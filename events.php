@@ -93,7 +93,14 @@ function get_event_status_badge($status) {
     <meta http-equiv="Content-Security-Policy" content="default-src <?php echo CSP_DEFAULT_SRC; ?>; script-src <?php echo CSP_SCRIPT_SRC; ?>; style-src <?php echo CSP_STYLE_SRC; ?>; font-src <?php echo CSP_FONT_SRC; ?>; img-src <?php echo CSP_IMG_SRC; ?>; connect-src <?php echo CSP_CONNECT_SRC; ?>">
     <title>Events | Salem Dominion Ministries</title>
     <meta name="description" content="Join us for life-changing events at Salem Dominion Ministries">
-    <link rel="icon" href="public/logo-icon.jpeg">
+    
+    <!-- Favicon - Church Logo -->
+    <link rel="icon" href="public/favicon.ico" sizes="any">
+    <link rel="icon" type="image/jpeg" sizes="16x16" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="32x32" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="192x192" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="512x512" href="public/logo-icon.jpeg">
+    <link rel="shortcut icon" href="public/logo-icon.jpeg">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">

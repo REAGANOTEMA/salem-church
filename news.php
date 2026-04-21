@@ -222,16 +222,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src <?php echo CSP_DEFAULT_SRC; ?>; script-src <?php echo CSP_SCRIPT_SRC; ?>; style-src <?php echo CSP_STYLE_SRC; ?>; font-src <?php echo CSP_FONT_SRC; ?>; img-src <?php echo CSP_IMG_SRC; ?>; connect-src <?php echo CSP_CONNECT_SRC; ?>">
     <title>News & Updates | Salem Dominion Ministries</title>
+    <!-- Search Engine and Social Media Meta Tags -->
     <meta name="description" content="Latest news and updates from Salem Dominion Ministries">
-    <link rel="icon" href="public/logo-icon.jpeg">
+    <meta name="keywords" content="Salem Dominion Ministries, news, updates, church, worship, Iganga, Uganda, Apostle Faty Musasizi, Christian, ministry">
+    <meta name="author" content="Salem Dominion Ministries">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="News & Updates - Salem Dominion Ministries">
+    <meta property="og:description" content="Latest news and updates from Salem Dominion Ministries">
+    <meta property="og:image" content="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']; ?>/public/logo-icon.jpeg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:image:alt" content="Salem Dominion Ministries Logo">
+    <meta property="og:site_name" content="Salem Dominion Ministries">
+    <meta property="og:url" content="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; ?>">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="News & Updates - Salem Dominion Ministries">
+    <meta name="twitter:description" content="Latest news and updates from Salem Dominion Ministries">
+    <meta name="twitter:image" content="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']; ?>/public/logo-icon.jpeg">
+    <meta name="twitter:image:alt" content="Salem Dominion Ministries Logo">
+    
+    <!-- Icons for All Devices - Using Church Logo -->
+    <link rel="icon" href="public/favicon.ico" sizes="any">
+    <link rel="icon" type="image/jpeg" sizes="16x16" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="32x32" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="192x192" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="512x512" href="public/logo-icon.jpeg">
+    <link rel="shortcut icon" href="public/logo-icon.jpeg">
     
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="public/site.webmanifest">
     <meta name="theme-color" content="#0f172a">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Salem Ministries">
     <link rel="apple-touch-icon" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="192x192" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="512x512" href="public/logo-icon.jpeg">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">

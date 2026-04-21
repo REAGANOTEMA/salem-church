@@ -68,23 +68,230 @@ if ($conn) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Salem Dominion Ministries - Welcome</title>
     
-    <!-- PWA Meta Tags -->
+    <!-- PWA Meta Tags - Universal Device Support -->
     <meta name="description" content="Welcome to Salem Dominion Ministries - Your spiritual home in Nampirika, Iganga District. Join us for worship, prayer, and community.">
     <meta name="theme-color" content="#fbbf24">
+    
+    <!-- Search Engine and Social Media Meta Tags -->
+    <meta name="keywords" content="Salem Dominion Ministries, church, worship, prayer, Iganga, Uganda, Apostle Faty Musasizi, Christian, ministry, sermons, events">
+    <meta name="author" content="Salem Dominion Ministries">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <meta name="bingbot" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; ?>">
+    <meta property="og:title" content="Salem Dominion Ministries - Your Spiritual Home">
+    <meta property="og:description" content="Welcome to Salem Dominion Ministries - Your spiritual home in Nampirika, Iganga District. Join us for worship, prayer, and community.">
+    <meta property="og:image" content="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']; ?>/public/logo-icon.jpeg">
+    <meta property="og:image:secure_url" content="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']; ?>/public/logo-icon.jpeg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:image:alt" content="Salem Dominion Ministries Logo">
+    <meta property="og:site_name" content="Salem Dominion Ministries">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@SalemDominion">
+    <meta name="twitter:creator" content="@SalemDominion">
+    <meta name="twitter:title" content="Salem Dominion Ministries - Your Spiritual Home">
+    <meta name="twitter:description" content="Welcome to Salem Dominion Ministries - Your spiritual home in Nampirika, Iganga District. Join us for worship, prayer, and community.">
+    <meta name="twitter:image" content="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']; ?>/public/logo-icon.jpeg">
+    <meta name="twitter:image:alt" content="Salem Dominion Ministries Logo">
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Salem Dominion Ministries",
+        "url": "<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']; ?>",
+        "logo": "<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']; ?>/public/logo-icon.jpeg",
+        "description": "Salem Dominion Ministries - Your spiritual home in Nampirika, Iganga District. Join us for worship, prayer, and community.",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Nampirika",
+            "addressRegion": "Iganga District",
+            "addressCountry": "Uganda"
+        },
+        "sameAs": [
+            "<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']; ?>"
+        ]
+    }
+    </script>
+    
+    <!-- iOS and Safari Support -->
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SDM">
+    <meta name="apple-touch-fullscreen" content="yes">
+    
+    <!-- Universal App Support -->
     <meta name="application-name" content="Salem Dominion Ministries">
     <meta name="msapplication-TileColor" content="#fbbf24">
     <meta name="msapplication-config" content="/browserconfig.xml">
+    <meta name="msapplication-TileImage" content="public/logo-icon.jpeg">
+    
+    <!-- Viewport and Responsive Design -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="email=no">
+    <meta name="format-detection" content="address=no">
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="public/site.webmanifest">
+    
+    <!-- Icons for All Devices - Using Church Logo -->
+    <link rel="icon" href="public/favicon.ico" sizes="any">
+    <link rel="icon" type="image/jpeg" sizes="16x16" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="32x32" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="48x48" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="64x64" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="128x128" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="192x192" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="256x256" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/jpeg" sizes="512x512" href="public/logo-icon.jpeg">
+    <link rel="shortcut icon" href="public/logo-icon.jpeg">
+    
+    <!-- Apple Touch Icons - Church Logo -->
     <link rel="apple-touch-icon" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="57x57" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="60x60" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="72x72" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="76x76" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="114x114" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="120x120" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="144x144" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="152x152" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="167x167" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="180x180" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="192x192" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="384x384" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon" sizes="512x512" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-startup-image" href="public/logo-icon.jpeg">
+    
+    <!-- iOS Specific -->
+    <link rel="apple-touch-icon-precomposed" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon-precomposed" sizes="167x167" href="public/logo-icon.jpeg">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="public/logo-icon.jpeg">
+    
+    <!-- Android Specific -->
+    <meta name="theme-color" content="#fbbf24">
+    <meta name="background-color" content="#0f172a">
+    
+    <!-- PWA Service Worker -->
+    <script>
+        // Register Service Worker for Universal Device Support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/public/sw.js')
+                    .then(function(registration) {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+        
+        // iOS PWA Install Prompt
+        let deferredPrompt;
+        let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        
+        // Show install prompt for iOS
+        if (isIOS && !window.navigator.standalone) {
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    showIOSInstallPrompt();
+                }, 3000);
+            });
+        }
+        
+        // Android PWA Install Prompt
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            showAndroidInstallPrompt();
+        });
+        
+        function showIOSInstallPrompt() {
+            const prompt = document.createElement('div');
+            prompt.className = 'pwa-install-prompt show';
+            prompt.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-download"></i>
+                    <span>Install this app on your iPhone: tap 
+                        <i class="fas fa-share-square"></i> then "Add to Home Screen"
+                    </span>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 20px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(prompt);
+            
+            setTimeout(function() {
+                if (prompt.parentElement) {
+                    prompt.remove();
+                }
+            }, 10000);
+        }
+        
+        function showAndroidInstallPrompt() {
+            const prompt = document.createElement('div');
+            prompt.className = 'pwa-install-prompt show';
+            prompt.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-download"></i>
+                    <span>Install this app for a better experience</span>
+                    <button onclick="installApp()" style="background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 5px 10px; border-radius: 5px; margin-right: 10px;">
+                        Install
+                    </button>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 20px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(prompt);
+            
+            setTimeout(function() {
+                if (prompt.parentElement) {
+                    prompt.remove();
+                }
+            }, 15000);
+        }
+        
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(choiceResult) {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+    </script>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="assets/mobile-responsive.css" rel="stylesheet">
+    <link href="assets/universal-device-support.css" rel="stylesheet">
     <style>
         /* Professional Styling */
         .hero-section {

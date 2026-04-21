@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# Prioritize important pages
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://salemdominionministries.com/sitemap.xml
+
+# Allow image indexing for logo
+Allow: /public/logo-icon.jpeg
+Allow: /public/
+
+# Disallow admin and system files
+Disallow: /admin/
+Disallow: /admin_sections/
+Disallow: /database/
+Disallow: /config.php
+Disallow: /db_connection.php
+Disallow: /test_*
+Disallow: /setup_*
+Disallow: /*.sql
+Disallow: /*.log
