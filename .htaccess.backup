@@ -1,0 +1,30 @@
+# Root Directory .htaccess Backup - Simple Version
+# Works on hosting servers without mod_rewrite
+
+# Set directory index priority - PHP files first
+DirectoryIndex index.php
+
+# --- Prevent access to sensitive files ---
+<FilesMatch "\.(htaccess|htpasswd|ini|env|log)$">
+    Require all denied
+</FilesMatch>
+
+# --- Ensure proper MIME types ---
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType application/json .json
+    AddType text/css .css
+    AddType image/svg+xml .svg
+    AddType image/png .png
+    AddType image/jpeg .jpg .jpeg
+    AddType image/gif .gif
+    AddType image/x-icon .ico
+</IfModule>
+
+# --- Security headers ---
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options SAMEORIGIN
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

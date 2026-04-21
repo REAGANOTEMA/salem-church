@@ -1,0 +1,5 @@
+Options -Indexes
+AddType video/mp4 .mp4
+AddType video/webm .webm
+AddType audio/mpeg .mp3
+AddType audio/wav .wav

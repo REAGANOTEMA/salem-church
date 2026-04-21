@@ -1,0 +1,1013 @@
+/**
+ * Heavenly Design System - Complete Visual Excellence
+ * Makes the website feel like heaven with perfect graphics and animations
+ */
+
+:root {
+    /* Heavenly Color Palette */
+    --heavenly-gold: #FFD700;
+    --divine-white: #FFFFFF;
+    --angel-blue: #87CEEB;
+    --grace-purple: #9370DB;
+    --eternal-pink: #FFB6C1;
+    --celestial-teal: #40E0D0;
+    --heavenly-orange: #FFA500;
+    --divine-red: #DC143C;
+    --eternal-green: #228B22;
+    --heavenly-indigo: #4B0082;
+    --celestial-gray: #F5F5F5;
+    
+    /* Gradient Heaven */
+    --gradient-heaven: linear-gradient(135deg, #FFD700 0%, #FFA500 25%, #FFB6C1 50%, #87CEEB 75%, #9370DB 100%);
+    --gradient-angel: linear-gradient(135deg, #FFFFFF 0%, #F8F8FF 25%, #E6E6FA 50%, #DDA0DD 75%, #FFB6C1 100%);
+    --gradient-divine: linear-gradient(135deg, #4B0082 0%, #9370DB 25%, #FFD700 50%, #FFA500 75%, #FF6347 100%);
+    --gradient-ethereal: linear-gradient(135deg, #87CEEB 0%, #40E0D0 25%, #98FB98 50%, #FFB6C1 75%, #DDA0DD 100%);
+    --gradient-celestial: linear-gradient(135deg, #FFD700 0%, #FFFFFF 25%, #87CEEB 50%, #9370DB 75%, #FFB6C1 100%);
+    --gradient-heavenly-light: linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,182,193,0.1) 25%, rgba(135,206,235,0.1) 50%, rgba(147,112,219,0.1) 75%, rgba(255,165,0,0.1) 100%);
+    
+    /* Heavenly Shadows */
+    --shadow-angel: 0 20px 40px rgba(255, 215, 0, 0.15);
+    --shadow-divine: 0 25px 50px rgba(147, 112, 219, 0.2);
+    --shadow-heavenly: 0 30px 60px rgba(135, 206, 235, 0.25);
+    --shadow-ethereal: 0 35px 70px rgba(255, 182, 193, 0.3);
+    --shadow-celestial: 0 40px 80px rgba(255, 255, 255, 0.4);
+    
+    /* Heavenly Fonts */
+    --font-heavenly: 'Dancing Script', cursive;
+    --font-divine: 'Playfair Display', serif;
+    --font-angel: 'Montserrat', sans-serif;
+    --font-celestial: 'Great Vibes', cursive;
+}
+
+/* Heavenly Body Styles */
+body {
+    font-family: var(--font-angel);
+    background: var(--gradient-heavenly-light);
+    color: #1a1a2e;
+    position: relative;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* Heavenly Background Effects */
+.heavenly-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 182, 193, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(135, 206, 235, 0.05) 0%, transparent 70%),
+        linear-gradient(135deg, rgba(255, 215, 0, 0.02) 0%, rgba(255, 182, 193, 0.02) 25%, rgba(135, 206, 235, 0.02) 50%, rgba(147, 112, 219, 0.02) 75%, rgba(255, 165, 0, 0.02) 100%);
+    pointer-events: none;
+    z-index: -1;
+    animation: heavenlyPulse 8s ease-in-out infinite;
+}
+
+@keyframes heavenlyPulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+/* Floating Heavenly Particles */
+.heavenly-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.heavenly-particle {
+    position: absolute;
+    background: var(--gradient-heaven);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: floatParticle 15s infinite ease-in-out;
+}
+
+.heavenly-particle:nth-child(1) {
+    width: 4px;
+    height: 4px;
+    left: 10%;
+    animation-delay: 0s;
+    animation-duration: 12s;
+}
+
+.heavenly-particle:nth-child(2) {
+    width: 6px;
+    height: 6px;
+    left: 20%;
+    animation-delay: 2s;
+    animation-duration: 14s;
+}
+
+.heavenly-particle:nth-child(3) {
+    width: 3px;
+    height: 3px;
+    left: 30%;
+    animation-delay: 4s;
+    animation-duration: 16s;
+}
+
+.heavenly-particle:nth-child(4) {
+    width: 5px;
+    height: 5px;
+    left: 40%;
+    animation-delay: 6s;
+    animation-duration: 13s;
+}
+
+.heavenly-particle:nth-child(5) {
+    width: 4px;
+    height: 4px;
+    left: 50%;
+    animation-delay: 8s;
+    animation-duration: 15s;
+}
+
+.heavenly-particle:nth-child(6) {
+    width: 6px;
+    height: 6px;
+    left: 60%;
+    animation-delay: 10s;
+    animation-duration: 11s;
+}
+
+.heavenly-particle:nth-child(7) {
+    width: 3px;
+    height: 3px;
+    left: 70%;
+    animation-delay: 12s;
+    animation-duration: 17s;
+}
+
+.heavenly-particle:nth-child(8) {
+    width: 5px;
+    height: 5px;
+    left: 80%;
+    animation-delay: 14s;
+    animation-duration: 14s;
+}
+
+.heavenly-particle:nth-child(9) {
+    width: 4px;
+    height: 4px;
+    left: 90%;
+    animation-delay: 16s;
+    animation-duration: 12s;
+}
+
+.heavenly-particle:nth-child(10) {
+    width: 6px;
+    height: 6px;
+    left: 95%;
+    animation-delay: 18s;
+    animation-duration: 15s;
+}
+
+@keyframes floatParticle {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Divine Light Rays */
+.divine-light-rays {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.divine-ray {
+    position: absolute;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+    transform-origin: top center;
+    animation: divineRay 20s infinite ease-in-out;
+}
+
+.divine-ray:nth-child(1) {
+    width: 2px;
+    height: 100%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.divine-ray:nth-child(2) {
+    width: 3px;
+    height: 100%;
+    left: 25%;
+    animation-delay: 3s;
+}
+
+.divine-ray:nth-child(3) {
+    width: 2px;
+    height: 100%;
+    left: 40%;
+    animation-delay: 6s;
+}
+
+.divine-ray:nth-child(4) {
+    width: 3px;
+    height: 100%;
+    left: 55%;
+    animation-delay: 9s;
+}
+
+.divine-ray:nth-child(5) {
+    width: 2px;
+    height: 100%;
+    left: 70%;
+    animation-delay: 12s;
+}
+
+.divine-ray:nth-child(6) {
+    width: 3px;
+    height: 100%;
+    left: 85%;
+    animation-delay: 15s;
+}
+
+@keyframes divineRay {
+    0%, 100% {
+        opacity: 0;
+        transform: rotate(-2deg);
+    }
+    50% {
+        opacity: 0.6;
+        transform: rotate(2deg);
+    }
+}
+
+/* Heavenly Logo Styles */
+.heavenly-logo {
+    display: inline-block;
+    position: relative;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.heavenly-logo img {
+    height: 50px;
+    width: auto;
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+    transition: all 0.3s ease;
+}
+
+.heavenly-logo:hover img {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.8));
+}
+
+.heavenly-logo::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    background: var(--gradient-heaven);
+    border-radius: 50%;
+    opacity: 0;
+    z-index: -1;
+    transition: all 0.3s ease;
+}
+
+.heavenly-logo:hover::before {
+    opacity: 0.3;
+    animation: logoGlow 2s ease-in-out infinite;
+}
+
+@keyframes logoGlow {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.2); opacity: 0.6; }
+}
+
+/* Navbar Heavenly Enhancement */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1);
+    border-bottom: 2px solid rgba(255, 215, 0, 0.2);
+    position: relative;
+    z-index: 1000;
+}
+
+.navbar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--gradient-heaven);
+    animation: navbarShimmer 3s ease-in-out infinite;
+}
+
+@keyframes navbarShimmer {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+.navbar-brand {
+    font-family: var(--font-heavenly);
+    font-size: 2rem;
+    font-weight: 700;
+    background: var(--gradient-divine);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+.nav-link {
+    font-weight: 600;
+    color: #1a1a2e;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-link::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--gradient-heaven);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::before,
+.nav-link.active::before {
+    width: 100%;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--heavenly-gold);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+/* Hero Section Heavenly Design */
+.hero-section {
+    background: var(--gradient-divine);
+    color: white;
+    padding: 150px 0 100px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: heroShimmer 4s ease-in-out infinite;
+}
+
+@keyframes heroShimmer {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+}
+
+.hero-title {
+    font-family: var(--font-divine);
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    animation: titleFloat 6s ease-in-out infinite;
+}
+
+@keyframes titleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.hero-subtitle {
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    animation: subtitleFade 8s ease-in-out infinite;
+}
+
+@keyframes subtitleFade {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+/* Heavenly Cards */
+.heavenly-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    box-shadow: var(--shadow-angel);
+    border: 2px solid rgba(255, 215, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.heavenly-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-heaven);
+    animation: cardShimmer 3s ease-in-out infinite;
+}
+
+@keyframes cardShimmer {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+.heavenly-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
+    animation: cardGlow 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes cardGlow {
+    0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
+    50% { opacity: 0.6; transform: scale(1.2) rotate(180deg); }
+}
+
+.heavenly-card:hover {
+    transform: translateY(-15px);
+    box-shadow: var(--shadow-divine);
+    border-color: rgba(255, 215, 0, 0.4);
+}
+
+/* Heavenly Buttons */
+.heavenly-btn {
+    background: var(--gradient-heaven);
+    color: #1a1a2e;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+}
+
+.heavenly-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: all 0.5s ease;
+}
+
+.heavenly-btn:hover::before {
+    left: 100%;
+}
+
+.heavenly-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(255, 215, 0, 0.4);
+    color: #1a1a2e;
+}
+
+/* Heavenly Sections */
+.heavenly-section {
+    padding: 100px 0;
+    position: relative;
+    background: var(--gradient-heavenly-light);
+}
+
+.heavenly-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--gradient-heaven);
+    animation: sectionShimmer 3s ease-in-out infinite;
+}
+
+@keyframes sectionShimmer {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* Heavenly Typography */
+.heavenly-title {
+    font-family: var(--font-divine);
+    font-size: 3rem;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 2rem;
+    background: var(--gradient-divine);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    animation: titleShimmer 4s ease-in-out infinite;
+}
+
+@keyframes titleShimmer {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+.heavenly-subtitle {
+    font-family: var(--font-angel);
+    font-size: 1.3rem;
+    text-align: center;
+    color: #666;
+    margin-bottom: 3rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Heavenly Images */
+.heavenly-image {
+    border-radius: 20px;
+    box-shadow: var(--shadow-angel);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.heavenly-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gradient-heavenly-light);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.heavenly-image:hover::before {
+    opacity: 0.3;
+}
+
+.heavenly-image:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-divine);
+}
+
+.heavenly-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.heavenly-image:hover img {
+    transform: scale(1.1);
+}
+
+/* Heavenly Icons */
+.heavenly-icon {
+    font-size: 3rem;
+    color: var(--heavenly-gold);
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    animation: iconPulse 3s ease-in-out infinite;
+    transition: all 0.3s ease;
+}
+
+.heavenly-icon:hover {
+    transform: scale(1.2);
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+    color: var(--divine-red);
+}
+
+@keyframes iconPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Heavenly Footer */
+.heavenly-footer {
+    background: var(--gradient-divine);
+    color: white;
+    padding: 60px 0 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.heavenly-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    animation: footerShimmer 5s ease-in-out infinite;
+}
+
+@keyframes footerShimmer {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+}
+
+/* Leadership Image Styles */
+.pastor-image-container {
+    position: relative;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 20px 20px 0 0;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 255, 255, 0.95));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pastor-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.3s ease;
+    filter: brightness(1.1) contrast(1.1);
+}
+
+.pastor-card:hover .pastor-image {
+    transform: scale(1.05);
+}
+
+.leader-image-container {
+    position: relative;
+    height: 300px;
+    overflow: hidden;
+    border-radius: 15px 15px 0 0;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 255, 255, 0.95));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.leader-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.3s ease;
+    filter: brightness(1.1) contrast(1.1);
+}
+
+.leader-card:hover .leader-image {
+    transform: scale(1.1);
+}
+
+/* Image Fallback and Enhancement */
+.pastor-image-container::before,
+.leader-image-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.05), transparent);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.pastor-image-container::after,
+.leader-image-container::after {
+    content: '🕊️';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 1.5rem;
+    opacity: 0.7;
+    z-index: 2;
+}
+
+/* Responsive Leadership Images */
+@media (max-width: 768px) {
+    .pastor-image-container {
+        height: 300px;
+    }
+    
+    .leader-image-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 576px) {
+    .pastor-image-container {
+        height: 250px;
+    }
+    
+    .leader-image-container {
+        height: 200px;
+    }
+}
+
+/* Navigation Arrows */
+.heavenly-navigation {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.nav-arrow {
+    width: 50px;
+    height: 50px;
+    background: var(--gradient-heaven);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1a1a2e;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-arrow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: all 0.5s ease;
+}
+
+.nav-arrow:hover::before {
+    left: 100%;
+}
+
+.nav-arrow:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(255, 215, 0, 0.4);
+    color: #1a1a2e;
+}
+
+.nav-arrow-up {
+    background: var(--gradient-divine);
+}
+
+.nav-arrow-home {
+    background: var(--gradient-angel);
+}
+
+.nav-arrow-home i {
+    color: #9370DB;
+}
+
+/* Tooltip for navigation arrows */
+.nav-arrow {
+    position: relative;
+}
+
+.nav-arrow::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 60px;
+    right: 50%;
+    transform: translateX(50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.nav-arrow:hover::after {
+    opacity: 1;
+}
+
+/* Children's Ministry Images */
+.children-image-container {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(255, 182, 193, 0.1), rgba(255, 255, 255, 0.95));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.children-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.3s ease;
+    filter: brightness(1.1) contrast(1.05);
+}
+
+.children-card:hover .children-image {
+    transform: scale(1.05);
+}
+
+.children-image-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 182, 193, 0.05), transparent);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.children-image-container::after {
+    content: '👶';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    opacity: 0.7;
+    z-index: 2;
+}
+
+/* Responsive Children's Images */
+@media (max-width: 768px) {
+    .children-image-container {
+        height: 200px;
+    }
+}
+
+@media (max-width: 576px) {
+    .children-image-container {
+        height: 150px;
+    }
+}
+
+/* Responsive Navigation Arrows */
+@media (max-width: 768px) {
+    .heavenly-navigation {
+        bottom: 20px;
+        right: 20px;
+    }
+    
+    .nav-arrow {
+        width: 45px;
+        height: 45px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .heavenly-navigation {
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    .nav-arrow {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Responsive Heaven */
+@media (max-width: 768px) {
+    .heavenly-logo img {
+        height: 40px;
+    }
+    
+    .navbar-brand {
+        font-size: 1.5rem;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.2rem;
+    }
+    
+    .heavenly-title {
+        font-size: 2rem;
+    }
+    
+    .heavenly-section {
+        padding: 60px 0;
+    }
+    
+    .hero-section {
+        padding: 100px 0 60px;
+    }
+    
+    .heavenly-btn {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+}
+
+/* Loading Animation */
+.heavenly-loading {
+    position: relative;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 10px;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Smooth Scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Selection Color */
+::selection {
+    background: var(--gradient-heaven);
+    color: #1a1a2e;
+}
+
+/* Scrollbar Heaven */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gradient-heavenly-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--gradient-heaven);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gradient-divine);
+}

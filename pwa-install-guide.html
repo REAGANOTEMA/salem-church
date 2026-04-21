@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Installation Guide - Salem Dominion Ministries</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .guide-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .guide-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .guide-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+        
+        .guide-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .platform-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .platform-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .platform-icon {
+            font-size: 3rem;
+            color: #fbbf24;
+            margin-bottom: 1rem;
+        }
+        
+        .platform-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .step-number {
+            background: #fbbf24;
+            color: #0f172a;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .feature-highlight {
+            background: rgba(251, 191, 36, 0.1);
+            border-left: 4px solid #fbbf24;
+            padding: 1rem;
+            margin: 2rem 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fbbf24;
+            margin-bottom: 0.5rem;
+        }
+        
+        .back-button {
+            background: #fbbf24;
+            color: #0f172a;
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background: #f59e0b;
+            transform: translateY(-2px);
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body>
+    <div class="guide-container">
+        <div class="guide-header">
+            <h1 class="guide-title">Install Our App</h1>
+            <p class="guide-subtitle">Get Salem Dominion Ministries on your device for easy access</p>
+        </div>
+        
+        <div class="feature-highlight">
+            <h3 class="feature-title">Why Install Our App?</h3>
+            <ul class="mb-0">
+                <li>Fast access to sermons, events, and updates</li>
+                <li>Works offline - access content even without internet</li>
+                <li>Push notifications for important announcements</li>
+                <li>Native app experience on your device</li>
+                <li>Quick access to donation and prayer requests</li>
+            </ul>
+        </div>
+        
+        <!-- Chrome/Android Instructions -->
+        <div class="platform-card">
+            <div class="platform-icon">
+                <i class="fab fa-chrome"></i>
+            </div>
+            <h2 class="platform-title">Chrome / Android</h2>
+            <ul class="step-list">
+                <li class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <strong>Open our website</strong> in Chrome browser on your Android device
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <strong>Look for the install prompt</strong> - Chrome will show "Add to Home screen" banner
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <strong>Tap "Install" or "Add"</strong> to install the app on your device
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <strong>Find the app</strong> on your home screen with the Salem Dominion Ministries icon
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Safari/iOS Instructions -->
+        <div class="platform-card">
+            <div class="platform-icon">
+                <i class="fab fa-safari"></i>
+            </div>
+            <h2 class="platform-title">Safari / iPhone/iPad</h2>
+            <ul class="step-list">
+                <li class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <strong>Open our website</strong> in Safari browser on your iPhone or iPad
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <strong>Tap the Share button</strong> (square icon with arrow) at the bottom of Safari
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <strong>Scroll down and tap "Add to Home Screen"</strong>
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <strong>Tap "Add" in the top-right corner</strong> to confirm installation
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <strong>Find the app</strong> on your home screen
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Edge Instructions -->
+        <div class="platform-card">
+            <div class="platform-icon">
+                <i class="fab fa-edge"></i>
+            </div>
+            <h2 class="platform-title">Microsoft Edge</h2>
+            <ul class="step-list">
+                <li class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <strong>Open our website</strong> in Microsoft Edge browser
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <strong>Click the App icon</strong> (three dots) in the top-right corner
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <strong>Select "Apps" then "Install this site as an app"</strong>
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <strong>Click "Install"</strong> to add the app to your device
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="index.php" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+                Back to Website
+            </a>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

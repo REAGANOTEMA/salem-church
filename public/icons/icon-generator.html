@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salem Dominion Ministries - Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .icon-preview {
+            width: 512px;
+            height: 512px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 25%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .church-icon {
+            font-size: 200px;
+            color: #1e293b;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .cross-symbol {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: #1e293b;
+            clip-path: polygon(50% 0%, 50% 35%, 65% 35%, 65% 50%, 100% 50%, 100% 65%, 65% 65%, 65% 100%, 50% 100%, 50% 65%, 35% 65%, 35% 50%, 0% 50%, 0% 35%, 35% 35%, 35% 0%);
+        }
+        .download-btn {
+            background: #f59e0b;
+            color: #1e293b;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        .download-btn:hover {
+            background: #d97706;
+            transform: scale(1.05);
+        }
+        .sizes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .size-preview {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+        .size-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 15%;
+            margin: 0 auto 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏛️ Salem Dominion Ministries - App Icon Generator</h1>
+    
+    <div class="icon-preview" id="mainIcon">
+        <div class="cross-symbol"></div>
+    </div>
+
+    <h2>Icon Preview Sizes</h2>
+    <div class="sizes-grid">
+        <div class="size-preview">
+            <div class="size-icon">✝</div>
+            <small>72x72</small>
+        </div>
+        <div class="size-preview">
+            <div class="size-icon">✝</div>
+            <small>96x96</small>
+        </div>
+        <div class="size-preview">
+            <div class="size-icon">✝</div>
+            <small>128x128</small>
+        </div>
+        <div class="size-preview">
+            <div class="size-icon">✝</div>
+            <small>144x144</small>
+        </div>
+        <div class="size-preview">
+            <div class="size-icon">✝</div>
+            <small>152x152</small>
+        </div>
+        <div class="size-preview">
+            <div class="size-icon">✝</div>
+            <small>192x192</small>
+        </div>
+        <div class="size-preview">
+            <div class="size-icon">✝</div>
+            <small>384x384</small>
+        </div>
+        <div class="size-preview">
+            <div class="size-icon">✝</div>
+            <small>512x512</small>
+        </div>
+    </div>
+
+    <h2>Download Icon Files</h2>
+    <p>Click the buttons below to download the app icons. These will be saved to your Downloads folder.</p>
+    
+    <div>
+        <button class="download-btn" onclick="downloadIcon(72)">📱 Download 72x72</button>
+        <button class="download-btn" onclick="downloadIcon(96)">📱 Download 96x96</button>
+        <button class="download-btn" onclick="downloadIcon(128)">📱 Download 128x128</button>
+        <button class="download-btn" onclick="downloadIcon(144)">📱 Download 144x144</button>
+        <button class="download-btn" onclick="downloadIcon(152)">📱 Download 152x152</button>
+        <button class="download-btn" onclick="downloadIcon(192)">📱 Download 192x192</button>
+        <button class="download-btn" onclick="downloadIcon(384)">📱 Download 384x384</button>
+        <button class="download-btn" onclick="downloadIcon(512)">📱 Download 512x512</button>
+    </div>
+
+    <h2>Download All Icons</h2>
+    <button class="download-btn" onclick="downloadAllIcons()" style="background: #10b981; color: white;">
+        📦 Download All Icons (ZIP)
+    </button>
+
+    <script>
+        function createIconCanvas(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#f59e0b');
+            gradient.addColorStop(1, '#d97706');
+            
+            // Draw rounded rectangle background
+            const radius = size * 0.25;
+            ctx.beginPath();
+            ctx.moveTo(radius, 0);
+            ctx.lineTo(size - radius, 0);
+            ctx.quadraticCurveTo(size, 0, size, radius);
+            ctx.lineTo(size, size - radius);
+            ctx.quadraticCurveTo(size, size, size - radius, size);
+            ctx.lineTo(radius, size);
+            ctx.quadraticCurveTo(0, size, 0, size - radius);
+            ctx.lineTo(0, radius);
+            ctx.quadraticCurveTo(0, 0, radius, 0);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Draw cross symbol
+            ctx.fillStyle = '#1e293b';
+            const crossSize = size * 0.3;
+            const crossThickness = size * 0.08;
+            const centerX = size / 2;
+            const centerY = size / 2;
+
+            // Vertical part of cross
+            ctx.fillRect(centerX - crossThickness/2, centerY - crossSize/2, crossThickness, crossSize);
+            
+            // Horizontal part of cross
+            ctx.fillRect(centerX - crossSize/2, centerY - crossThickness/2, crossSize, crossThickness);
+
+            return canvas;
+        }
+
+        function downloadIcon(size) {
+            const canvas = createIconCanvas(size);
+            const link = document.createElement('a');
+            link.download = `icon-${size}x${size}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        function downloadAllIcons() {
+            const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+            sizes.forEach((size, index) => {
+                setTimeout(() => {
+                    downloadIcon(size);
+                }, index * 200);
+            });
+        }
+
+        // Generate main icon preview
+        window.onload = function() {
+            const mainIcon = document.getElementById('mainIcon');
+            const canvas = createIconCanvas(512);
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL();
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.borderRadius = '25%';
+            mainIcon.innerHTML = '';
+            mainIcon.appendChild(img);
+        };
+    </script>
+</body>
+</html>

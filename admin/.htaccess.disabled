@@ -1,0 +1,16 @@
+# Admin Directory .htaccess
+# Prevent directory listing
+Options -Indexes
+
+# Set default index file
+DirectoryIndex index.php
+
+# Security headers
+<Files "*.php">
+    Require all granted
+</Files>
+
+# Prevent access to sensitive files
+<FilesMatch "\.(log|sql|bak|backup|old)$">
+    Require all denied
+</FilesMatch>
