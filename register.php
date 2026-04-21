@@ -2,7 +2,7 @@
 // USER REGISTRATION - Salem Dominion Ministries - Professional & Mobile Responsive
 require_once 'db_connection.php';
 
-$conn = getConnection();
+$conn = createDatabaseConnection();
 if (!$conn) {
     // Database connection failed - show detailed error for debugging
     $errors[] = 'Database connection failed. Please check your database credentials.';

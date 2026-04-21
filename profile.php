@@ -14,7 +14,7 @@ if (!isset($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true)
     exit;
 }
 
-$conn = getConnection();
+$conn = createDatabaseConnection();
 $user_id = $_SESSION['user_id'];
 $errors = [];
 $success = '';

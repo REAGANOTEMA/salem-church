@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 
 // Get user info
 $user_id = $_SESSION['user_id'];
-$conn = getConnection();
+$conn = createDatabaseConnection();
 $user = null;
 
 if ($conn) {

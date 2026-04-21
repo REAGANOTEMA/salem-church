@@ -7,7 +7,7 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-$conn = getConnection();
+$conn = createDatabaseConnection();
 
 // Initialize variables
 $errors = [];
