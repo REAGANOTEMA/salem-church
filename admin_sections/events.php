@@ -85,7 +85,7 @@ if ($conn) {
 <?php endif; ?>
 
 <div class="content-header">
-    <h1 class="page-title"><img src="<?php echo LOGO_PATH; ?>" alt="Salem Dominion Ministries" style="width: 30px; height: 30px; margin-right: 10px;">Event Management</h1>
+    <h1 class="page-title"><?php echo getLogoImg(30, 30, 'margin-right: 10px'); ?>Event Management</h1>
     <p class="page-subtitle">Create and manage church events with scheduling and details</p>
 </div>
 

@@ -17,7 +17,7 @@ if ($conn) {
 ?>
 
 <div class="content-header">
-    <h1 class="page-title"><img src="<?php echo LOGO_PATH; ?>" alt="Salem Dominion Ministries" style="width: 30px; height: 30px; margin-right: 10px;">Testimonial Management</h1>
+    <h1 class="page-title"><?php echo getLogoImg(30, 30, 'margin-right: 10px'); ?>Testimonial Management</h1>
     <p class="page-subtitle">Review and approve user testimonials for the church website</p>
 </div>
 
@@ -25,7 +25,7 @@ if ($conn) {
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-icon">
-            <img src="<?php echo LOGO_PATH; ?>" alt="Salem Dominion Ministries" style="width: 40px; height: 40px;">
+            <?php echo getLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo count($testimonials); ?></div>
         <div class="stat-label">Total Testimonials</div>
@@ -33,7 +33,7 @@ if ($conn) {
     
     <div class="stat-card">
         <div class="stat-icon">
-            <img src="<?php echo LOGO_PATH; ?>" alt="Salem Dominion Ministries" style="width: 40px; height: 40px;">
+            <?php echo getLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo count(array_filter($testimonials, fn($t) => $t['is_approved'] == 1)); ?></div>
         <div class="stat-label">Approved</div>
@@ -41,7 +41,7 @@ if ($conn) {
     
     <div class="stat-card">
         <div class="stat-icon">
-            <img src="<?php echo LOGO_PATH; ?>" alt="Salem Dominion Ministries" style="width: 40px; height: 40px;">
+            <?php echo getLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo count(array_filter($testimonials, fn($t) => $t['is_approved'] == 0)); ?></div>
         <div class="stat-label">Pending</div>

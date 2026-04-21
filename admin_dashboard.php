@@ -169,7 +169,7 @@ if ($conn) {
     <!-- Open Graph Meta Tags for Social Media -->
     <meta property="og:title" content="Admin Dashboard - <?php echo CHURCH_NAME; ?>">
     <meta property="og:description" content="<?php echo CHURCH_DESCRIPTION; ?>">
-    <meta property="og:image" content="<?php echo LOGO_PATH; ?>">
+    <meta property="og:image" content="<?php echo getSafeLogoUrl(); ?>">
     <meta property="og:url" content="<?php echo CHURCH_WEBSITE; ?>/admin_dashboard.php">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="<?php echo CHURCH_NAME; ?>">
@@ -179,13 +179,13 @@ if ($conn) {
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Admin Dashboard - <?php echo CHURCH_NAME; ?>">
     <meta name="twitter:description" content="<?php echo CHURCH_DESCRIPTION; ?>">
-    <meta name="twitter:image" content="<?php echo LOGO_PATH; ?>">
+    <meta name="twitter:image" content="<?php echo getSafeLogoUrl(); ?>">
     <meta name="twitter:site" content="@<?php echo str_replace([' ', '.'], ['', ''], strtolower(CHURCH_NAME)); ?>">
     
     <!-- Favicon and Apple Touch Icon -->
-    <link rel="icon" type="image/jpeg" href="<?php echo CHURCH_LOGO; ?>">
-    <link rel="apple-touch-icon" href="<?php echo CHURCH_LOGO; ?>">
-    <link rel="shortcut icon" href="<?php echo CHURCH_LOGO; ?>">
+    <link rel="icon" type="image/jpeg" href="<?php echo getSafeLogoUrl(); ?>">
+    <link rel="apple-touch-icon" href="<?php echo getSafeLogoUrl(); ?>">
+    <link rel="shortcut icon" href="<?php echo getSafeLogoUrl(); ?>">
     
     <!-- Canonical URL -->
     <link rel="canonical" href="<?php echo CHURCH_WEBSITE; ?>/admin_dashboard.php">
@@ -198,8 +198,8 @@ if ($conn) {
         "name": "<?php echo CHURCH_NAME; ?>",
         "description": "<?php echo CHURCH_DESCRIPTION; ?>",
         "url": "<?php echo CHURCH_WEBSITE; ?>",
-        "logo": "<?php echo LOGO_PATH; ?>",
-        "image": "<?php echo LOGO_PATH; ?>",
+        "logo": "<?php echo getSafeLogoUrl(); ?>",
+        "image": "<?php echo getSafeLogoUrl(); ?>",
         "contactPoint": {
             "@type": "ContactPoint",
             "email": "<?php echo CHURCH_EMAIL; ?>",
