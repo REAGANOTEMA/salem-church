@@ -1,7 +1,7 @@
 ﻿<?php
 require_once __DIR__ . '/db_connection.php';
 
-$conn = getConnection();
+$conn = createDatabaseConnection();
 
 // Initialize variables
 $children_programs = [];

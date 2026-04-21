@@ -1,8 +1,9 @@
 <?php
 // SERMONS PAGE - Salem Dominion Ministries - Professional & Mobile Responsive
 require_once 'db_connection.php';
+require_once 'config.php';
 
-$conn = getConnection();
+$conn = createDatabaseConnection();
 
 // Pagination and filtering
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
@@ -122,7 +123,7 @@ function safe_html($string, $default = '') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com 'unsafe-inline'; style-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src <?php echo CSP_DEFAULT_SRC; ?>; script-src <?php echo CSP_SCRIPT_SRC; ?>; style-src <?php echo CSP_STYLE_SRC; ?>; font-src <?php echo CSP_FONT_SRC; ?>; img-src <?php echo CSP_IMG_SRC; ?>; connect-src <?php echo CSP_CONNECT_SRC; ?>">
     <title>Sermons | Salem Dominion Ministries</title>
     <meta name="description" content="Life-changing sermons and teachings from Salem Dominion Ministries">
     

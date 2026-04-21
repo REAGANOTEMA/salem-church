@@ -99,6 +99,14 @@ if (!defined('DB_NAME') && isset($_ENV['DB_NAME'])) {
 define('CHURCH_NAME', 'Salem Dominion Ministries');
 define('CHURCH_PASTOR', 'Pastor Faty Musasizi');
 
+// Content Security Policy Constants for consistent font loading
+define('CSP_DEFAULT_SRC', "'self'");
+define('CSP_SCRIPT_SRC', "'self' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com 'unsafe-inline'");
+define('CSP_STYLE_SRC', "'self' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline'");
+define('CSP_FONT_SRC', "'self' https://fonts.gstatic.com https://fonts.googleapis.com https://cdnjs.cloudflare.com");
+define('CSP_IMG_SRC', "'self' data: https:");
+define('CSP_CONNECT_SRC', "'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com");
+
 // Dynamic website URL for different environments
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';

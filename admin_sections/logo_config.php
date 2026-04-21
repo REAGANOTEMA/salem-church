@@ -9,19 +9,31 @@ $base_url = $protocol . '://' . $host;
 
 // Define logo paths for admin sections
 define('ADMIN_LOGO_DIRECT', $base_url . '/public/logo-icon.jpeg');
+define('ADMIN_LOGO_ROOT', $base_url . '/logo-icon.jpeg');
 define('ADMIN_LOGO_SERVE', $base_url . '/serve_logo.php');
-define('ADMIN_LOGO_FALLBACK', 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/8A8A');
+define('ADMIN_LOGO_SIMPLE', $base_url . '/logo.php');
+define('ADMIN_LOGO_FALLBACK', 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/8A8A');
 
 // Function to get admin logo URL with fallbacks
 function getAdminLogoUrl() {
-    // Try serve script first (most reliable)
-    if (file_exists('../serve_logo.php')) {
-        return ADMIN_LOGO_SERVE;
-    }
-    
-    // Try direct path
+    // Try public/logo-icon.jpeg first (as requested)
     if (file_exists('../public/logo-icon.jpeg') && is_readable('../public/logo-icon.jpeg')) {
         return ADMIN_LOGO_DIRECT;
+    }
+    
+    // Try root-level logo
+    if (file_exists('../logo-icon.jpeg')) {
+        return ADMIN_LOGO_ROOT;
+    }
+    
+    // Try simple logo script
+    if (file_exists('../logo.php')) {
+        return ADMIN_LOGO_SIMPLE;
+    }
+    
+    // Try serve script
+    if (file_exists('../serve_logo.php')) {
+        return ADMIN_LOGO_SERVE;
     }
     
     // Use base64 fallback (always works)

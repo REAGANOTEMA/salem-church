@@ -19,7 +19,7 @@ $latest_news = [];
 $database_ready = true;
 
 // Initialize database connection
-$conn = getConnection();
+$conn = createDatabaseConnection();
 
 if ($conn) {
     try {

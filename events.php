@@ -1,8 +1,9 @@
 <?php
 // EVENTS PAGE - Salem Dominion Ministries - Professional & Mobile Responsive
 require_once 'db_connection.php';
+require_once 'config.php';
 
-$conn = getConnection();
+$conn = createDatabaseConnection();
 
 // Initialize variables
 $events = [];
@@ -89,7 +90,7 @@ function get_event_status_badge($status) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src <?php echo CSP_DEFAULT_SRC; ?>; script-src <?php echo CSP_SCRIPT_SRC; ?>; style-src <?php echo CSP_STYLE_SRC; ?>; font-src <?php echo CSP_FONT_SRC; ?>; img-src <?php echo CSP_IMG_SRC; ?>; connect-src <?php echo CSP_CONNECT_SRC; ?>">
     <title>Events | Salem Dominion Ministries</title>
     <meta name="description" content="Join us for life-changing events at Salem Dominion Ministries">
     <link rel="icon" href="public/logo-icon.jpeg">

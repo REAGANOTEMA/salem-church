@@ -2,7 +2,7 @@
 // MINISTRIES PAGE - Salem Dominion Ministries - Professional & Mobile Responsive
 require_once __DIR__ . '/db_connection.php';
 
-$conn = getConnection();
+$conn = createDatabaseConnection();
 
 // Initialize variables
 $ministries = [];

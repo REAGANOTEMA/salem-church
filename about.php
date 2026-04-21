@@ -4,7 +4,7 @@ session_start();
 // Database connection with error handling
 require_once 'db_connection.php';
 
-$conn = getConnection();
+$conn = createDatabaseConnection();
 $leadership = [];
 $testimonials = [];
 $stats = ['ministries' => 6, 'members' => 500, 'events' => 50, 'years' => 15];

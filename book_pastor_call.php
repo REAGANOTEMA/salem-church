@@ -15,7 +15,7 @@ $is_logged_in = false;
 $user_email = '';
 
 // Initialize database connection
-$conn = getConnection();
+$conn = createDatabaseConnection();
 
 // Get pastor availability and existing bookings
 try {
@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             // Reconnect to database for form submission
-            $conn = getConnection();
+            $conn = createDatabaseConnection();
             if ($conn) {
                 // Check if slot is available
                 $check_slot = $conn->prepare("SELECT id FROM pastor_bookings WHERE date = ? AND start_time = ? AND status != 'cancelled'");
