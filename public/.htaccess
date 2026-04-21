@@ -1,0 +1,11 @@
+# Allow access to images
+<Files "logo-icon.jpeg">
+    Order allow,deny
+    Allow from all
+</Files>
+
+# General image handling
+<FilesMatch "\.(jpg|jpeg|png|gif)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>

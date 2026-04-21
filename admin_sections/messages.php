@@ -2,6 +2,9 @@
 // Get global database connection
 $conn = $GLOBALS['admin_db_connection'] ?? null;
 
+// Get admin logo configuration
+require_once 'logo_config.php';
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     if (isset($_POST['action'])) {
@@ -91,7 +94,7 @@ if ($conn) {
 <?php endif; ?>
 
 <div class="content-header">
-    <h1 class="page-title"><?php echo getLogoImg(30, 30, 'margin-right: 10px'); ?>Message Management</h1>
+    <h1 class="page-title"><?php echo getAdminLogoImg(30, 30, 'margin-right: 10px'); ?>Message Management</h1>
     <p class="page-subtitle">Manage and respond to user messages and inquiries</p>
 </div>
 
@@ -99,7 +102,7 @@ if ($conn) {
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo count($messages); ?></div>
         <div class="stat-label">Total Messages</div>
@@ -107,7 +110,7 @@ if ($conn) {
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo count(array_filter($messages, fn($m) => $m['status'] === 'read')); ?></div>
         <div class="stat-label">Read</div>
@@ -115,7 +118,7 @@ if ($conn) {
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo count(array_filter($messages, fn($m) => $m['status'] === 'unread')); ?></div>
         <div class="stat-label">Unread</div>
@@ -123,7 +126,7 @@ if ($conn) {
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo count(array_filter($messages, fn($m) => $m['status'] === 'replied')); ?></div>
         <div class="stat-label">Replied</div>

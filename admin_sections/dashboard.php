@@ -1,6 +1,9 @@
 <?php
 // ADMIN DASHBOARD SECTION - Salem Dominion Ministries
 // Overview and statistics
+
+// Get admin logo configuration
+require_once 'logo_config.php';
 ?>
 
 <div class="content-header">
@@ -12,7 +15,7 @@
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo number_format($stats['sermons']); ?></div>
         <div class="stat-label">Total Sermons</div>
@@ -20,7 +23,7 @@
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo number_format($engagement_stats['sermon_views']); ?></div>
         <div class="stat-label">Sermon Views</div>
@@ -28,7 +31,7 @@
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo number_format($engagement_stats['sermon_reactions'] + $engagement_stats['gallery_reactions']); ?></div>
         <div class="stat-label">Total Reactions</div>
@@ -36,7 +39,7 @@
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo number_format($engagement_stats['sermon_comments'] + $engagement_stats['gallery_comments']); ?></div>
         <div class="stat-label">Total Comments</div>
@@ -44,7 +47,7 @@
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo number_format($engagement_stats['avg_testimonial_rating'], 1); ?></div>
         <div class="stat-label">Avg Rating</div>

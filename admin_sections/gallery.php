@@ -1,7 +1,9 @@
 <?php
 // Get global database connection
-require_once '../db_connection.php';
 $conn = $GLOBALS['admin_db_connection'] ?? null;
+
+// Get admin logo configuration
+require_once 'logo_config.php';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
@@ -155,7 +157,7 @@ if ($conn) {
 <?php endif; ?>
 
 <div class="content-header">
-    <h1 class="page-title"><?php echo getLogoImg(30, 30, 'margin-right: 10px'); ?>Gallery Management</h1>
+    <h1 class="page-title"><?php echo getAdminLogoImg(30, 30, 'margin-right: 10px'); ?>Gallery Management</h1>
     <p class="page-subtitle">Upload and manage multimedia content for the church gallery</p>
 </div>
 

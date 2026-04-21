@@ -2,6 +2,9 @@
 // Get global database connection
 $conn = $GLOBALS['admin_db_connection'] ?? null;
 
+// Get admin logo configuration
+require_once 'logo_config.php';
+
 // Get users from database
 $users = [];
 if ($conn) {
@@ -17,7 +20,7 @@ if ($conn) {
 ?>
 
 <div class="content-header">
-    <h1 class="page-title"><?php echo getLogoImg(30, 30, 'margin-right: 10px'); ?>Users Management</h1>
+    <h1 class="page-title"><?php echo getAdminLogoImg(30, 30, 'margin-right: 10px'); ?>Users Management</h1>
     <p class="page-subtitle">Manage user accounts and permissions</p>
 </div>
 
@@ -25,7 +28,7 @@ if ($conn) {
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo count($users); ?></div>
         <div class="stat-label">Total Users</div>
@@ -33,7 +36,7 @@ if ($conn) {
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo count(array_filter($users, fn($u) => $u['is_active'] == 1)); ?></div>
         <div class="stat-label">Active Users</div>
@@ -41,7 +44,7 @@ if ($conn) {
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php echo count(array_filter($users, fn($u) => $u['is_active'] == 0)); ?></div>
         <div class="stat-label">Inactive Users</div>
@@ -49,7 +52,7 @@ if ($conn) {
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getLogoImg(40, 40); ?>
+            <?php echo getAdminLogoImg(40, 40); ?>
         </div>
         <div class="stat-number"><?php 
             echo count(array_filter($users, fn($u) => 

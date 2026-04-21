@@ -2,6 +2,9 @@
 // Get global database connection
 $conn = $GLOBALS['admin_db_connection'] ?? null;
 
+// Get admin logo configuration
+require_once 'logo_config.php';
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     if (isset($_POST['action'])) {
@@ -85,7 +88,7 @@ if ($conn) {
 <?php endif; ?>
 
 <div class="content-header">
-    <h1 class="page-title"><?php echo getLogoImg(30, 30, 'margin-right: 10px'); ?>Event Management</h1>
+    <h1 class="page-title"><?php echo getAdminLogoImg(30, 30, 'margin-right: 10px'); ?>Event Management</h1>
     <p class="page-subtitle">Create and manage church events with scheduling and details</p>
 </div>
 

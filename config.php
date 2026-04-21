@@ -97,7 +97,6 @@ if (!defined('DB_NAME') && isset($_ENV['DB_NAME'])) {
 
 // Church Branding
 define('CHURCH_NAME', 'Salem Dominion Ministries');
-define('CHURCH_LOGO', 'public/logo-icon.jpeg');
 define('CHURCH_PASTOR', 'Pastor Faty Musasizi');
 
 // Dynamic website URL for different environments
