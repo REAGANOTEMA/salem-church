@@ -1,8 +1,9 @@
 <?php
 // GALLERY PAGE - Salem Dominion Ministries - Professional & Mobile Responsive
 require_once 'db_connection.php';
+require_once 'config.php';
 
-$conn = getConnection();
+$conn = createDatabaseConnection();
 
 // Pagination and filtering
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
@@ -19,85 +20,95 @@ $categories = [];
 
 try {
     if ($conn) {
-        // Get categories
-        $categories_stmt = $conn->prepare("SELECT DISTINCT category FROM gallery WHERE category IS NOT NULL AND category != '' AND status = 'published' ORDER BY category");
-        if ($categories_stmt) {
-            $categories_stmt->execute();
-            $categories_result = $categories_stmt->get_result();
-            $categories = $categories_result->fetch_all(MYSQLI_ASSOC);
-            $categories_stmt->close();
-        }
-        
-        // Get gallery items with proper error handling
-        $query = "SELECT g.*, CONCAT(u.first_name, ' ', u.last_name) as uploader_name 
-                  FROM gallery g 
-                  LEFT JOIN users u ON g.uploaded_by = u.id 
-                  WHERE g.status = 'published'";
-        
-        $params = [];
-        $types = '';
-        
-        if ($category_filter) {
-            $query .= " AND g.category = ?";
-            $params[] = $category_filter;
-            $types .= 's';
-        }
-        
-        if ($search) {
-            $query .= " AND (g.title LIKE ? OR g.description LIKE ?)";
-            $search_param = "%$search%";
-            $params[] = $search_param;
-            $params[] = $search_param;
-            $types .= 'ss';
-        }
-        
-        $query .= " ORDER BY g.created_at DESC LIMIT ? OFFSET ?";
-        $params[] = $per_page;
-        $params[] = $offset;
-        $types .= 'ii';
-        
-        $stmt = $conn->prepare($query);
-        if ($stmt) {
-            if (!empty($params)) {
-                $stmt->bind_param($types, ...$params);
+        // Check if gallery table exists
+        $table_check = $conn->query("SHOW TABLES LIKE 'gallery'");
+        if ($table_check && $table_check->num_rows > 0) {
+            // Get categories
+            $categories_stmt = $conn->prepare("SELECT DISTINCT category FROM gallery WHERE category IS NOT NULL AND category != '' AND status = 'published' ORDER BY category");
+            if ($categories_stmt) {
+                $categories_stmt->execute();
+                $categories_result = $categories_stmt->get_result();
+                $categories = $categories_result->fetch_all(MYSQLI_ASSOC);
+                $categories_stmt->close();
             }
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $gallery_items = $result->fetch_all(MYSQLI_ASSOC);
-            $stmt->close();
-        }
-        
-        // Get total count for pagination
-        $count_query = "SELECT COUNT(*) as total FROM gallery WHERE status = 'published'";
-        $count_params = [];
-        $count_types = '';
-        
-        if ($category_filter) {
-            $count_query .= " AND category = ?";
-            $count_params[] = $category_filter;
-            $count_types .= 's';
-        }
-        
-        if ($search) {
-            $count_query .= " AND (title LIKE ? OR description LIKE ?)";
-            $search_param = "%$search%";
-            $count_params[] = $search_param;
-            $count_params[] = $search_param;
-            $count_types .= 'ss';
-        }
-        
-        $count_stmt = $conn->prepare($count_query);
-        if ($count_stmt) {
-            if (!empty($count_params)) {
-                $count_stmt->bind_param($count_types, ...$count_params);
+            
+            // Get gallery items with proper error handling
+            $query = "SELECT g.*, CONCAT(u.first_name, ' ', u.last_name) as uploader_name 
+                      FROM gallery g 
+                      LEFT JOIN users u ON g.uploaded_by = u.id 
+                      WHERE g.status = 'published'";
+            
+            $params = [];
+            $types = '';
+            
+            if ($category_filter) {
+                $query .= " AND g.category = ?";
+                $params[] = $category_filter;
+                $types .= 's';
             }
-            $count_stmt->execute();
-            $count_result = $count_stmt->get_result();
-            $total_items = $count_result->fetch_assoc()['total'];
-            $count_stmt->close();
+            
+            if ($search) {
+                $query .= " AND (g.title LIKE ? OR g.description LIKE ?)";
+                $search_param = "%$search%";
+                $params[] = $search_param;
+                $params[] = $search_param;
+                $types .= 'ss';
+            }
+            
+            $query .= " ORDER BY g.created_at DESC LIMIT ? OFFSET ?";
+            $params[] = $per_page;
+            $params[] = $offset;
+            $types .= 'ii';
+            
+            $stmt = $conn->prepare($query);
+            if ($stmt) {
+                if (!empty($params)) {
+                    $stmt->bind_param($types, ...$params);
+                }
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $gallery_items = $result->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+            }
+            
+            // Get total count for pagination
+            $count_query = "SELECT COUNT(*) as total FROM gallery WHERE status = 'published'";
+            $count_params = [];
+            $count_types = '';
+            
+            if ($category_filter) {
+                $count_query .= " AND category = ?";
+                $count_params[] = $category_filter;
+                $count_types .= 's';
+            }
+            
+            if ($search) {
+                $count_query .= " AND (title LIKE ? OR description LIKE ?)";
+                $search_param = "%$search%";
+                $count_params[] = $search_param;
+                $count_params[] = $search_param;
+                $count_types .= 'ss';
+            }
+            
+            $count_stmt = $conn->prepare($count_query);
+            if ($count_stmt) {
+                if (!empty($count_params)) {
+                    $count_stmt->bind_param($count_types, ...$count_params);
+                }
+                $count_stmt->execute();
+                $count_result = $count_stmt->get_result();
+                $total_items = $count_result->fetch_assoc()['total'];
+                $count_stmt->close();
+            }
+            
+            $total_pages = ceil($total_items / $per_page);
+        } else {
+            // Gallery table doesn't exist, set empty defaults
+            $gallery_items = [];
+            $total_items = 0;
+            $total_pages = 1;
+            $categories = [];
         }
-        
-        $total_pages = ceil($total_items / $per_page);
         
         $conn->close();
     }
@@ -119,14 +130,14 @@ function format_gallery_date($date) {
 }
 
 // Helper function to get media icon
-function get_media_icon($media_type) {
+function get_media_icon($file_type) {
     $icons = [
         'image' => 'fa-image',
         'video' => 'fa-video',
         'audio' => 'fa-music',
         'document' => 'fa-file-alt'
     ];
-    return $icons[$media_type] ?? 'fa-file';
+    return $icons[$file_type] ?? 'fa-file';
 }
 ?>
 <!DOCTYPE html>
@@ -134,10 +145,11 @@ function get_media_icon($media_type) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com 'unsafe-inline'; style-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src <?php echo CSP_DEFAULT_SRC; ?>; script-src <?php echo CSP_SCRIPT_SRC; ?>; style-src <?php echo CSP_STYLE_SRC; ?>; font-src <?php echo CSP_FONT_SRC; ?>; img-src <?php echo CSP_IMG_SRC; ?>; connect-src <?php echo CSP_CONNECT_SRC; ?>">
     <title>Gallery | Salem Dominion Ministries</title>
     <meta name="description" content="Explore our gallery of events, services, and ministry moments at Salem Dominion Ministries">
     <link rel="icon" href="public/logo-icon.jpeg">
+    <link rel="shortcut icon" href="public/logo-icon.jpeg">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -697,18 +709,18 @@ function get_media_icon($media_type) {
             <?php if (!empty($gallery_items)): ?>
                 <div class="gallery-grid">
                     <?php foreach ($gallery_items as $item): ?>
-                        <div class="gallery-item" onclick="openLightbox('<?= safe_html($item['media_url']) ?>', '<?= safe_html($item['title']) ?>', '<?= safe_html($item['description']) ?>')">
+                        <div class="gallery-item" onclick="openLightbox('<?= safe_html($item['file_url']) ?>', '<?= safe_html($item['title']) ?>', '<?= safe_html($item['description']) ?>')">
                             <div class="gallery-media">
-                                <?php if ($item['media_type'] == 'image'): ?>
-                                    <img src="<?= safe_html($item['media_url']) ?>" alt="<?= safe_html($item['title']) ?>">
+                                <?php if ($item['file_type'] == 'image'): ?>
+                                    <img src="<?= safe_html($item['file_url']) ?>" alt="<?= safe_html($item['title']) ?>">
                                 <?php else: ?>
                                     <div class="media-icon">
-                                        <i class="fas <?= get_media_icon($item['media_type']) ?> fa-3x"></i>
+                                        <i class="fas <?= get_media_icon($item['file_type']) ?> fa-3x"></i>
                                     </div>
                                 <?php endif; ?>
                                 <div class="media-overlay">
-                                    <i class="fas <?= get_media_icon($item['media_type']) ?>"></i>
-                                    <span><?= safe_html($item['media_type']) ?></span>
+                                    <i class="fas <?= get_media_icon($item['file_type']) ?>"></i>
+                                    <span><?= safe_html($item['file_type']) ?></span>
                                 </div>
                             </div>
                             <div class="gallery-content">

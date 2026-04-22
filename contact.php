@@ -28,10 +28,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
         try {
             if ($conn) {
-                // Save contact message to database
-                $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, phone, subject, message, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+                // Save contact message to database using messages table
+                $stmt = $conn->prepare("INSERT INTO messages (sender_id, recipient_id, subject, message, message_type, status, priority, created_at) VALUES (?, ?, ?, ?, 'user_to_admin', 'unread', 'normal', NOW())");
                 if ($stmt) {
-                    $stmt->bind_param("sssss", $name, $email, $phone, $subject, $message);
+                    // Set sender_id as 0 for anonymous contact form submissions
+                    $sender_id = 0;
+                    // Set recipient_id as NULL (will be seen by all admins)
+                    $recipient_id = null;
+                    
+                    // Include contact info in the message
+                    $full_message = "Name: $name\nEmail: $email\nPhone: $phone\n\nMessage:\n$message";
+                    
+                    $stmt->bind_param("iiss", $sender_id, $recipient_id, $subject, $full_message);
                     $stmt->execute();
                     $stmt->close();
                     

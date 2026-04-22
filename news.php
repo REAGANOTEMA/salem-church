@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         case 'get_news_detail':
             $news_id = intval($_POST['news_id']);
             try {
-                $conn = getConnection();
+                $conn = createDatabaseConnection();
                 $stmt = $conn->prepare("SELECT * FROM news WHERE id = ? AND status = 'published'");
                 $stmt->bind_param('i', $news_id);
                 $stmt->execute();
@@ -179,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             
             try {
-                $conn = getConnection();
+                $conn = createDatabaseConnection();
                 $stmt = $conn->prepare("INSERT INTO news (title, content, excerpt, category, status, created_at) VALUES (?, ?, ?, ?, 'published', NOW())");
                 $stmt->bind_param('ssss', $title, $content, $excerpt, $category);
                 $stmt->execute();
@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             
             $news_id = intval($_POST['news_id']);
             try {
-                $conn = getConnection();
+                $conn = createDatabaseConnection();
                 $stmt = $conn->prepare("DELETE FROM news WHERE id = ?");
                 $stmt->bind_param('i', $news_id);
                 $stmt->execute();
@@ -247,12 +247,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <meta name="twitter:image" content="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']; ?>/public/logo-icon.jpeg">
     <meta name="twitter:image:alt" content="Salem Dominion Ministries Logo">
     
-    <!-- Icons for All Devices - Using Church Logo -->
-    <link rel="icon" href="public/favicon.ico" sizes="any">
-    <link rel="icon" type="image/jpeg" sizes="16x16" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="32x32" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="192x192" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="512x512" href="public/logo-icon.jpeg">
+    <!-- Favicon - Church Logo Only -->
+    <link rel="icon" href="public/logo-icon.jpeg">
     <link rel="shortcut icon" href="public/logo-icon.jpeg">
     
     <!-- PWA Meta Tags -->
@@ -262,9 +258,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Salem Ministries">
-    <link rel="apple-touch-icon" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="192x192" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="512x512" href="public/logo-icon.jpeg">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">

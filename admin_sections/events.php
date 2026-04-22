@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $category = $_POST['category'] ?? '';
                 
                 if (!empty($title) && !empty($event_date)) {
-                    $stmt = $conn->prepare("INSERT INTO events (title, description, event_date, event_time, location, category, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+                    $stmt = $conn->prepare("INSERT INTO events (title, description, event_date, event_time, location, category, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'upcoming', NOW())");
                     if ($stmt) {
                         $stmt->bind_param("ssssss", $title, $description, $event_date, $event_time, $location, $category);
                         $stmt->execute();

@@ -3,7 +3,7 @@
 require_once 'config.php';
 require_once 'db_connection.php';
 
-$conn = getConnection();
+$conn = createDatabaseConnection();
 
 // Initialize variables
 $errors = [];
@@ -30,10 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
         try {
             if ($conn) {
-                $stmt = $conn->prepare("INSERT INTO testimonials (name, email, occupation, testimonial, rating, is_approved) VALUES (?, ?, ?, ?, ?, FALSE)");
+                $stmt = $conn->prepare("INSERT INTO testimonials (name, email, occupation, testimonial, rating, status) VALUES (?, ?, ?, ?, ?, 'pending')");
                 if ($stmt) {
-                    $stmt->bind_param("ssssii", $name, $email, $occupation, $testimonial, $rating, $is_approved);
-                    $is_approved = 0;
+                    $stmt->bind_param("ssssi", $name, $email, $occupation, $testimonial, $rating);
                     $stmt->execute();
                     $stmt->close();
                     $success = 'Thank you for sharing your testimony! It will be reviewed and published soon.';
@@ -48,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     if ($conn) {
         // Get featured testimonials
-        $featured_stmt = $conn->prepare("SELECT * FROM testimonials WHERE is_approved = 1 AND is_featured = 1 ORDER BY rating DESC, created_at DESC LIMIT 6");
+        $featured_stmt = $conn->prepare("SELECT * FROM testimonials WHERE status = 'approved' AND is_featured = 1 ORDER BY rating DESC, submitted_at DESC LIMIT 6");
         if ($featured_stmt) {
             $featured_stmt->execute();
             $featured_result = $featured_stmt->get_result();
@@ -57,7 +56,7 @@ try {
         }
         
         // Get all approved testimonials
-        $all_stmt = $conn->prepare("SELECT * FROM testimonials WHERE is_approved = 1 ORDER BY created_at DESC");
+        $all_stmt = $conn->prepare("SELECT * FROM testimonials WHERE status = 'approved' ORDER BY submitted_at DESC");
         if ($all_stmt) {
             $all_stmt->execute();
             $all_result = $all_stmt->get_result();
@@ -114,6 +113,7 @@ function render_star_rating($rating) {
     <title>Testimonials | Salem Dominion Ministries</title>
     <meta name="description" content="Read inspiring testimonies of God's faithfulness at Salem Dominion Ministries">
     <link rel="icon" href="public/logo-icon.jpeg">
+    <link rel="shortcut icon" href="public/logo-icon.jpeg">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">

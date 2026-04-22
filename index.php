@@ -145,47 +145,9 @@ if ($conn) {
     <!-- PWA Manifest -->
     <link rel="manifest" href="public/site.webmanifest">
     
-    <!-- Icons for All Devices - Using Church Logo -->
-    <link rel="icon" href="public/favicon.ico" sizes="any">
-    <link rel="icon" type="image/jpeg" sizes="16x16" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="32x32" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="48x48" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="64x64" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="128x128" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="192x192" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="256x256" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="512x512" href="public/logo-icon.jpeg">
+    <!-- Favicon - Church Logo Only -->
+    <link rel="icon" href="public/logo-icon.jpeg">
     <link rel="shortcut icon" href="public/logo-icon.jpeg">
-    
-    <!-- Apple Touch Icons - Church Logo -->
-    <link rel="apple-touch-icon" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="57x57" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="60x60" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="72x72" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="76x76" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="114x114" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="120x120" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="144x144" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="152x152" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="167x167" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="180x180" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="192x192" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="384x384" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="512x512" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-startup-image" href="public/logo-icon.jpeg">
-    
-    <!-- iOS Specific -->
-    <link rel="apple-touch-icon-precomposed" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon-precomposed" sizes="167x167" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="public/logo-icon.jpeg">
     
     <!-- Android Specific -->
     <meta name="theme-color" content="#fbbf24">

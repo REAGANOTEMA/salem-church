@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $author = $_POST['author'] ?? 'Admin';
                 
                 if (!empty($title) && !empty($content)) {
-                    $stmt = $conn->prepare("INSERT INTO news (title, content, category, author, created_at) VALUES (?, ?, ?, ?, NOW())");
+                    $stmt = $conn->prepare("INSERT INTO news (title, content, category, author, status, created_at) VALUES (?, ?, ?, ?, 'published', NOW())");
                     if ($stmt) {
                         $stmt->bind_param("ssss", $title, $content, $category, $author);
                         $stmt->execute();

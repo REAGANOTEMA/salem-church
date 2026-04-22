@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 $messages = [];
 if ($conn) {
     try {
-        $result = $conn->query("SELECT m.*, u.name as sender_name, u.email as sender_email 
+        $result = $conn->query("SELECT m.*, CONCAT(u.first_name, ' ', u.last_name) as sender_name, u.email as sender_email 
                                  FROM messages m 
                                  LEFT JOIN users u ON m.sender_id = u.id 
                                  ORDER BY m.created_at DESC LIMIT 20");

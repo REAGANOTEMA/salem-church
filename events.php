@@ -94,12 +94,8 @@ function get_event_status_badge($status) {
     <title>Events | Salem Dominion Ministries</title>
     <meta name="description" content="Join us for life-changing events at Salem Dominion Ministries">
     
-    <!-- Favicon - Church Logo -->
-    <link rel="icon" href="public/favicon.ico" sizes="any">
-    <link rel="icon" type="image/jpeg" sizes="16x16" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="32x32" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="192x192" href="public/logo-icon.jpeg">
-    <link rel="icon" type="image/jpeg" sizes="512x512" href="public/logo-icon.jpeg">
+    <!-- Favicon - Church Logo Only -->
+    <link rel="icon" href="public/logo-icon.jpeg">
     <link rel="shortcut icon" href="public/logo-icon.jpeg">
     
     <!-- Bootstrap CSS -->

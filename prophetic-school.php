@@ -2,7 +2,7 @@
 require_once 'config.php';
 require_once 'db_connection.php';
 
-$conn = getConnection();
+$conn = createDatabaseConnection();
 
 // Initialize variables
 $errors = [];
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         try {
-            $conn = getConnection();
+            $conn = createDatabaseConnection();
             if (!$conn) {
                 $errors[] = 'Database connection failed. Please try again later.';
             } else {

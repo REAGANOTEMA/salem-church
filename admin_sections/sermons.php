@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $audio_url = $_POST['audio_url'] ?? '';
                 
                 if (!empty($title)) {
-                    $stmt = $conn->prepare("INSERT INTO sermons (title, category, description, content, video_url, audio_url, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+                    $stmt = $conn->prepare("INSERT INTO sermons (title, category, description, content, video_url, audio_url, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'published', NOW())");
                     if ($stmt) {
                         $stmt->bind_param("ssssss", $title, $category, $description, $content, $video_url, $audio_url);
                         $stmt->execute();
