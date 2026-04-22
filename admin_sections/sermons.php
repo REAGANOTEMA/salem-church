@@ -1,6 +1,11 @@
 <?php
-// Get global database connection
+// Get database connection - ensure it's properly established
 $conn = $GLOBALS['admin_db_connection'] ?? null;
+if (!$conn) {
+    // Try to create a new connection if global is not available
+    require_once '../db_connection.php';
+    $conn = createDatabaseConnection();
+}
 
 // Get admin logo configuration
 require_once 'logo_config.php';

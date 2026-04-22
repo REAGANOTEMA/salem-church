@@ -1,15 +1,63 @@
 <?php
-// Get global database connection
+// Get database connection - ensure it's properly established
 $conn = $GLOBALS['admin_db_connection'] ?? null;
+if (!$conn) {
+    // Try to create a new connection if global is not available
+    require_once '../db_connection.php';
+    $conn = createDatabaseConnection();
+}
 
 // Get admin logo configuration
 require_once 'logo_config.php';
+
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
+    if (isset($_POST['action'])) {
+        switch ($_POST['action']) {
+            case 'approve_testimonial':
+                $id = $_POST['id'] ?? '';
+                if (!empty($id)) {
+                    $stmt = $conn->prepare("UPDATE testimonials SET status='approved', approved_at=NOW(), approved_by=1 WHERE id=?");
+                    if ($stmt) {
+                        $stmt->bind_param("i", $id);
+                        $stmt->execute();
+                        $success = "Testimonial approved successfully!";
+                    }
+                }
+                break;
+                
+            case 'reject_testimonial':
+                $id = $_POST['id'] ?? '';
+                if (!empty($id)) {
+                    $stmt = $conn->prepare("UPDATE testimonials SET status='rejected' WHERE id=?");
+                    if ($stmt) {
+                        $stmt->bind_param("i", $id);
+                        $stmt->execute();
+                        $success = "Testimonial rejected successfully!";
+                    }
+                }
+                break;
+                
+            case 'delete_testimonial':
+                $id = $_POST['id'] ?? '';
+                if (!empty($id)) {
+                    $stmt = $conn->prepare("DELETE FROM testimonials WHERE id=?");
+                    if ($stmt) {
+                        $stmt->bind_param("i", $id);
+                        $stmt->execute();
+                        $success = "Testimonial deleted successfully!";
+                    }
+                }
+                break;
+        }
+    }
+}
 
 // Get testimonials from database
 $testimonials = [];
 if ($conn) {
     try {
-        $result = $conn->query("SELECT * FROM testimonials ORDER BY created_at DESC LIMIT 20");
+        $result = $conn->query("SELECT * FROM testimonials ORDER BY submitted_at DESC LIMIT 20");
         if ($result) {
             $testimonials = $result->fetch_all(MYSQLI_ASSOC);
         }
@@ -38,7 +86,7 @@ if ($conn) {
         <div class="stat-icon">
             <?php echo getAdminLogoImg(40, 40); ?>
         </div>
-        <div class="stat-number"><?php echo count(array_filter($testimonials, fn($t) => $t['is_approved'] == 1)); ?></div>
+        <div class="stat-number"><?php echo count(array_filter($testimonials, fn($t) => $t['status'] == 'approved')); ?></div>
         <div class="stat-label">Approved</div>
     </div>
     
@@ -46,7 +94,7 @@ if ($conn) {
         <div class="stat-icon">
             <?php echo getAdminLogoImg(40, 40); ?>
         </div>
-        <div class="stat-number"><?php echo count(array_filter($testimonials, fn($t) => $t['is_approved'] == 0)); ?></div>
+        <div class="stat-number"><?php echo count(array_filter($testimonials, fn($t) => $t['status'] == 'pending')); ?></div>
         <div class="stat-label">Pending</div>
     </div>
 </div>

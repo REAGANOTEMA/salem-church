@@ -17,6 +17,7 @@ if (!isset($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true)
 $conn = createDatabaseConnection();
 $user_id = $_SESSION['user_id'];
 $user_info = null;
+$unread_messages = 0;
 
 // Get user information
 if ($conn) {
@@ -29,6 +30,18 @@ if ($conn) {
             $user_info = $user_result->fetch_assoc();
         }
         $user_stmt->close();
+    }
+    
+    // Get unread messages count
+    $msg_stmt = $conn->prepare("SELECT COUNT(*) as count FROM messages WHERE recipient_id = ? AND status = 'unread'");
+    if ($msg_stmt) {
+        $msg_stmt->bind_param("i", $user_id);
+        $msg_stmt->execute();
+        $msg_result = $msg_stmt->get_result();
+        if ($msg_result->num_rows > 0) {
+            $unread_messages = $msg_result->fetch_assoc()['count'];
+        }
+        $msg_stmt->close();
     }
 }
 
@@ -664,6 +677,11 @@ function safe_html($string, $default = '') {
                         <a class="nav-link active" href="dashboard.php">Dashboard</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="messages.php">
+                            <i class="fas fa-envelope me-1"></i>Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="sermons.php">Sermons</a>
                     </li>
                     <li class="nav-item">
@@ -778,6 +796,42 @@ function safe_html($string, $default = '') {
                             
                             <div class="text-center mt-3">
                                 <small class="text-muted">Score: <span id="quizScore">0</span> / <span id="totalQuestions">0</span></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                        <h2 class="section-title">
+                            <i class="fas fa-envelope"></i>
+                            Messages
+                            <?php if ($unread_messages > 0): ?>
+                                <span class="badge bg-danger ms-2"><?php echo $unread_messages; ?></span>
+                            <?php endif; ?>
+                        </h2>
+                        
+                        <div class="messages-container">
+                            <?php if ($unread_messages > 0): ?>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-bell me-2"></i>
+                                    You have <?php echo $unread_messages; ?> unread message<?php echo $unread_messages > 1 ? 's' : ''; ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    No new messages
+                                </div>
+                            <?php endif; ?>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="messages.php" class="btn btn-primary">
+                                    <i class="fas fa-inbox me-2"></i>View Messages
+                                </a>
+                                <a href="messages.php" class="btn btn-outline-primary">
+                                    <i class="fas fa-pen me-2"></i>Compose Message
+                                </a>
                             </div>
                         </div>
                     </div>

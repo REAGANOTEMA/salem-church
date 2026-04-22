@@ -1,6 +1,11 @@
 <?php
-// Get global database connection
+// Get database connection - ensure it's properly established
 $conn = $GLOBALS['admin_db_connection'] ?? null;
+if (!$conn) {
+    // Try to create a new connection if global is not available
+    require_once '../db_connection.php';
+    $conn = createDatabaseConnection();
+}
 
 // Get admin logo configuration
 require_once 'logo_config.php';
@@ -18,9 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $category = $_POST['category'] ?? '';
                 
                 if (!empty($title) && !empty($event_date)) {
-                    $stmt = $conn->prepare("INSERT INTO events (title, description, event_date, event_time, location, category, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'upcoming', NOW())");
+                    $stmt = $conn->prepare("INSERT INTO events (title, description, event_date, event_time, location, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, 'upcoming', 1, NOW())");
                     if ($stmt) {
-                        $stmt->bind_param("ssssss", $title, $description, $event_date, $event_time, $location, $category);
+                        $stmt->bind_param("sssss", $title, $description, $event_date, $event_time, $location);
                         $stmt->execute();
                         $success = "Event added successfully!";
                     }
@@ -37,9 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                 $category = $_POST['category'] ?? '';
                 
                 if (!empty($id) && !empty($title)) {
-                    $stmt = $conn->prepare("UPDATE events SET title=?, description=?, event_date=?, event_time=?, location=?, category=? WHERE id=?");
+                    $stmt = $conn->prepare("UPDATE events SET title=?, description=?, event_date=?, event_time=?, location=? WHERE id=?");
                     if ($stmt) {
-                        $stmt->bind_param("ssssssi", $title, $description, $event_date, $event_time, $location, $category, $id);
+                        $stmt->bind_param("sssssi", $title, $description, $event_date, $event_time, $location, $id);
                         $stmt->execute();
                         $success = "Event updated successfully!";
                     }

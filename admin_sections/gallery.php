@@ -1,6 +1,11 @@
 <?php
-// Get global database connection
+// Get database connection - ensure it's properly established
 $conn = $GLOBALS['admin_db_connection'] ?? null;
+if (!$conn) {
+    // Try to create a new connection if global is not available
+    require_once '../db_connection.php';
+    $conn = createDatabaseConnection();
+}
 
 // Get admin logo configuration
 require_once 'logo_config.php';
@@ -44,9 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
                     
                     if ($upload_ok === 1) {
                         if (move_uploaded_file($media_file['tmp_name'], $target_file)) {
-                            $stmt = $conn->prepare("INSERT INTO gallery (title, description, category, file_type, file_url, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+                            $stmt = $conn->prepare("INSERT INTO gallery (title, description, category, file_type, file_url, status, uploaded_by, created_at) VALUES (?, ?, ?, ?, ?, 'published', 1, NOW())");
                             if ($stmt) {
-                                $stmt->bind_param("ssssss", $title, $description, $category, $media_type, $target_file);
+                                $stmt->bind_param("sssss", $title, $description, $category, $media_type, $target_file);
                                 $stmt->execute();
                                 $success = "Gallery item added successfully!";
                             }
