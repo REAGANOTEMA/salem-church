@@ -6,6 +6,7 @@
 
 // Include configuration
 require_once 'config.php';
+require_once 'hosting_config.php';
 
 // Universal environment detection
 function isLocalhost() {
@@ -180,14 +181,17 @@ function getEmergencyDatabaseConfigs() {
 
 // Create actual database connection by testing all configurations
 function createDatabaseConnection() {
-    // First try hosting platform configuration with provided credentials
+    // First try hosting platform configuration from hosting_config.php
     try {
-        $hosting_conn = new mysqli('localhost', 'salemdominionmin_db', 'CtYeTnGktDxy9UvdtZJF', 'salemdominionmin_db', 3306);
-        if (!$hosting_conn->connect_error) {
-            // Test database access
-            $test_result = $hosting_conn->query("SELECT 1");
-            if ($test_result) {
-                return $hosting_conn; // Hosting connection successful
+        if (function_exists('getHostingDatabaseConfig')) {
+            $hosting_config = getHostingDatabaseConfig();
+            $hosting_conn = new mysqli($hosting_config['host'], $hosting_config['user'], $hosting_config['pass'], $hosting_config['name'], $hosting_config['port']);
+            if (!$hosting_conn->connect_error) {
+                // Test database access
+                $test_result = $hosting_conn->query("SELECT 1");
+                if ($test_result) {
+                    return $hosting_conn; // Hosting connection successful
+                }
             }
         }
     } catch (Exception $e) {

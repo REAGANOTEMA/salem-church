@@ -57,18 +57,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 $testimonials = [];
 if ($conn) {
     try {
-        $result = $conn->query("SELECT * FROM testimonials ORDER BY submitted_at DESC LIMIT 20");
-        if ($result) {
-            $testimonials = $result->fetch_all(MYSQLI_ASSOC);
+        // First check if testimonials table exists
+        $table_check = $conn->query("SHOW TABLES LIKE 'testimonials'");
+        if ($table_check && $table_check->num_rows > 0) {
+            $result = $conn->query("SELECT * FROM testimonials ORDER BY submitted_at DESC LIMIT 20");
+            if ($result) {
+                $testimonials = $result->fetch_all(MYSQLI_ASSOC);
+            }
+        } else {
+            // Create testimonials table if it doesn't exist
+            $create_table = $conn->query("CREATE TABLE IF NOT EXISTS testimonials (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255),
+                occupation VARCHAR(255),
+                testimonial TEXT NOT NULL,
+                rating INT DEFAULT 5,
+                status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+                is_featured BOOLEAN DEFAULT FALSE,
+                approved_at TIMESTAMP NULL,
+                approved_by INT DEFAULT 1,
+                submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )");
+            
+            if ($create_table) {
+                $result = $conn->query("SELECT * FROM testimonials ORDER BY submitted_at DESC LIMIT 20");
+                if ($result) {
+                    $testimonials = $result->fetch_all(MYSQLI_ASSOC);
+                }
+            }
         }
     } catch (Exception $e) {
         $error = 'Failed to fetch testimonials: ' . $e->getMessage();
     }
+} else {
+    $error = 'Database connection failed';
 }
 ?>
 
 <div class="content-header">
-    <h1 class="page-title"><?php echo getAdminLogoImg(30, 30, 'margin-right: 10px'); ?>Testimonial Management</h1>
+    <h1 class="page-title"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/8A8A" alt="Salem Dominion Ministries" style="width: 30px; height: 30px; margin-right: 10px;">Testimonial Management</h1>
     <p class="page-subtitle">Review and approve user testimonials for the church website</p>
 </div>
 
@@ -76,7 +105,7 @@ if ($conn) {
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getAdminLogoImg(40, 40); ?>
+            <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/8A8A" alt="Salem Dominion Ministries" style="width: 40px; height: 40px;">
         </div>
         <div class="stat-number"><?php echo count($testimonials); ?></div>
         <div class="stat-label">Total Testimonials</div>
@@ -84,7 +113,7 @@ if ($conn) {
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getAdminLogoImg(40, 40); ?>
+            <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/8A8A" alt="Salem Dominion Ministries" style="width: 40px; height: 40px;">
         </div>
         <div class="stat-number"><?php echo count(array_filter($testimonials, fn($t) => $t['status'] == 'approved')); ?></div>
         <div class="stat-label">Approved</div>
@@ -92,7 +121,7 @@ if ($conn) {
     
     <div class="stat-card">
         <div class="stat-icon">
-            <?php echo getAdminLogoImg(40, 40); ?>
+            <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/8A8A" alt="Salem Dominion Ministries" style="width: 40px; height: 40px;">
         </div>
         <div class="stat-number"><?php echo count(array_filter($testimonials, fn($t) => $t['status'] == 'pending')); ?></div>
         <div class="stat-label">Pending</div>

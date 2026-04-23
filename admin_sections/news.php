@@ -62,17 +62,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     }
 }
 
-// Get news articles from database
-$news_articles = [];
+// Get news from database
+$news = [];
 if ($conn) {
     try {
-        $result = $conn->query("SELECT * FROM news ORDER BY created_at DESC LIMIT 20");
-        if ($result) {
-            $news_articles = $result->fetch_all(MYSQLI_ASSOC);
+        // First check if news table exists
+        $table_check = $conn->query("SHOW TABLES LIKE 'news'");
+        if ($table_check && $table_check->num_rows > 0) {
+            $result = $conn->query("SELECT * FROM news ORDER BY created_at DESC LIMIT 20");
+            if ($result) {
+                $news = $result->fetch_all(MYSQLI_ASSOC);
+            }
+        } else {
+            // Create news table if it doesn't exist
+            $create_table = $conn->query("CREATE TABLE IF NOT EXISTS news (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                category VARCHAR(100),
+                author VARCHAR(100) DEFAULT 'Admin',
+                status ENUM('published', 'draft', 'archived') DEFAULT 'published',
+                created_by INT DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )");
+            
+            if ($create_table) {
+                $result = $conn->query("SELECT * FROM news ORDER BY created_at DESC LIMIT 20");
+                if ($result) {
+                    $news = $result->fetch_all(MYSQLI_ASSOC);
+                }
+            }
         }
     } catch (Exception $e) {
-        $error = 'Failed to fetch news articles: ' . $e->getMessage();
+        $error = 'Failed to fetch news: ' . $e->getMessage();
     }
+} else {
+    $error = 'Database connection failed';
 }
 ?>
 
@@ -89,7 +115,7 @@ if ($conn) {
 <?php endif; ?>
 
 <div class="content-header">
-    <h1 class="page-title"><?php echo getAdminLogoImg(30, 30, 'margin-right: 10px'); ?>News Management</h1>
+    <h1 class="page-title"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/8A8A" alt="Salem Dominion Ministries" style="width: 30px; height: 30px; margin-right: 10px;">News Management</h1>
     <p class="page-subtitle">Create and manage news articles and announcements</p>
 </div>
 
@@ -156,10 +182,10 @@ if ($conn) {
             <i class="fas fa-list"></i>
             Published Articles
         </h3>
-        <span class="badge bg-primary"><?php echo count($news_articles); ?> Total</span>
+        <span class="badge bg-primary"><?php echo count($news); ?> Total</span>
     </div>
     
-    <?php if (empty($news_articles)): ?>
+    <?php if (empty($news)): ?>
         <div class="empty-state">
             <i class="fas fa-newspaper fa-3x mb-3"></i>
             <h4>No Articles Found</h4>
@@ -178,7 +204,7 @@ if ($conn) {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($news_articles as $article): ?>
+                    <?php foreach ($news as $article): ?>
                         <tr>
                             <td>
                                 <strong><?php echo htmlspecialchars($article['title']); ?></strong>

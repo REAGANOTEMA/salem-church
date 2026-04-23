@@ -7,6 +7,9 @@ $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : '
 $host = $_SERVER['HTTP_HOST'];
 $base_url = $protocol . '://' . $host;
 
+// Make base_url globally accessible
+$GLOBALS['base_url'] = $base_url;
+
 // Define logo paths for admin sections
 define('ADMIN_LOGO_DIRECT', $base_url . '/public/logo-icon.jpeg');
 define('ADMIN_LOGO_ROOT', $base_url . '/logo-icon.jpeg');
@@ -16,33 +19,14 @@ define('ADMIN_LOGO_FALLBACK', 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAA
 
 // Function to get admin logo URL with fallbacks
 function getAdminLogoUrl() {
-    // Try public/logo-icon.jpeg first (as requested)
-    if (file_exists('../public/logo-icon.jpeg') && is_readable('../public/logo-icon.jpeg')) {
-        return ADMIN_LOGO_DIRECT;
-    }
-    
-    // Try root-level logo
-    if (file_exists('../logo-icon.jpeg')) {
-        return ADMIN_LOGO_ROOT;
-    }
-    
-    // Try simple logo script
-    if (file_exists('../logo.php')) {
-        return ADMIN_LOGO_SIMPLE;
-    }
-    
-    // Try serve script
-    if (file_exists('../serve_logo.php')) {
-        return ADMIN_LOGO_SERVE;
-    }
-    
-    // Use base64 fallback (always works)
-    return ADMIN_LOGO_FALLBACK;
+    // Always use public/logo-icon.jpeg as requested
+    return $GLOBALS['base_url'] ?? 'http://localhost' . '/public/logo-icon.jpeg';
 }
 
 // Function to generate admin logo img tag
 function getAdminLogoImg($width = 30, $height = 30, $extra_style = '') {
-    $url = getAdminLogoUrl();
+    // Use simple relative path that works
+    $url = '../public/logo-icon.jpeg';
     $style = "width: {$width}px; height: {$height}px;" . ($extra_style ? " {$extra_style}" : "");
     return "<img src='{$url}' alt='Salem Dominion Ministries' style='{$style}'>";
 }

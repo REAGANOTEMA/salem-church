@@ -5,6 +5,34 @@ require_once 'config.php';
 
 $conn = createDatabaseConnection();
 
+// Handle comment submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_comment') {
+    $content_type = 'sermon';
+    $content_id = intval($_POST['content_id'] ?? 0);
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $comment = trim($_POST['comment'] ?? '');
+    $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
+    
+    $errors = [];
+    if (empty($name)) $errors[] = 'Name is required';
+    if (empty($comment)) $errors[] = 'Comment is required';
+    if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email address';
+    
+    if (empty($errors)) {
+        try {
+            $stmt = $conn->prepare("INSERT INTO comments (content_type, content_id, user_id, name, email, comment) VALUES (?, ?, ?, ?, ?, ?)");
+            if ($stmt) {
+                $stmt->bind_param("siisss", $content_type, $content_id, $user_id, $name, $email, $comment);
+                $stmt->execute();
+                $success = "Comment submitted successfully! It will be reviewed and published soon.";
+            }
+        } catch (Exception $e) {
+            $errors[] = "Failed to submit comment. Please try again.";
+        }
+    }
+}
+
 // Pagination and filtering
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 $per_page = 9;
@@ -20,6 +48,22 @@ $total_pages = 1;
 
 try {
     if ($conn) {
+        // Create comments table if it doesn't exist
+        $create_comments_table = $conn->query("CREATE TABLE IF NOT EXISTS comments (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            content_type ENUM('sermon', 'news', 'event', 'gallery', 'testimonial') NOT NULL,
+            content_id INT NOT NULL,
+            user_id INT,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255),
+            comment TEXT NOT NULL,
+            status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_content (content_type, content_id),
+            INDEX idx_status (status)
+        )");
+        
         // Get sermons with proper error handling
         $query = "SELECT s.*, CONCAT(u.first_name, ' ', u.last_name) as preacher_name 
                   FROM sermons s 
@@ -102,6 +146,22 @@ try {
             $series_result = $series_stmt->get_result();
             $sermon_series = $series_result->fetch_all(MYSQLI_ASSOC);
             $series_stmt->close();
+        }
+        
+        // Get comments for each sermon
+        foreach ($recent_sermons as &$sermon) {
+            $comment_stmt = $conn->prepare("SELECT * FROM comments WHERE content_type = 'sermon' AND content_id = ? AND status = 'approved' ORDER BY created_at DESC");
+            if ($comment_stmt) {
+                $comment_stmt->bind_param("i", $sermon['id']);
+                $comment_stmt->execute();
+                $comment_result = $comment_stmt->get_result();
+                $sermon['comments'] = $comment_result->fetch_all(MYSQLI_ASSOC);
+                $sermon['comment_count'] = count($sermon['comments']);
+                $comment_stmt->close();
+            } else {
+                $sermon['comments'] = [];
+                $sermon['comment_count'] = 0;
+            }
         }
         
         $conn->close();
@@ -676,6 +736,9 @@ function safe_html($string, $default = '') {
                                     <a href="#" class="btn btn-sermon">
                                         <i class="fas fa-download me-2"></i>Download
                                     </a>
+                                    <button class="btn btn-sermon" onclick="toggleComments(<?= $sermon['id'] ?>)">
+                                        <i class="fas fa-comments me-2"></i>Comments (<?= $sermon['comment_count'] ?>)
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -688,6 +751,69 @@ function safe_html($string, $default = '') {
                     <p>Check back soon for new sermons and teachings.</p>
                 </div>
             <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- Comments Section -->
+    <section class="comments-section" style="display: none;" id="comments-section">
+        <div class="container">
+            <div class="comment-container">
+                <h3 class="comments-title">
+                    <i class="fas fa-comments me-2"></i>Comments
+                </h3>
+                
+                <!-- Existing Comments -->
+                <div id="existing-comments">
+                    <!-- Comments will be loaded here dynamically -->
+                </div>
+                
+                <!-- Add Comment Form -->
+                <div class="comment-form">
+                    <h4>Leave a Comment</h4>
+                    <?php if (isset($errors) && !empty($errors)): ?>
+                        <div class="alert alert-danger">
+                            <?php foreach ($errors as $error): ?>
+                                <div><?= htmlspecialchars($error) ?></div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <?php if (isset($success)): ?>
+                        <div class="alert alert-success">
+                            <?= htmlspecialchars($success) ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <form method="POST" id="comment-form">
+                        <input type="hidden" name="action" value="add_comment">
+                        <input type="hidden" name="content_id" id="comment-content-id">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="name" class="form-label">Name *</label>
+                                    <input type="text" name="name" id="comment-name" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" name="email" id="comment-email" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="comment" class="form-label">Comment *</label>
+                            <textarea name="comment" id="comment-text" class="form-control" rows="4" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-sermon">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Comment
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -1038,5 +1164,115 @@ function safe_html($string, $default = '') {
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Store sermon data for comments
+        const sermonData = <?php echo json_encode($recent_sermons); ?>;
+        
+        function toggleComments(sermonId) {
+            const commentsSection = document.getElementById('comments-section');
+            const existingComments = document.getElementById('existing-comments');
+            const contentIdInput = document.getElementById('comment-content-id');
+            
+            // Set the content ID for the form
+            contentIdInput.value = sermonId;
+            
+            // Find the sermon data
+            const sermon = sermonData.find(s => s.id == sermonId);
+            
+            if (sermon) {
+                // Display existing comments
+                existingComments.innerHTML = '';
+                
+                if (sermon.comments && sermon.comments.length > 0) {
+                    sermon.comments.forEach(comment => {
+                        const commentHtml = `
+                            <div class="comment-item">
+                                <div class="comment-header">
+                                    <strong>${comment.name}</strong>
+                                    <span class="comment-date">${new Date(comment.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <div class="comment-content">${comment.comment}</div>
+                            </div>
+                        `;
+                        existingComments.innerHTML += commentHtml;
+                    });
+                } else {
+                    existingComments.innerHTML = '<p class="text-muted">No comments yet. Be the first to comment!</p>';
+                }
+                
+                // Show the comments section
+                commentsSection.style.display = 'block';
+                commentsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        // Add comment styles
+        const commentStyles = `
+            .comments-section {
+                background: rgba(255, 255, 255, 0.02);
+                padding: 60px 0;
+                margin-top: 40px;
+            }
+            
+            .comment-container {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(251, 191, 36, 0.3);
+                border-radius: 20px;
+                padding: 2rem;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            
+            .comments-title {
+                color: var(--heavenly-gold);
+                font-family: 'Playfair Display', serif;
+                font-size: 2rem;
+                margin-bottom: 2rem;
+                text-align: center;
+            }
+            
+            .comment-item {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 15px;
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+                border-left: 4px solid var(--heavenly-gold);
+            }
+            
+            .comment-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0.5rem;
+            }
+            
+            .comment-date {
+                color: rgba(255, 255, 255, 0.6);
+                font-size: 0.9rem;
+            }
+            
+            .comment-content {
+                line-height: 1.6;
+            }
+            
+            .comment-form {
+                margin-top: 2rem;
+                padding-top: 2rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .comment-form h4 {
+                color: var(--heavenly-gold);
+                margin-bottom: 1.5rem;
+            }
+        `;
+        
+        // Add styles to head
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = commentStyles;
+        document.head.appendChild(styleSheet);
+    </script>
 </body>
 </html>

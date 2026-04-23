@@ -139,13 +139,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 $gallery_items = [];
 if ($conn) {
     try {
-        $result = $conn->query("SELECT * FROM gallery ORDER BY created_at DESC LIMIT 20");
-        if ($result) {
-            $gallery_items = $result->fetch_all(MYSQLI_ASSOC);
+        // First check if gallery table exists
+        $table_check = $conn->query("SHOW TABLES LIKE 'gallery'");
+        if ($table_check && $table_check->num_rows > 0) {
+            $result = $conn->query("SELECT * FROM gallery ORDER BY created_at DESC LIMIT 20");
+            if ($result) {
+                $gallery_items = $result->fetch_all(MYSQLI_ASSOC);
+            }
+        } else {
+            // Create gallery table if it doesn't exist
+            $create_table = $conn->query("CREATE TABLE IF NOT EXISTS gallery (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                category VARCHAR(100),
+                file_type ENUM('image', 'video', 'audio') DEFAULT 'image',
+                file_url VARCHAR(500),
+                status ENUM('published', 'draft') DEFAULT 'published',
+                uploaded_by INT DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )");
+            
+            if ($create_table) {
+                $result = $conn->query("SELECT * FROM gallery ORDER BY created_at DESC LIMIT 20");
+                if ($result) {
+                    $gallery_items = $result->fetch_all(MYSQLI_ASSOC);
+                }
+            }
         }
     } catch (Exception $e) {
         $error = 'Failed to fetch gallery items: ' . $e->getMessage();
     }
+} else {
+    $error = 'Database connection failed';
 }
 ?>
 
@@ -162,7 +189,7 @@ if ($conn) {
 <?php endif; ?>
 
 <div class="content-header">
-    <h1 class="page-title"><?php echo getAdminLogoImg(30, 30, 'margin-right: 10px'); ?>Gallery Management</h1>
+    <h1 class="page-title"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/8A8A" alt="Salem Dominion Ministries" style="width: 30px; height: 30px; margin-right: 10px;">Gallery Management</h1>
     <p class="page-subtitle">Upload and manage multimedia content for the church gallery</p>
 </div>
 

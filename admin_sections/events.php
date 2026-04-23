@@ -70,13 +70,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 $events = [];
 if ($conn) {
     try {
-        $result = $conn->query("SELECT * FROM events ORDER BY event_date DESC LIMIT 20");
-        if ($result) {
-            $events = $result->fetch_all(MYSQLI_ASSOC);
+        // First check if events table exists
+        $table_check = $conn->query("SHOW TABLES LIKE 'events'");
+        if ($table_check && $table_check->num_rows > 0) {
+            $result = $conn->query("SELECT * FROM events ORDER BY event_date DESC LIMIT 20");
+            if ($result) {
+                $events = $result->fetch_all(MYSQLI_ASSOC);
+            }
+        } else {
+            // Create events table if it doesn't exist
+            $create_table = $conn->query("CREATE TABLE IF NOT EXISTS events (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                event_date DATE NOT NULL,
+                event_time TIME,
+                location VARCHAR(255),
+                status ENUM('upcoming', 'ongoing', 'completed', 'cancelled') DEFAULT 'upcoming',
+                created_by INT DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )");
+            
+            if ($create_table) {
+                $result = $conn->query("SELECT * FROM events ORDER BY event_date DESC LIMIT 20");
+                if ($result) {
+                    $events = $result->fetch_all(MYSQLI_ASSOC);
+                }
+            }
         }
     } catch (Exception $e) {
         $error = 'Failed to fetch events: ' . $e->getMessage();
     }
+} else {
+    $error = 'Database connection failed';
 }
 ?>
 
@@ -93,7 +120,7 @@ if ($conn) {
 <?php endif; ?>
 
 <div class="content-header">
-    <h1 class="page-title"><?php echo getAdminLogoImg(30, 30, 'margin-right: 10px'); ?>Event Management</h1>
+    <h1 class="page-title"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/8A8A" alt="Salem Dominion Ministries" style="width: 30px; height: 30px; margin-right: 10px;">Event Management</h1>
     <p class="page-subtitle">Create and manage church events with scheduling and details</p>
 </div>
 

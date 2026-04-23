@@ -1,8 +1,37 @@
 <?php
 // NEWS PAGE - Salem Dominion Ministries - Professional & Mobile Responsive
 require_once 'db_connection.php';
+require_once 'config.php';
 
 $conn = createDatabaseConnection();
+
+// Handle comment submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_comment') {
+    $content_type = 'news';
+    $content_id = intval($_POST['content_id'] ?? 0);
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $comment = trim($_POST['comment'] ?? '');
+    $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
+    
+    $errors = [];
+    if (empty($name)) $errors[] = 'Name is required';
+    if (empty($comment)) $errors[] = 'Comment is required';
+    if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email address';
+    
+    if (empty($errors)) {
+        try {
+            $stmt = $conn->prepare("INSERT INTO comments (content_type, content_id, user_id, name, email, comment) VALUES (?, ?, ?, ?, ?, ?)");
+            if ($stmt) {
+                $stmt->bind_param("siisss", $content_type, $content_id, $user_id, $name, $email, $comment);
+                $stmt->execute();
+                $success = "Comment submitted successfully! It will be reviewed and published soon.";
+            }
+        } catch (Exception $e) {
+            $errors[] = "Failed to submit comment. Please try again.";
+        }
+    }
+}
 
 // Pagination and filtering
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
@@ -106,6 +135,22 @@ try {
         }
         
         $total_pages = ceil($total_news / $per_page);
+        
+        // Get comments for each news item
+        foreach ($news_items as &$news) {
+            $comment_stmt = $conn->prepare("SELECT * FROM comments WHERE content_type = 'news' AND content_id = ? AND status = 'approved' ORDER BY created_at DESC");
+            if ($comment_stmt) {
+                $comment_stmt->bind_param("i", $news['id']);
+                $comment_stmt->execute();
+                $comment_result = $comment_stmt->get_result();
+                $news['comments'] = $comment_result->fetch_all(MYSQLI_ASSOC);
+                $news['comment_count'] = count($news['comments']);
+                $comment_stmt->close();
+            } else {
+                $news['comments'] = [];
+                $news['comment_count'] = 0;
+            }
+        }
         
         $conn->close();
     }
@@ -919,6 +964,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                     <button class="btn btn-news" onclick="showNewsDetail(<?= $news['id'] ?>)">
                                         <i class="fas fa-book-open me-2"></i>Read More
                                     </button>
+                                    <button class="btn btn-news" onclick="toggleNewsComments(<?= $news['id'] ?>)">
+                                        <i class="fas fa-comments me-2"></i>Comments (<?= $news['comment_count'] ?>)
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -931,6 +979,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     <p>Check back soon for the latest updates and announcements.</p>
                 </div>
             <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- Comments Section -->
+    <section class="comments-section" style="display: none;" id="news-comments-section">
+        <div class="container">
+            <div class="comment-container">
+                <h3 class="comments-title">
+                    <i class="fas fa-comments me-2"></i>Comments
+                </h3>
+                
+                <!-- Existing Comments -->
+                <div id="existing-news-comments">
+                    <!-- Comments will be loaded here dynamically -->
+                </div>
+                
+                <!-- Add Comment Form -->
+                <div class="comment-form">
+                    <h4>Leave a Comment</h4>
+                    <?php if (isset($errors) && !empty($errors)): ?>
+                        <div class="alert alert-danger">
+                            <?php foreach ($errors as $error): ?>
+                                <div><?= htmlspecialchars($error) ?></div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <?php if (isset($success)): ?>
+                        <div class="alert alert-success">
+                            <?= htmlspecialchars($success) ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <form method="POST" id="news-comment-form">
+                        <input type="hidden" name="action" value="add_comment">
+                        <input type="hidden" name="content_id" id="news-comment-content-id">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="name" class="form-label">Name *</label>
+                                    <input type="text" name="name" id="news-comment-name" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" name="email" id="news-comment-email" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="comment" class="form-label">Comment *</label>
+                            <textarea name="comment" id="news-comment-text" class="form-control" rows="4" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-news">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Comment
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -1228,6 +1339,115 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         document.addEventListener('DOMContentLoaded', function() {
             console.log('News page loaded successfully at ' + new Date().toLocaleString());
         });
+        
+        // Store news data for comments
+        const newsData = <?php echo json_encode($news_items); ?>;
+        
+        function toggleNewsComments(newsId) {
+            const commentsSection = document.getElementById('news-comments-section');
+            const existingComments = document.getElementById('existing-news-comments');
+            const contentIdInput = document.getElementById('news-comment-content-id');
+            
+            // Set the content ID for the form
+            contentIdInput.value = newsId;
+            
+            // Find the news data
+            const news = newsData.find(n => n.id == newsId);
+            
+            if (news) {
+                // Display existing comments
+                existingComments.innerHTML = '';
+                
+                if (news.comments && news.comments.length > 0) {
+                    news.comments.forEach(comment => {
+                        const commentHtml = `
+                            <div class="comment-item">
+                                <div class="comment-header">
+                                    <strong>${comment.name}</strong>
+                                    <span class="comment-date">${new Date(comment.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <div class="comment-content">${comment.comment}</div>
+                            </div>
+                        `;
+                        existingComments.innerHTML += commentHtml;
+                    });
+                } else {
+                    existingComments.innerHTML = '<p class="text-muted">No comments yet. Be the first to comment!</p>';
+                }
+                
+                // Show the comments section
+                commentsSection.style.display = 'block';
+                commentsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        // Add comment styles
+        const commentStyles = `
+            .comments-section {
+                background: rgba(255, 255, 255, 0.02);
+                padding: 60px 0;
+                margin-top: 40px;
+            }
+            
+            .comment-container {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(251, 191, 36, 0.3);
+                border-radius: 20px;
+                padding: 2rem;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            
+            .comments-title {
+                color: var(--heavenly-gold);
+                font-family: 'Playfair Display', serif;
+                font-size: 2rem;
+                margin-bottom: 2rem;
+                text-align: center;
+            }
+            
+            .comment-item {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 15px;
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+                border-left: 4px solid var(--heavenly-gold);
+            }
+            
+            .comment-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0.5rem;
+            }
+            
+            .comment-date {
+                color: rgba(255, 255, 255, 0.6);
+                font-size: 0.9rem;
+            }
+            
+            .comment-content {
+                line-height: 1.6;
+            }
+            
+            .comment-form {
+                margin-top: 2rem;
+                padding-top: 2rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .comment-form h4 {
+                color: var(--heavenly-gold);
+                margin-bottom: 1.5rem;
+            }
+        `;
+        
+        // Add styles to head
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = commentStyles;
+        document.head.appendChild(styleSheet);
+        
     </script>
 </body>
 </html>
