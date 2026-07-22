@@ -1,1149 +1,407 @@
 <?php
-// USER REGISTRATION - Salem Dominion Ministries - Professional & Mobile Responsive
-require_once 'db_connection.php';
+/**
+ * Salem Dominion Ministries - User Registration Page
+ */
 
-$conn = createDatabaseConnection();
-if (!$conn) {
-    // Database connection failed - show detailed error for debugging
-    $errors[] = 'Database connection failed. Please check your database credentials.';
-    
-    // Debug information (remove in production)
-    if (isset($_SERVER['HTTP_HOST'])) {
-        error_log("Registration DB failed on host: " . $_SERVER['HTTP_HOST']);
-        error_log("Server name: " . ($_SERVER['SERVER_NAME'] ?? 'not set'));
-        error_log("Server addr: " . ($_SERVER['SERVER_ADDR'] ?? 'not set'));
-    }
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/database.php';
+require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/auth.php';
+
+if (!empty($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true) {
+    redirect(BASE_URL . '/index.php');
 }
 
-// Initialize variables
-$errors = [];
-$success = '';
+$currentPage = 'register';
+$pageTitle   = 'Register - ' . CHURCH_NAME;
+$csrfToken   = csrfToken();
+$flash       = getFlash();
 
-// Handle registration
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $first_name = trim($_POST['first_name'] ?? '');
-    $last_name = trim($_POST['last_name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $mobile = trim($_POST['mobile'] ?? '');
-    $country = trim($_POST['country'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
-    
-    // Validation
-    if (empty($first_name) || empty($last_name)) {
-        $errors[] = 'First name and last name are required';
-    }
-    
-    if (empty($email)) {
-        $errors[] = 'Email is required';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Please enter a valid email address';
-    }
-    
-    if (empty($mobile)) {
-        $errors[] = 'Mobile number is required';
-    }
-    
-    if (empty($country)) {
-        $errors[] = 'Country is required';
-    }
-    
-    if (empty($password)) {
-        $errors[] = 'Password is required';
-    } elseif (strlen($password) < 6) {
-        $errors[] = 'Password must be at least 6 characters long';
-    }
-    
-    if ($password !== $confirm_password) {
-        $errors[] = 'Passwords do not match';
-    }
-    
-    // Check if email already exists
-    if (empty($errors)) {
-        try {
-            if ($conn) {
-                // Check if email already exists
-                $check_stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-                if ($check_stmt) {
-                    $check_stmt->bind_param("s", $email);
-                    $check_stmt->execute();
-                    $check_result = $check_stmt->get_result();
-                    
-                    if ($check_result->num_rows > 0) {
-                        $errors[] = 'Email already registered. Please use a different email or login.';
-                    }
-                    
-                    $check_stmt->close();
-                } else {
-                    $errors[] = 'Database preparation error. Please try again.';
-                }
-                
-                // If no errors, register the user
-                if (empty($errors)) {
-                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                    
-                    // Generate username from email
-                    $username = strtolower(str_replace(['@', '.'], '', $email)) . rand(100, 999);
-                    
-                    $insert_stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, username, password, phone, country, role, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'user', 1, NOW())");
-                    if ($insert_stmt) {
-                        $insert_stmt->bind_param("sssssss", $first_name, $last_name, $email, $username, $hashed_password, $mobile, $country);
-                        
-                        if ($insert_stmt->execute()) {
-                            $success = 'Registration successful! You can now login to your account.';
-                            
-                            // Clear form
-                            $_POST = [];
-                        } else {
-                            $errors[] = 'Registration failed. Please try again.';
-                        }
-                        
-                        $insert_stmt->close();
-                    } else {
-                        $errors[] = 'Database preparation error. Please try again.';
-                    }
-                }
-                
-                $conn->close();
-            } else {
-                $errors[] = 'Database connection failed. Please try again later.';
-            }
-        } catch (Exception $e) {
-            error_log("Registration error: " . $e->getMessage());
-            $errors[] = 'Database error occurred. Please try again.';
-        }
-    }
-}
-
-// Helper function for safe HTML output
-function safe_html($string, $default = '') {
-    return htmlspecialchars($string ?? $default, ENT_QUOTES, 'UTF-8');
-}
+require_once __DIR__ . '/components/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;">
-    <title>Register | Salem Dominion Ministries</title>
-    <meta name="description" content="Join our community at Salem Dominion Ministries - Create your account today">
-    <link rel="icon" href="public/logo-icon.jpeg">
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <noscript>
-        <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    </noscript>
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <noscript>
-        <link href="https://stackpath.bootstrapcdn.com/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    </noscript>
-    <!-- Mobile Responsive CSS -->
-    <link href="assets/mobile-responsive.css" rel="stylesheet">
-    <noscript>
-        <style>
-            /* Fallback basic styles if mobile-responsive.css fails */
-            .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
-            .row { display: flex; flex-wrap: wrap; margin: 0 -15px; }
-            .col-md-6 { flex: 0 0 50%; max-width: 50%; padding: 0 15px; }
-            .col-lg-4 { flex: 0 0 33.333%; max-width: 33.333%; padding: 0 15px; }
-            .text-center { text-align: center; }
-            .mb-4 { margin-bottom: 1.5rem; }
-            .mt-3 { margin-top: 1rem; }
-            @media (max-width: 768px) {
-                .col-md-6, .col-lg-4 { flex: 0 0 100%; max-width: 100%; }
-            }
-        </style>
-    </noscript>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
-    <noscript>
-        <style>
-            /* Fallback fonts if Google Fonts fail */
-            body { font-family: Arial, sans-serif; }
-            h1, h2, h3, h4, h5, h6 { font-family: Georgia, serif; }
-        </style>
-    </noscript>
-    
-    <style>
-        :root {
-            --midnight-blue: #0f172a;
-            --heavenly-gold: #fbbf24;
-            --ocean-blue: #0ea5e9;
-            --snow-white: #ffffff;
-            --gradient-divine: linear-gradient(135deg, var(--heavenly-gold) 0%, var(--ocean-blue) 100%);
-        }
+<style>
+.auth-page {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, rgba(15,23,42,0.03) 0%, rgba(14,165,233,0.05) 100%);
+}
+.auth-card {
+    width: 100%;
+    max-width: 500px;
+    background: var(--white);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+    padding: 48px 40px;
+    animation: authSlideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes authSlideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.auth-logo {
+    text-align: center;
+    margin-bottom: 32px;
+}
+.auth-logo img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 12px;
+    border: 3px solid rgba(14,165,233,0.2);
+}
+.auth-logo h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--midnight);
+    margin: 0 0 4px;
+}
+.auth-logo p {
+    font-size: 0.88rem;
+    color: var(--gray-500);
+    margin: 0;
+}
+.auth-form .form-row {
+    display: flex;
+    gap: 16px;
+}
+.auth-form .form-row .form-group { flex: 1; }
+.auth-form .form-group {
+    margin-bottom: 18px;
+}
+.auth-form label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.auth-form .input-wrap {
+    position: relative;
+}
+.auth-form .input-wrap i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+    font-size: 0.9rem;
+    transition: color 0.3s;
+}
+.auth-form input[type="text"],
+.auth-form input[type="email"],
+.auth-form input[type="tel"],
+.auth-form input[type="password"] {
+    width: 100%;
+    padding: 14px 14px 14px 42px;
+    border: 2px solid var(--gray-200);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-family: 'Montserrat', sans-serif;
+    color: var(--gray-700);
+    background: var(--white);
+    transition: all 0.3s;
+    outline: none;
+}
+.auth-form input:focus {
+    border-color: var(--ocean);
+    box-shadow: 0 0 0 4px rgba(14,165,233,0.1);
+}
+.auth-form .toggle-pass {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 0.9rem;
+}
+.auth-form .toggle-pass:hover { color: var(--ocean); }
+.auth-form .password-requirements {
+    font-size: 0.78rem;
+    color: var(--gray-400);
+    margin-top: 6px;
+}
+.auth-form .password-requirements span.met { color: #16a34a; }
+.auth-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--ocean), #0284c7);
+    color: var(--white);
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'Montserrat', sans-serif;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+.auth-btn:hover {
+    background: linear-gradient(135deg, #0284c7, var(--midnight));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(14,165,233,0.35);
+}
+.auth-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+.auth-btn .spinner {
+    display: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+.auth-btn.loading .spinner { display: inline-block; }
+.auth-btn.loading .btn-text { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 24px 0;
+    color: var(--gray-400);
+    font-size: 0.82rem;
+}
+.auth-divider::before, .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--gray-200);
+}
+.auth-login-link {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--gray-500);
+}
+.auth-login-link a {
+    color: var(--ocean);
+    font-weight: 700;
+    text-decoration: none;
+}
+.auth-login-link a:hover { text-decoration: underline; }
+.auth-alert {
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: authSlideUp 0.4s ease;
+}
+.auth-alert.error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+.auth-alert.success {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+@media (max-width: 480px) {
+    .auth-card { padding: 32px 24px; border-radius: 20px; }
+    .auth-form .form-row { flex-direction: column; gap: 0; }
+}
+</style>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<main class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <img src="<?php echo LOGO_URL; ?>" alt="<?php echo CHURCH_NAME; ?>">
+            <h2>Join Our Family</h2>
+            <p>Create your account today</p>
+        </div>
 
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: var(--midnight-blue);
-            color: var(--snow-white);
-            min-height: 100vh;
-        }
+        <?php if ($flash): ?>
+            <div class="auth-alert <?php echo $flash['type'] === 'error' ? 'error' : 'success'; ?>">
+                <i class="fas <?php echo $flash['type'] === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'; ?>"></i>
+                <?php echo htmlspecialchars($flash['message']); ?>
+            </div>
+        <?php endif; ?>
 
-        /* Navigation */
-        .navbar {
-            background: rgba(15, 23, 42, 0.95) !important;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            padding: 1rem 0;
-        }
+        <div id="registerAlert" class="auth-alert" style="display:none;"></div>
 
-        .navbar-brand {
-            color: var(--heavenly-gold) !important;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            text-decoration: none !important;
-            display: flex;
-            align-items: center;
-        }
+        <form class="auth-form" id="registerForm" onsubmit="return handleRegister(event)">
+            <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
 
-        .navbar-brand img {
-            width: 40px;
-            height: 40px;
-            margin-right: 10px;
-            border-radius: 50%;
-        }
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <div class="input-wrap">
+                        <input type="text" id="first_name" name="first_name" placeholder="John" required>
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <div class="input-wrap">
+                        <input type="text" id="last_name" name="last_name" placeholder="Doe" required>
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
 
-        .navbar-nav .nav-link {
-            color: var(--snow-white) !important;
-            font-weight: 400;
-            margin: 0 10px;
-            transition: all 0.3s ease;
-        }
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <div class="input-wrap">
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                    <i class="fas fa-envelope"></i>
+                </div>
+            </div>
 
-        .navbar-nav .nav-link:hover {
-            color: var(--heavenly-gold) !important;
-        }
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <div class="input-wrap">
+                    <input type="tel" id="phone" name="phone" placeholder="+256 700 000000">
+                    <i class="fas fa-phone"></i>
+                </div>
+            </div>
 
-        /* Hero Section */
-        .hero-section {
-            background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), url('assets/register-hero.jpg');
-            background-size: cover;
-            background-position: center;
-            padding: 120px 0 80px;
-            text-align: center;
-            position: relative;
-        }
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <input type="password" id="password" name="password" placeholder="Min. 8 characters" required minlength="8" autocomplete="new-password" oninput="checkPasswordStrength(this.value)">
+                    <i class="fas fa-lock"></i>
+                    <button type="button" class="toggle-pass" onclick="togglePassword(this)" aria-label="Toggle password visibility">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="password-requirements" id="passReqs">
+                    <span id="req-length"><i class="fas fa-circle" style="font-size:6px;vertical-align:middle;"></i> At least 8 characters</span>
+                </div>
+            </div>
 
-        .hero-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 3.5rem;
-            font-weight: 700;
-            color: var(--heavenly-gold);
-            margin-bottom: 1rem;
-        }
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <div class="input-wrap">
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter your password" required minlength="8" autocomplete="new-password">
+                    <i class="fas fa-lock"></i>
+                </div>
+            </div>
 
-        .hero-subtitle {
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 2rem;
-        }
-
-        /* Registration Section */
-        .registration-section {
-            padding: 80px 0;
-        }
-
-        .section-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--heavenly-gold);
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .registration-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 25px;
-            padding: 3rem;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .form-control, .form-select {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: var(--snow-white);
-            border-radius: 15px;
-            padding: 12px 20px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus, .form-select:focus {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--heavenly-gold);
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
-            color: var(--snow-white);
-        }
-
-        .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .form-label {
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .btn-register {
-            background: var(--gradient-divine);
-            color: var(--snow-white);
-            border: none;
-            border-radius: 50px;
-            padding: 12px 30px;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .btn-register:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
-            color: var(--snow-white);
-            text-decoration: none;
-        }
-
-        .btn-outline-register {
-            background: transparent;
-            color: var(--heavenly-gold);
-            border: 2px solid var(--heavenly-gold);
-            border-radius: 50px;
-            padding: 12px 30px;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .btn-outline-register:hover {
-            background: var(--gradient-divine);
-            border-color: var(--heavenly-gold);
-            color: var(--snow-white);
-            text-decoration: none;
-        }
-
-        /* Benefits Section */
-        .benefits-section {
-            padding: 60px 0;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .benefit-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 20px;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s ease;
-            height: 100%;
-        }
-
-        .benefit-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--heavenly-gold);
-        }
-
-        .benefit-icon {
-            width: 80px;
-            height: 80px;
-            background: var(--gradient-divine);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            font-size: 2rem;
-            color: var(--snow-white);
-            transition: all 0.3s ease;
-        }
-
-        .benefit-card:hover .benefit-icon {
-            transform: scale(1.1);
-            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4);
-        }
-
-        .benefit-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--heavenly-gold);
-            margin-bottom: 1rem;
-        }
-
-        .benefit-description {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.6;
-        }
-
-        /* Footer */
-        .footer {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 60px 0 20px;
-            margin-top: 80px;
-        }
-        
-        .footer-widget h4 {
-            position: relative;
-            padding-bottom: 15px;
-            color: var(--heavenly-gold);
-        }
-        
-        .footer-widget h4::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 50px;
-            height: 2px;
-            background: var(--heavenly-gold);
-        }
-        
-        .footer-links li {
-            margin-bottom: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .footer-links li:hover {
-            transform: translateX(5px);
-        }
-        
-        .footer-links a:hover {
-            color: var(--heavenly-gold) !important;
-        }
-        
-        .social-icon {
-            transition: all 0.3s ease;
-            display: inline-block;
-        }
-        
-        .social-icon:hover {
-            transform: translateY(-3px);
-            color: var(--heavenly-gold) !important;
-        }
-
-        /* Enhanced Mobile Responsive */
-        @media (max-width: 992px) {
-            .hero-title {
-                font-size: 2.8rem;
-            }
-            
-            .registration-card {
-                max-width: 600px;
-                padding: 2.5rem;
-            }
-            
-            .section-title {
-                font-size: 2.2rem;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .hero-section {
-                padding: 100px 0 60px;
-            }
-            
-            .hero-title {
-                font-size: 2.5rem;
-            }
-            
-            .hero-subtitle {
-                font-size: 1rem;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .registration-section {
-                padding: 60px 0;
-            }
-            
-            .registration-card {
-                padding: 2rem;
-                margin: 0 1rem;
-                max-width: 100%;
-            }
-            
-            .navbar-brand {
-                font-size: 1.4rem;
-            }
-            
-            .navbar-brand img {
-                width: 30px;
-                height: 30px;
-            }
-            
-            .form-row {
-                margin-bottom: 1rem;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .hero-title {
-                font-size: 2rem;
-            }
-            
-            .hero-subtitle {
-                font-size: 0.9rem;
-            }
-            
-            .section-title {
-                font-size: 1.8rem;
-            }
-            
-            .registration-card {
-                padding: 1.5rem;
-                margin: 0 0.5rem;
-            }
-            
-            .form-control, .form-select {
-                padding: 10px 15px;
-                font-size: 0.9rem;
-            }
-            
-            .btn-register, .btn-outline-register {
-                padding: 10px 20px;
-                font-size: 0.9rem;
-            }
-            
-            .navbar-brand {
-                font-size: 1.2rem;
-            }
-            
-            .navbar-brand img {
-                width: 25px;
-                height: 25px;
-            }
-            
-            .password-strength {
-                margin-top: 0.3rem;
-                height: 4px;
-            }
-            
-            .form-check-label {
-                font-size: 0.85rem;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .hero-title {
-                font-size: 1.8rem;
-            }
-            
-            .hero-subtitle {
-                font-size: 0.85rem;
-            }
-            
-            .section-title {
-                font-size: 1.6rem;
-            }
-            
-            .registration-card {
-                padding: 1rem;
-                margin: 0 0.25rem;
-            }
-            
-            .form-control, .form-select {
-                padding: 8px 12px;
-                font-size: 0.85rem;
-            }
-            
-            .btn-register, .btn-outline-register {
-                padding: 8px 16px;
-                font-size: 0.85rem;
-                width: 100%;
-                margin-bottom: 0.5rem;
-            }
-            
-            .navbar-brand span {
-                display: none;
-            }
-            
-            .navbar-brand img {
-                margin-right: 0;
-            }
-            
-            .form-label {
-                font-size: 0.85rem;
-            }
-            
-            .small {
-                font-size: 0.75rem;
-            }
-        }
-
-        /* Alert Styles */
-        .alert {
-            border-radius: 15px;
-            border: none;
-            backdrop-filter: blur(20px);
-        }
-
-        .alert-success {
-            background: rgba(34, 197, 94, 0.2);
-            color: #86efac;
-            border: 1px solid rgba(34, 197, 94, 0.3);
-        }
-
-        .alert-danger {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-
-        /* Password Strength Indicator */
-        .password-strength {
-            margin-top: 0.5rem;
-            height: 5px;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-        }
-
-        .password-strength-bar {
-            height: 100%;
-            width: 0;
-            transition: all 0.3s ease;
-        }
-
-        .strength-weak { background: #ef4444; width: 33%; }
-        .strength-medium { background: #f59e0b; width: 66%; }
-        .strength-strong { background: #10b981; width: 100%; }
-    </style>
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="index.php">
-                <img src="public/logo-icon.jpeg" alt="Salem Dominion Ministries">
-                <span>Salem Dominion Ministries</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+            <button type="submit" class="auth-btn" id="registerBtn">
+                <span class="btn-text"><i class="fas fa-user-plus"></i> Create Account</span>
+                <span class="spinner"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.php">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="about.php">About</a></li>
-                    <li class="nav-item"><a class="nav-link" href="ministries.php">Ministries</a></li>
-                    <li class="nav-item"><a class="nav-link" href="events.php">Events</a></li>
-                    <li class="nav-item"><a class="nav-link" href="sermons.php">Sermons</a></li>
-                    <li class="nav-item"><a class="nav-link" href="news.php">News</a></li>
-                    <li class="nav-item"><a class="nav-link" href="gallery.php">Gallery</a></li>
-                    <li class="nav-item"><a class="nav-link" href="prophetic-school.php">Prophetic School</a></li>
-                    <li class="nav-item"><a class="nav-link" href="book_pastor_call.php" class="text-warning">Book Call</a></li>
-                    <li class="nav-item"><a class="nav-link" href="contact.php">Contact</a></li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="login.php">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+        </form>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container">
-            <h1 class="hero-title">Join Our Community</h1>
-            <p class="hero-subtitle">Create your account and become part of our growing family</p>
-        </div>
-    </section>
+        <div class="auth-divider">or</div>
 
-    <!-- Registration Form -->
-    <section class="registration-section">
-        <div class="container">
-            <div class="registration-card">
-                <h2 class="section-title">Create Account</h2>
-                
-                <?php if (!empty($errors)): ?>
-                    <div class="alert alert-danger mb-4">
-                        <?php foreach ($errors as $error): ?>
-                            <p class="mb-1"><?= safe_html($error) ?></p>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-                
-                <?php if (!empty($success)): ?>
-                    <div class="alert alert-success mb-4">
-                        <?= safe_html($success) ?>
-                        <div class="mt-3">
-                            <a href="login.php" class="btn btn-register">
-                                <i class="fas fa-sign-in-alt me-2"></i>Login Now
-                            </a>
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <form method="POST" action="">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">First Name *</label>
-                                <input type="text" name="first_name" class="form-control" required value="<?= safe_html($_POST['first_name'] ?? '') ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Last Name *</label>
-                                <input type="text" name="last_name" class="form-control" required value="<?= safe_html($_POST['last_name'] ?? '') ?>">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Email Address *</label>
-                                <input type="email" name="email" class="form-control" required value="<?= safe_html($_POST['email'] ?? '') ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Mobile Number *</label>
-                                <input type="tel" name="mobile" class="form-control" required value="<?= safe_html($_POST['mobile'] ?? '') ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Country *</label>
-                                <select name="country" class="form-select" required>
-                                    <option value="">Select Country</option>
-                                    <option value="Uganda" <?= ($_POST['country'] ?? '') === 'Uganda' ? 'selected' : '' ?>>Uganda</option>
-                                    <option value="Kenya" <?= ($_POST['country'] ?? '') === 'Kenya' ? 'selected' : '' ?>>Kenya</option>
-                                    <option value="Tanzania" <?= ($_POST['country'] ?? '') === 'Tanzania' ? 'selected' : '' ?>>Tanzania</option>
-                                    <option value="Rwanda" <?= ($_POST['country'] ?? '') === 'Rwanda' ? 'selected' : '' ?>>Rwanda</option>
-                                    <option value="Other" <?= ($_POST['country'] ?? '') === 'Other' ? 'selected' : '' ?>>Other</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Password *</label>
-                                <input type="password" name="password" id="password" class="form-control" required>
-                                <div class="password-strength">
-                                    <div class="password-strength-bar" id="strength-bar"></div>
-                                </div>
-                                <small class="text-white-50">Password must be at least 6 characters long</small>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Confirm Password *</label>
-                                <input type="password" name="confirm_password" class="form-control" required>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="terms" required>
-                                    <label class="form-check-label text-white-50" for="terms">
-                                        I agree to the <a href="#" class="text-warning">Terms of Service</a> and <a href="#" class="text-warning">Privacy Policy</a>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-register">
-                                    <i class="fas fa-user-plus me-2"></i>Create Account
-                                </button>
-                                <a href="login.php" class="btn btn-outline-register ms-3">
-                                    <i class="fas fa-sign-in-alt me-2"></i>Already have an account?
-                                </a>
-                            </div>
-                        </div>
-                    </form>
-                <?php endif; ?>
-            </div>
-        </div>
-    </section>
+        <p class="auth-login-link">
+            Already have an account? <a href="login.php">Sign in</a>
+        </p>
+    </div>
+</main>
 
-    <!-- Benefits Section -->
-    <section class="benefits-section">
-        <div class="container">
-            <h2 class="section-title">Why Join Us?</h2>
-            <div class="row g-4">
-                <div class="col-lg-4 col-md-6">
-                    <div class="benefit-card">
-                        <div class="benefit-icon">
-                            <i class="fas fa-bible"></i>
-                        </div>
-                        <h3 class="benefit-title">Spiritual Growth</h3>
-                        <p class="benefit-description">Access to sermons, teachings, and spiritual resources to deepen your faith</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="benefit-card">
-                        <div class="benefit-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h3 class="benefit-title">Community</h3>
-                        <p class="benefit-description">Connect with fellow believers and participate in church activities</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="benefit-card">
-                        <div class="benefit-icon">
-                            <i class="fas fa-calendar"></i>
-                        </div>
-                        <h3 class="benefit-title">Events & Updates</h3>
-                        <p class="benefit-description">Stay informed about upcoming events and church news</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+<script>
+function togglePassword(btn) {
+    var input = btn.parentElement.querySelector('input');
+    var icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
 
-    <!-- Professional Footer with 3D Effects -->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="footer-widget footer-3d">
-                        <h4 class="text-white mb-3 footer-title-3d">
-                            <i class="fas fa-church me-2"></i>Salem Dominion Ministries
-                        </h4>
-                        <p class="text-white-50">Empowering lives through the Word of God and the Power of the Holy Spirit. Join us in spreading the Gospel and making disciples.</p>
-                        <div class="mt-3">
-                            <a href="<?php echo CHURCH_WEBSITE; ?>" target="_blank" class="text-white me-3 social-icon-3d">
-                                <i class="fas fa-globe fa-lg"></i>
-                            </a>
-                            <a href="https://youtube.com/@musasizifaty?si=BxEArdVKNKVSac3X" target="_blank" class="text-white me-3 social-icon-3d">
-                                <i class="fab fa-youtube fa-lg"></i>
-                            </a>
-                            <a href="https://www.tiktok.com/@salem1dominionchurch?_r=1&_t=ZS-95E1n40LieS" target="_blank" class="text-white me-3 social-icon-3d">
-                                <i class="fab fa-tiktok fa-lg"></i>
-                            </a>
-                            <a href="https://www.facebook.com/share/1CoCEmvnBB/" target="_blank" class="text-white social-icon-3d">
-                                <i class="fab fa-facebook fa-lg"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <div class="footer-widget footer-3d">
-                        <h5 class="text-white mb-3 footer-title-3d">Quick Links</h5>
-                        <ul class="list-unstyled footer-links">
-                            <li><a href="about.php" class="text-white-50 text-decoration-none footer-link-3d">About Us</a></li>
-                            <li><a href="leadership.php" class="text-white-50 text-decoration-none footer-link-3d">Leadership</a></li>
-                            <li><a href="sermons.php" class="text-white-50 text-decoration-none footer-link-3d">Sermons</a></li>
-                            <li><a href="events.php" class="text-white-50 text-decoration-none footer-link-3d">Events</a></li>
-                            <li><a href="ministries.php" class="text-white-50 text-decoration-none footer-link-3d">Ministries</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="footer-widget footer-3d">
-                        <h5 class="text-white mb-3 footer-title-3d">Services</h5>
-                        <ul class="list-unstyled footer-links">
-                            <li><a href="prophetic-school.php" class="text-white-50 text-decoration-none footer-link-3d">Prophetic School</a></li>
-                            <li><a href="book_pastor_call.php" class="text-white-50 text-decoration-none footer-link-3d">Book Pastor Call</a></li>
-                            <li><a href="children_ministry.php" class="text-white-50 text-decoration-none footer-link-3d">Children Ministry</a></li>
-                            <li><a href="donate.php" class="text-white-50 text-decoration-none footer-link-3d">Give & Donate</a></li>
-                            <li><a href="testimonials.php" class="text-white-50 text-decoration-none footer-link-3d">Testimonials</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="footer-widget footer-3d">
-                        <h5 class="text-white mb-3 footer-title-3d">Contact Info</h5>
-                        <ul class="list-unstyled footer-contact">
-                            <li class="mb-2">
-                                <i class="fas fa-map-marker-alt me-2 text-primary"></i>
-                                <span class="text-white-50">Nampirika, Iganga District, Uganda</span>
-                            </li>
-                            <li class="mb-2">
-                                <i class="fas fa-phone me-2 text-primary"></i>
-                                <span class="text-white-50">+256 753 244 480</span>
-                            </li>
-                            <li class="mb-2">
-                                <i class="fas fa-envelope me-2 text-primary"></i>
-                                <span class="text-white-50">info@salem-dominion-ministries.com</span>
-                            </li>
-                            <li class="mb-2">
-                                <i class="fas fa-globe me-2 text-primary"></i>
-                                <span class="text-white-50"><?php echo parse_url(CHURCH_WEBSITE, PHP_URL_HOST); ?></span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <hr class="bg-white my-4">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="text-white-50 mb-0">&copy; <?= date('Y') ?> Salem Dominion Ministries. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <a href="privacy.php" class="text-white-50 me-3 text-decoration-none">Privacy Policy</a>
-                    <a href="terms.php" class="text-white-50 text-decoration-none">Terms of Service</a>
-                </div>
-            </div>
-            <div class="row mt-4">
-                <div class="col-12 text-center">
-                    <div class="designer-credit-3d">
-                        <p class="text-white-50 mb-2">
-                            <i class="fas fa-code me-2"></i>Designed & Developed by
-                        </p>
-                        <h5 class="designer-name-3d text-warning mb-2">Mr. Reagan Otema</h5>
-                        <a href="https://wa.me/256772514889" target="_blank" class="designer-contact-3d">
-                            <i class="fab fa-whatsapp me-2"></i>+256 772 514 889
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
+function checkPasswordStrength(pw) {
+    var el = document.getElementById('req-length');
+    if (pw.length >= 8) {
+        el.innerHTML = '<i class="fas fa-check-circle" style="color:#16a34a;vertical-align:middle;"></i> At least 8 characters';
+        el.classList.add('met');
+    } else {
+        el.innerHTML = '<i class="fas fa-circle" style="font-size:6px;vertical-align:middle;"></i> At least 8 characters';
+        el.classList.remove('met');
+    }
+}
 
-    <style>
-        /* 3D Footer Effects */
-        .footer-3d {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 2rem;
-            transform: perspective(1000px) rotateX(0deg);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
+function showAuthAlert(type, message) {
+    var el = document.getElementById('registerAlert');
+    el.className = 'auth-alert ' + type;
+    el.innerHTML = '<i class="fas ' + (type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i> ' + message;
+    el.style.display = 'flex';
+}
 
-        .footer-3d:hover {
-            transform: perspective(1000px) rotateX(-5deg) translateY(-10px);
-            box-shadow: 0 20px 60px rgba(251, 191, 36, 0.2);
-            border-color: rgba(251, 191, 36, 0.3);
-        }
+function handleRegister(e) {
+    e.preventDefault();
+    var btn = document.getElementById('registerBtn');
+    var form = e.target;
 
-        .footer-title-3d {
-            position: relative;
-            text-shadow: 0 2px 10px rgba(251, 191, 36, 0.5);
-            transform: translateZ(20px);
-            transition: all 0.3s ease;
-        }
+    var pass = form.querySelector('#password').value;
+    var confirm = form.querySelector('#confirm_password').value;
 
-        .footer-title-3d:hover {
-            transform: translateZ(30px) scale(1.05);
-            text-shadow: 0 4px 20px rgba(251, 191, 36, 0.8);
-        }
+    if (pass.length < 8) {
+        showAuthAlert('error', 'Password must be at least 8 characters long.');
+        return false;
+    }
+    if (pass !== confirm) {
+        showAuthAlert('error', 'Passwords do not match.');
+        return false;
+    }
 
-        .social-icon-3d {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            line-height: 50px;
-            text-align: center;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            transform: translateZ(10px);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
+    btn.classList.add('loading');
+    btn.disabled = true;
+    document.getElementById('registerAlert').style.display = 'none';
 
-        .social-icon-3d::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.3), transparent);
-            transition: all 0.6s ease;
-        }
+    var formData = new FormData(form);
+    var data = {};
+    formData.forEach(function(v, k) { data[k] = v; });
 
-        .social-icon-3d:hover::before {
-            left: 100%;
-        }
-
-        .social-icon-3d:hover {
-            transform: translateZ(30px) rotateY(360deg) scale(1.2);
-            background: linear-gradient(135deg, var(--heavenly-gold), var(--ocean-blue));
-            border-color: var(--heavenly-gold);
-            box-shadow: 0 15px 40px rgba(251, 191, 36, 0.4);
-        }
-
-        .footer-link-3d {
-            display: inline-block;
-            transform: translateZ(5px);
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .footer-link-3d::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--heavenly-gold);
-            transition: all 0.3s ease;
-        }
-
-        .footer-link-3d:hover {
-            transform: translateZ(15px) translateX(5px);
-            color: var(--heavenly-gold) !important;
-        }
-
-        .footer-link-3d:hover::after {
-            width: 100%;
-        }
-
-        .designer-credit-3d {
-            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(14, 165, 233, 0.1));
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 15px;
-            padding: 1.5rem;
-            transform: perspective(1000px) rotateX(0deg);
-            transition: all 0.5s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .designer-credit-3d::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(251, 191, 36, 0.1), transparent);
-            animation: designerShimmer 3s infinite;
-        }
-
-        @keyframes designerShimmer {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-            100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-        }
-
-        .designer-credit-3d:hover {
-            transform: perspective(1000px) rotateX(-5deg) translateY(-5px);
-            box-shadow: 0 15px 40px rgba(251, 191, 36, 0.3);
-        }
-
-        .designer-name-3d {
-            transform: translateZ(20px);
-            text-shadow: 0 2px 15px rgba(251, 191, 36, 0.6);
-            animation: designerGlow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes designerGlow {
-            0% { text-shadow: 0 2px 15px rgba(251, 191, 36, 0.6); }
-            100% { text-shadow: 0 4px 25px rgba(251, 191, 36, 0.9); }
-        }
-
-        .designer-contact-3d {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background: linear-gradient(135deg, #25D366, #128C7E);
-            color: white;
-            border-radius: 25px;
-            text-decoration: none;
-            transform: translateZ(15px);
-            transition: all 0.4s ease;
-            box-shadow: 0 5px 20px rgba(37, 211, 102, 0.3);
-        }
-
-        .designer-contact-3d:hover {
-            transform: translateZ(25px) scale(1.1);
-            box-shadow: 0 10px 30px rgba(37, 211, 102, 0.5);
-            text-decoration: none;
-            color: white;
-        }
-
-        /* Mobile Responsive 3D Effects */
-        @media (max-width: 768px) {
-            .footer-3d {
-                transform: none;
-                padding: 1.5rem;
-            }
-            
-            .footer-3d:hover {
-                transform: translateY(-5px);
-            }
-            
-            .social-icon-3d {
-                width: 40px;
-                height: 40px;
-                line-height: 40px;
-                font-size: 0.9rem;
-            }
-            
-            .social-icon-3d:hover {
-                transform: scale(1.1);
-            }
-            
-            .designer-credit-3d {
-                padding: 1rem;
-                transform: none;
-            }
-            
-            .designer-credit-3d:hover {
-                transform: translateY(-3px);
-            }
-        }
-    </style>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Fallback if Bootstrap JS fails
-        if (typeof bootstrap === 'undefined') {
-            // Basic Bootstrap functionality fallback
-            window.bootstrap = {
-                Dropdown: function(element) {
-                    element.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const menu = element.nextElementSibling;
-                        if (menu) {
-                            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-                        }
-                    });
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'api.php?action=register', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            try {
+                var res = JSON.parse(xhr.responseText);
+                if (res.success) {
+                    showAuthAlert('success', res.message || 'Account created!');
+                    setTimeout(function() {
+                        window.location.href = 'index.php';
+                    }, 1200);
+                } else {
+                    showAuthAlert('error', res.message || 'Registration failed. Please try again.');
                 }
-            };
-            
-            // Initialize dropdowns
-            document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function(element) {
-                new bootstrap.Dropdown(element);
-            });
-        }
-    </script>
-    
-    <script>
-        // Password strength checker
-        document.addEventListener('DOMContentLoaded', function() {
-            const passwordInput = document.getElementById('password');
-            const strengthBar = document.getElementById('strength-bar');
-            
-            if (passwordInput && strengthBar) {
-                passwordInput.addEventListener('input', function() {
-                    const password = this.value;
-                    let strength = 0;
-                    
-                    if (password.length >= 6) strength++;
-                    if (password.length >= 10) strength++;
-                    if (/[A-Z]/.test(password)) strength++;
-                    if (/[0-9]/.test(password)) strength++;
-                    if (/[^A-Za-z0-9]/.test(password)) strength++;
-                    
-                    strengthBar.className = 'password-strength-bar';
-                    
-                    if (strength <= 2) {
-                        strengthBar.classList.add('strength-weak');
-                    } else if (strength <= 3) {
-                        strengthBar.classList.add('strength-medium');
-                    } else {
-                        strengthBar.classList.add('strength-strong');
-                    }
-                });
+            } catch(ex) {
+                showAuthAlert('error', 'An error occurred. Please try again.');
             }
-        });
-    </script>
-</body>
-</html>
+        }
+    };
+    xhr.onerror = function() {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        showAuthAlert('error', 'Network error. Please check your connection.');
+    };
+    xhr.send(JSON.stringify(data));
+    return false;
+}
+</script>
+
+<?php require_once __DIR__ . '/components/footer.php'; ?>

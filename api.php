@@ -1,581 +1,886 @@
 <?php
 /**
- * Salem Dominion Ministries - Backend API
- * Handles User Authentication, supreme admin logic for Reagan Otema, and Blog Comments.
+ * Salem Dominion Ministries - AJAX API Handler
+ * Clean, routed API with CSRF protection and PDO prepared statements
  */
 
-header("Access-Control-Allow-Origin: *");
-header("Content-Security-Policy: default-src " . CSP_DEFAULT_SRC . ";" .
-       "script-src " . CSP_SCRIPT_SRC . ";" .
-       "style-src " . CSP_STYLE_SRC . ";" .
-       "font-src " . CSP_FONT_SRC . ";" .
-       "connect-src " . CSP_CONNECT_SRC . ";" .
-       "img-src 'self' data:;" // Allow images from self and data URIs
-);
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/database.php';
+require_once __DIR__ . '/includes/helpers.php';
+
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token, X-Requested-With');
+header('Access-Control-Allow-Credentials: true');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
+    http_response_code(204);
     exit;
 }
 
-require_once 'config.php';
-
-// --- Database Connection ---
-function getDB() {
-    $conn = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
-    $conn->set_charset(DB_CHARSET);
-    if ($conn->connect_error) {
-        http_response_code(500);
-        die(json_encode(['success' => false, 'message' => 'Database connection failed']));
-    }
-    return $conn;
-}
-
-// --- Activity Logger ---
-function logActivity($db, $userId, $action, $table, $recordId = null) {
-    $ip = $_SERVER['REMOTE_ADDR'];
-    $agent = $_SERVER['HTTP_USER_AGENT'];
-    // Ensure the action string is not too long for the 'action' column
-    $action = substr($action, 0, 255); 
-    $stmt = $db->prepare("INSERT INTO activity_logs (user_id, action, table_name, record_id, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ississ", $userId, $action, $table, $recordId, $ip, $agent);
-    $stmt->execute();
-}
-
-// --- Response Helper ---
-function sendResponse($success, $data = [], $message = '', $code = 200) {
-    http_response_code($code);
-    $response = ['success' => $success];
-    if (!empty($message)) $response['message'] = $message;
-    if (!empty($data)) $response = array_merge($response, $data);
-    echo json_encode($response);
-    exit;
-}
-
-// --- JWT Simple Implementation ---
-function createJWT($user) {
-    $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-    $payload = base64_encode(json_encode([
-        'id' => $user['id'],
-        'email' => $user['email'],
-        'role' => $user['role'],
-        'exp' => time() + SESSION_LIFETIME
-    ]));
-    $signature = hash_hmac('sha256', "$header.$payload", JWT_SECRET);
-    return "$header.$payload.$signature";
-}
-
-function getAuth() {
-    $headers = array_change_key_case(getallheaders(), CASE_LOWER);
-    if (isset($headers['authorization'])) {
-        $token = str_replace('Bearer ', '', $headers['authorization']);
-        $parts = explode('.', $token);
-        if (count($parts) != 3) return null;
-        if (hash_hmac('sha256', "{$parts[0]}.{$parts[1]}", JWT_SECRET) !== $parts[2]) return null;
-        $payload = json_decode(base64_decode($parts[1]), true);
-        return ($payload && $payload['exp'] > time()) ? $payload : null;
-    }
-    return null;
-}
-
-// --- Request Handling ---
-$request_uri = $_SERVER['PATH_INFO'] ?? '';
-$action = $_GET['action'] ?? '';
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
-$input = json_decode(file_get_contents("php://input"), true);
-$auth = getAuth();
-$db = getDB();
 
-// AUTHENTICATION
-if (strpos($request_uri, '/auth') !== false || $action === 'login' || $action === 'register') {
-    if ($action === 'login' || strpos($request_uri, '/login') !== false) {
-        $email = $input['email'] ?? '';
-        $pass = $input['password'] ?? '';
-        $stmt = $db->prepare("SELECT * FROM users WHERE email = ? AND is_active = 1");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $res = $stmt->get_result()->fetch_assoc();
-        if ($res && password_verify($pass, $res['password_hash'])) {
-            unset($res['password_hash']);
-            $db->query("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = " . $res['id']);
-            sendResponse(true, ['user' => $res, 'token' => createJWT($res)], 'Login successful');
-        }
-        sendResponse(false, [], 'Invalid email or password', 401);
+function apiSuccess(array $data = [], string $message = 'Success'): void {
+    jsonResponse(array_merge(['success' => true, 'message' => $message], $data));
+}
+
+function apiError(string $message, int $code = 400): void {
+    jsonResponse(['success' => false, 'message' => $message], $code);
+}
+
+function apiInput(): array {
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (is_array($input)) {
+        return $input;
     }
+    return [];
+}
 
-    if ($action === 'register' || strpos($request_uri, '/register') !== false) {
-        $fname = $input['firstName'] ?? '';
-        $lname = $input['lastName'] ?? '';
-        $email = $input['email'] ?? '';
-        $phone = $input['phone'] ?? '';
-        $pass = password_hash($input['password'] ?? '', PASSWORD_DEFAULT);
-        
-        $stmt = $db->prepare("INSERT INTO users (first_name, last_name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, ?, 'member')");
-        $stmt->bind_param("sssss", $fname, $lname, $email, $phone, $pass);
-        if ($stmt->execute()) {
-            $id = $db->insert_id;
-            $u = ['id' => $id, 'email' => $email, 'role' => 'member'];
-            sendResponse(true, ['token' => createJWT($u)], 'Account created');
-        }
-        sendResponse(false, [], 'Registration failed', 400);
+function apiCsrfVerify(): bool {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        return true;
     }
+    return verifyCSRFToken();
+}
 
-    if ($action === 'verify' || strpos($request_uri, '/verify') !== false) {
-        if ($auth) {
-            $stmt = $db->prepare("SELECT id, first_name, last_name, email, role, avatar_url FROM users WHERE id = ?");
-            $stmt->bind_param("i", $auth['id']);
-            $stmt->execute();
-            sendResponse(true, ['user' => $stmt->get_result()->fetch_assoc()]);
-        }
-        sendResponse(false, [], 'Unauthorized', 401);
-    }
-
-    // Forgot Password Logic
-    if ($action === 'forgot-password' && $method === 'POST') {
-        $email = $input['email'] ?? '';
-        $user = $db->selectOne("SELECT id FROM users WHERE email = ?", [$email]);
-        if ($user) {
-            $token = bin2hex(random_bytes(32));
-            $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
-            $db->insert("INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)", [$user['id'], $token, $expires]);
-            
-            $resetLink = APP_URL . "/reset_password.php?token=" . $token;
-            $subject = "Password Reset - Salem Dominion Ministries";
-            $message = "Please click the link below to reset your password: \n\n" . $resetLink;
-            
-            if (MAIL_ENABLED) {
-                mail($email, $subject, $message, "From: " . MAIL_FROM);
-            }
-            sendResponse(true, [], 'Reset link sent to email');
-        }
-        sendResponse(false, [], 'Email not found', 404);
-    }
-
-    // Reset Password Execution
-    if ($action === 'reset-password' && $method === 'POST') {
-        $token = $input['token'] ?? '';
-        $newPass = password_hash($input['password'] ?? '', PASSWORD_DEFAULT);
-        $reset = $db->selectOne("SELECT user_id FROM password_resets WHERE token = ? AND expires_at > NOW() AND used = 0", [$token]);
-        
-        if ($reset) {
-            $db->update("UPDATE users SET password_hash = ? WHERE id = ?", [$newPass, $reset['user_id']]);
-            $db->update("UPDATE password_resets SET used = 1 WHERE token = ?", [$token]);
-            sendResponse(true, [], 'Password updated successfully');
-        }
-        sendResponse(false, [], 'Invalid or expired token', 400);
+function requireCsrf(): void {
+    if (!apiCsrfVerify()) {
+        apiError('Invalid security token. Please refresh and try again.', 403);
     }
 }
 
-// DONATIONS
-if ($action === 'confirm-donation' && $method === 'POST') {
-    if (!$auth || $auth['role'] !== 'admin') {
-        sendResponse(false, [], 'Admin access required', 403);
+function requireAuth(): array {
+    if (empty($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true) {
+        apiError('Please log in to continue.', 401);
     }
+    $user = Database::getInstance()->fetch(
+        "SELECT id, first_name, last_name, email, phone, role FROM users WHERE id = ? AND is_active = 1",
+        [$_SESSION['user_id']]
+    );
+    if (!$user) {
+        session_destroy();
+        apiError('Session expired. Please log in again.', 401);
+    }
+    return $user;
+}
 
-    $donationId = $input['donation_id'] ?? 0;
-    if ($donationId > 0) {
-        $donation = $db->selectOne("SELECT * FROM donations WHERE id = ?", [$donationId]);
-        if (!$donation) {
-            sendResponse(false, [], 'Donation not found', 404);
-        }
-        if ($donation['status'] === 'completed') {
-            sendResponse(false, [], 'Donation already confirmed', 400);
+$db = Database::getInstance();
+
+switch ($action) {
+
+    // ──────────────────────────────────────────
+    // NEWSLETTER SUBSCRIBE
+    // ──────────────────────────────────────────
+    case 'newsletter_subscribe':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $email = trim($_POST['email'] ?? '');
+        if (empty($email) || !validateEmail($email)) {
+            apiError('Please provide a valid email address.');
         }
 
-        $result = $db->update(
-            "UPDATE donations SET status = 'completed', processed_by = ? WHERE id = ?",
-            [$auth['id'], $donationId]
+        $existing = $db->fetch("SELECT id, is_active FROM newsletter_subscribers WHERE email = ?", [$email]);
+        if ($existing) {
+            if (!$existing['is_active']) {
+                $db->update('newsletter_subscribers', ['is_active' => 1, 'unsubscribed_at' => null], 'id = ?', [$existing['id']]);
+                apiSuccess([], 'Welcome back! You have been resubscribed.');
+            }
+            apiSuccess([], 'You are already subscribed. Thank you!');
+        }
+
+        $db->insert('newsletter_subscribers', [
+            'email'        => $email,
+            'ip_address'   => $_SERVER['REMOTE_ADDR'] ?? '',
+            'user_agent'   => substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500),
+            'is_active'    => 1,
+            'subscribed_at' => date('Y-m-d H:i:s'),
+            'created_at'   => date('Y-m-d H:i:s'),
+        ]);
+
+        apiSuccess([], 'Thank you for subscribing! God bless you.');
+        break;
+
+    // ──────────────────────────────────────────
+    // NEWSLETTER UNSUBSCRIBE
+    // ──────────────────────────────────────────
+    case 'newsletter_unsubscribe':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $email = trim($_POST['email'] ?? '');
+        if (empty($email) || !validateEmail($email)) {
+            apiError('Please provide a valid email address.');
+        }
+
+        $subscriber = $db->fetch("SELECT id, is_active FROM newsletter_subscribers WHERE email = ?", [$email]);
+        if (!$subscriber || !$subscriber['is_active']) {
+            apiError('Email not found or already unsubscribed.');
+        }
+
+        $db->update('newsletter_subscribers', [
+            'is_active'       => 0,
+            'unsubscribed_at' => date('Y-m-d H:i:s'),
+        ], 'id = ?', [$subscriber['id']]);
+
+        apiSuccess([], 'You have been unsubscribed successfully.');
+        break;
+
+    // ──────────────────────────────────────────
+    // CONTACT SUBMIT
+    // ──────────────────────────────────────────
+    case 'contact_submit':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $data    = apiInput();
+        $name    = trim($data['name'] ?? $_POST['name'] ?? '');
+        $email   = trim($data['email'] ?? $_POST['email'] ?? '');
+        $phone   = trim($data['phone'] ?? $_POST['phone'] ?? '');
+        $subject = trim($data['subject'] ?? $_POST['subject'] ?? '');
+        $message = trim($data['message'] ?? $_POST['message'] ?? '');
+
+        if (empty($name) || empty($email) || empty($message)) {
+            apiError('Name, email, and message are required.');
+        }
+        if (!validateEmail($email)) {
+            apiError('Please provide a valid email address.');
+        }
+        if (strlen($name) > 200) {
+            apiError('Name is too long.');
+        }
+        if (strlen($message) > 5000) {
+            apiError('Message is too long. Please keep it under 5000 characters.');
+        }
+
+        $db->insert('contact_messages', [
+            'name'       => $name,
+            'email'      => $email,
+            'phone'      => $phone,
+            'subject'    => $subject ?: 'Contact Form Submission',
+            'message'    => $message,
+            'status'     => 'unread',
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        apiSuccess([], 'Your message has been sent successfully. We will get back to you soon!');
+        break;
+
+    // ──────────────────────────────────────────
+    // PRAYER REQUEST SUBMIT
+    // ──────────────────────────────────────────
+    case 'prayer_submit':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $data         = apiInput();
+        $name         = trim($data['name'] ?? $_POST['name'] ?? '');
+        $email        = trim($data['email'] ?? $_POST['email'] ?? '');
+        $phone        = trim($data['phone'] ?? $_POST['phone'] ?? '');
+        $request_text = trim($data['request_text'] ?? $_POST['request_text'] ?? '');
+        $is_urgent    = isset($data['is_urgent']) ? intval($data['is_urgent']) : intval($_POST['is_urgent'] ?? 0);
+        $is_anonymous = isset($data['is_anonymous']) ? intval($data['is_anonymous']) : intval($_POST['is_anonymous'] ?? 0);
+
+        if (empty($request_text)) {
+            apiError('Please enter your prayer request.');
+        }
+        if (!$is_anonymous && empty($name)) {
+            apiError('Please provide your name, or submit anonymously.');
+        }
+        if (!empty($email) && !validateEmail($email)) {
+            apiError('Please provide a valid email address.');
+        }
+        if (strlen($request_text) > 5000) {
+            apiError('Prayer request is too long. Please keep it under 5000 characters.');
+        }
+
+        $db->insert('prayer_requests', [
+            'name'         => $is_anonymous ? 'Anonymous' : $name,
+            'email'        => $email,
+            'phone'        => $phone,
+            'request_text' => $request_text,
+            'is_urgent'    => $is_urgent ? 1 : 0,
+            'is_anonymous' => $is_anonymous ? 1 : 0,
+            'status'       => 'pending',
+            'is_answered'  => 0,
+            'ip_address'   => $_SERVER['REMOTE_ADDR'] ?? '',
+            'created_at'   => date('Y-m-d H:i:s'),
+        ]);
+
+        apiSuccess([], 'Your prayer request has been submitted. We are standing with you in prayer!');
+        break;
+
+    // ──────────────────────────────────────────
+    // TESTIMONIAL SUBMIT
+    // ──────────────────────────────────────────
+    case 'testimonial_submit':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $data        = apiInput();
+        $name        = trim($data['name'] ?? $_POST['name'] ?? '');
+        $email       = trim($data['email'] ?? $_POST['email'] ?? '');
+        $occupation  = trim($data['occupation'] ?? $_POST['occupation'] ?? '');
+        $testimonial = trim($data['testimonial'] ?? $_POST['testimonial'] ?? '');
+        $rating      = intval($data['rating'] ?? $_POST['rating'] ?? 5);
+
+        if (empty($name) || empty($testimonial)) {
+            apiError('Name and testimonial are required.');
+        }
+        if (!empty($email) && !validateEmail($email)) {
+            apiError('Please provide a valid email address.');
+        }
+        if ($rating < 1 || $rating > 5) {
+            $rating = 5;
+        }
+        if (strlen($testimonial) > 2000) {
+            apiError('Testimonial is too long. Please keep it under 2000 characters.');
+        }
+
+        $db->insert('testimonials', [
+            'name'        => $name,
+            'email'       => $email,
+            'occupation'  => $occupation,
+            'testimonial' => $testimonial,
+            'rating'      => $rating,
+            'status'      => 'pending',
+            'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '',
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        apiSuccess([], 'Thank you for sharing your testimony! It will be published after review.');
+        break;
+
+    // ──────────────────────────────────────────
+    // DONATION SUBMIT
+    // ──────────────────────────────────────────
+    case 'donation_submit':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $data           = apiInput();
+        $donor_name     = trim($data['donor_name'] ?? $_POST['donor_name'] ?? '');
+        $donor_email    = trim($data['donor_email'] ?? $_POST['donor_email'] ?? '');
+        $donor_phone    = trim($data['donor_phone'] ?? $_POST['donor_phone'] ?? '');
+        $amount         = floatval($data['amount'] ?? $_POST['amount'] ?? 0);
+        $donation_type  = trim($data['donation_type'] ?? $_POST['donation_type'] ?? 'general');
+        $payment_method = trim($data['payment_method'] ?? $_POST['payment_method'] ?? 'cash');
+        $notes          = trim($data['notes'] ?? $_POST['notes'] ?? '');
+
+        if (empty($donor_name) || $amount <= 0) {
+            apiError('Donor name and a valid donation amount are required.');
+        }
+        if (!empty($donor_email) && !validateEmail($donor_email)) {
+            apiError('Please provide a valid email address.');
+        }
+        if ($amount > 1000000000) {
+            apiError('Donation amount is too large.');
+        }
+
+        $reference = 'DON-' . strtoupper(bin2hex(random_bytes(6))) . '-' . date('ymd');
+
+        $donationId = $db->insert('donations', [
+            'donor_name'     => $donor_name,
+            'donor_email'    => $donor_email,
+            'donor_phone'    => $donor_phone,
+            'amount'         => $amount,
+            'currency'       => 'UGX',
+            'donation_type'  => $donation_type,
+            'payment_method' => $payment_method,
+            'reference'      => $reference,
+            'status'         => 'pending',
+            'notes'          => $notes,
+            'ip_address'     => $_SERVER['REMOTE_ADDR'] ?? '',
+            'created_at'     => date('Y-m-d H:i:s'),
+        ]);
+
+        apiSuccess([
+            'donation_id' => $donationId,
+            'reference'   => $reference,
+        ], 'Thank you for your generous donation! Reference: ' . $reference);
+        break;
+
+    // ──────────────────────────────────────────
+    // BOOK PASTOR
+    // ──────────────────────────────────────────
+    case 'book_pastor':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $data         = apiInput();
+        $name         = trim($data['name'] ?? $_POST['name'] ?? '');
+        $email        = trim($data['email'] ?? $_POST['email'] ?? '');
+        $phone        = trim($data['phone'] ?? $_POST['phone'] ?? '');
+        $booking_date = $data['booking_date'] ?? $_POST['booking_date'] ?? '';
+        $start_time   = $data['start_time'] ?? $_POST['start_time'] ?? '';
+        $booking_type = trim($data['booking_type'] ?? $_POST['booking_type'] ?? 'counseling');
+        $subject      = trim($data['subject'] ?? $_POST['subject'] ?? '');
+        $description  = trim($data['description'] ?? $_POST['description'] ?? '');
+
+        if (empty($name) || empty($email) || empty($booking_date) || empty($start_time)) {
+            apiError('Name, email, booking date, and time are required.');
+        }
+        if (!validateEmail($email)) {
+            apiError('Please provide a valid email address.');
+        }
+        if (!empty($phone) && !validatePhone($phone)) {
+            apiError('Please provide a valid phone number.');
+        }
+        if (strtotime($booking_date) === false) {
+            apiError('Please provide a valid booking date.');
+        }
+        if (strtotime($booking_date) < strtotime('today')) {
+            apiError('Booking date cannot be in the past.');
+        }
+        if (!preg_match('/^\d{2}:\d{2}$/', $start_time)) {
+            apiError('Please provide a valid time (HH:MM).');
+        }
+
+        $end_hour = intval(substr($start_time, 0, 2)) + 1;
+        $end_time = str_pad($end_hour, 2, '0', STR_PAD_LEFT) . substr($start_time, 2);
+
+        $conflict = $db->fetch(
+            "SELECT id FROM pastor_bookings WHERE booking_date = ? AND start_time = ? AND status NOT IN ('cancelled','rejected')",
+            [$booking_date, $start_time]
+        );
+        if ($conflict) {
+            apiError('This time slot is already booked. Please choose a different time.');
+        }
+
+        $db->insert('pastor_bookings', [
+            'name'         => $name,
+            'email'        => $email,
+            'phone'        => $phone,
+            'booking_date' => $booking_date,
+            'start_time'   => $start_time,
+            'end_time'     => $end_time,
+            'booking_type' => $booking_type,
+            'subject'      => $subject,
+            'description'  => $description,
+            'status'       => 'pending',
+            'ip_address'   => $_SERVER['REMOTE_ADDR'] ?? '',
+            'created_at'   => date('Y-m-d H:i:s'),
+        ]);
+
+        apiSuccess([], 'Your booking has been submitted successfully. You will receive a confirmation soon.');
+        break;
+
+    // ──────────────────────────────────────────
+    // PROPHETIC SCHOOL APPLICATION
+    // ──────────────────────────────────────────
+    case 'prophetic_apply':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $data    = apiInput();
+        $name    = trim($data['name'] ?? $_POST['name'] ?? '');
+        $email   = trim($data['email'] ?? $_POST['email'] ?? '');
+        $phone   = trim($data['phone'] ?? $_POST['phone'] ?? '');
+        $program = trim($data['program'] ?? $_POST['program'] ?? '');
+        $message = trim($data['message'] ?? $_POST['message'] ?? '');
+
+        if (empty($name) || empty($email) || empty($program)) {
+            apiError('Name, email, and program selection are required.');
+        }
+        if (!validateEmail($email)) {
+            apiError('Please provide a valid email address.');
+        }
+
+        $existing = $db->fetch(
+            "SELECT id FROM prophetic_school_applications WHERE email = ? AND program = ?",
+            [$email, $program]
+        );
+        if ($existing) {
+            apiError('You have already applied for this program.');
+        }
+
+        $db->insert('prophetic_school_applications', [
+            'name'       => $name,
+            'email'      => $email,
+            'phone'      => $phone,
+            'program'    => $program,
+            'message'    => $message,
+            'status'     => 'pending',
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        apiSuccess([], 'Your application has been submitted successfully! We will contact you soon.');
+        break;
+
+    // ──────────────────────────────────────────
+    // GET LIVE STATUS
+    // ──────────────────────────────────────────
+    case 'get_live_status':
+        if ($method !== 'GET') apiError('Method not allowed', 405);
+
+        $live = $db->fetch(
+            "SELECT is_live, youtube_url, title FROM youtube_live WHERE is_active = 1 ORDER BY id DESC LIMIT 1"
         );
 
-        if ($result) {
-            logActivity($db, $auth['id'], "Confirmed payment for donation ID " . $donationId, "donations", $donationId);
-            sendResponse(true, [], 'Donation confirmed successfully');
+        apiSuccess([
+            'data' => $live ? [
+                'is_live'     => (bool)$live['is_live'],
+                'youtube_url' => $live['youtube_url'],
+                'title'       => $live['title'],
+            ] : [
+                'is_live'     => false,
+                'youtube_url' => '',
+                'title'       => '',
+            ],
+        ]);
+        break;
+
+    // ──────────────────────────────────────────
+    // GET SERMONS
+    // ──────────────────────────────────────────
+    case 'get_sermons':
+        if ($method !== 'GET') apiError('Method not allowed', 405);
+
+        $category = $_GET['category'] ?? '';
+        $search   = $_GET['search'] ?? '';
+        $page     = max(1, intval($_GET['page'] ?? 1));
+        $limit    = intval($_GET['limit'] ?? ITEMS_PER_PAGE);
+        $offset   = ($page - 1) * $limit;
+
+        $where  = "status = 'published'";
+        $params = [];
+
+        if (!empty($category)) {
+            $where .= " AND category = ?";
+            $params[] = $category;
+        }
+        if (!empty($search)) {
+            $where .= " AND (title LIKE ? OR description LIKE ? OR sermon_series LIKE ?)";
+            $searchTerm = "%{$search}%";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+
+        $total = $db->count('sermons', $where, $params);
+        $totalPages = max(1, ceil($total / $limit));
+
+        $params[] = $limit;
+        $params[] = $offset;
+        $sermons = $db->fetchAll(
+            "SELECT id, title, sermon_date, sermon_series, category, duration, description, media_type, media_url, views, created_at FROM sermons WHERE {$where} ORDER BY sermon_date DESC LIMIT ? OFFSET ?",
+            $params
+        );
+
+        apiSuccess([
+            'data' => $sermons,
+            'pagination' => [
+                'page'        => $page,
+                'per_page'    => $limit,
+                'total'       => $total,
+                'total_pages' => $totalPages,
+            ],
+        ]);
+        break;
+
+    // ──────────────────────────────────────────
+    // GET EVENTS
+    // ──────────────────────────────────────────
+    case 'get_events':
+        if ($method !== 'GET') apiError('Method not allowed', 405);
+
+        $status = $_GET['status'] ?? '';
+        $page   = max(1, intval($_GET['page'] ?? 1));
+        $limit  = intval($_GET['limit'] ?? ITEMS_PER_PAGE);
+        $offset = ($page - 1) * $limit;
+
+        $where  = "1=1";
+        $params = [];
+
+        if (!empty($status)) {
+            $where .= " AND status = ?";
+            $params[] = $status;
         } else {
-            sendResponse(false, [], 'Failed to confirm donation', 500);
+            $where .= " AND (status = 'published' OR status = 'upcoming')";
         }
-    }
-    sendResponse(false, [], 'Invalid donation ID', 400);
-}
 
-// COMMENTS
-if (strpos($request_uri, '/comments') !== false) {
-    if ($method === 'GET') {
-        $postId = $_GET['postId'] ?? 0;
-        $res = $db->query("SELECT c.*, u.first_name, u.last_name, u.avatar_url FROM comments c LEFT JOIN users u ON c.user_id = u.id WHERE c.post_id = ".intval($postId)." AND c.status = 'approved' ORDER BY c.created_at DESC");
-        sendResponse(true, ['data' => $res]);
-    }
-    if ($method === 'POST') {
-        if (!$auth) sendResponse(false, [], 'Login required', 401);
-        $postId = $input['postId'] ?? 0;
-        $content = $input['commentContent'] ?? '';
-        $stmt = $db->prepare("INSERT INTO comments (post_id, user_id, comment_content, status) VALUES (?, ?, ?, 'approved')");
-        $stmt->bind_param("iis", $postId, $auth['id'], $content);
-        if ($stmt->execute()) sendResponse(true, [], 'Comment posted');
-        sendResponse(false, [], 'Failed to post comment', 500);
-    }
-}
+        $total = $db->count('events', $where, $params);
+        $totalPages = max(1, ceil($total / $limit));
 
-// SERMON MANAGEMENT
-if (strpos($request_uri, '/sermons') !== false) {
-    if ($method === 'GET' && isset($_GET['action'])) {
-        $action = $_GET['action'];
-        
-        switch ($action) {
-            case 'get_sermon':
-                $sermonId = intval($_GET['id']);
-                $stmt = $db->prepare("SELECT * FROM sermons WHERE id = ?");
-                $stmt->bind_param("i", $sermonId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                if ($sermon = $result->fetch_assoc()) {
-                    sendResponse(true, ['sermon' => $sermon]);
-                } else {
-                    sendResponse(false, [], 'Sermon not found', 404);
-                }
-                break;
-                
-            case 'get_sermon_detail':
-                $sermonId = intval($_GET['id']);
-                $stmt = $db->prepare("SELECT s.*, u.first_name, u.last_name FROM sermons s LEFT JOIN users u ON s.created_by = u.id WHERE s.id = ?");
-                $stmt->bind_param("i", $sermonId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                if ($sermon = $result->fetch_assoc()) {
-                    // Generate HTML content
-                    $content = "
-                        <div class='sermon-detail'>
-                            <div class='sermon-header mb-4'>
-                                <h2 class='sermon-title'>" . htmlspecialchars($sermon['title']) . "</h2>
-                                <div class='sermon-meta'>
-                                    <span class='sermon-category badge bg-primary'>" . htmlspecialchars($sermon['category']) . "</span>
-                                    <span class='sermon-date'>" . date('F j, Y', strtotime($sermon['sermon_date'])) . "</span>
-                                    <span class='sermon-views'><i class='fas fa-eye'></i> " . number_format($sermon['views'] ?? 0) . " views</span>
-                                </div>
-                            </div>
-                            <div class='media-player mb-4'>
-                                " . ($sermon['media_type'] === 'video' && $sermon['media_url'] ? 
-                                    "<video class='video-player' controls><source src='" . htmlspecialchars($sermon['media_url']) . "' type='video/mp4'></video>" :
-                                    ($sermon['media_type'] === 'audio' && $sermon['media_url'] ?
-                                    "<div class='audio-player'>
-                                        <h3><i class='fas fa-microphone-alt'></i> Audio Sermon</h3>
-                                        <audio controls style='width: 100%; margin-top: 1rem;'>
-                                            <source src='" . htmlspecialchars($sermon['media_url']) . "' type='audio/mpeg'>
-                                        </audio>
-                                    </div>" :
-                                    "<div class='text-center text-white py-5'>
-                                        <i class='fas fa-microphone' style='font-size: 3rem; margin-bottom: 1rem; display: block;'></i>
-                                        <h3>Sermon Available</h3>
-                                        <p>Join us for this powerful message</p>
-                                    </div>")
-                                . "
-                            </div>
-                            <div class='sermon-content'>
-                                " . nl2br(htmlspecialchars($sermon['description'] ?? '')) . "
-                                " . ($sermon['sermon_text'] ? "<div class='sermon-text mt-4'><h4>Scripture & Notes</h4><p>" . nl2br(htmlspecialchars($sermon['sermon_text'])) . "</p></div>" : '') . "
-                            </div>
-                            <div class='comments-section'>
-                                <div class='comments-header'>
-                                    <h3 class='comments-title'>Comments</h3>
-                                    <span class='comment-count'>0 comments</span>
-                                </div>
-                                <div class='comment-form'>
-                                    <textarea class='comment-input' placeholder='Share your thoughts on this sermon...' rows='3'></textarea>
-                                    <div class='comment-actions'>
-                                        <button class='btn-comment' onclick='addSermonComment(" . $sermonId . ")'>Post Comment</button>
-                                    </div>
-                                </div>
-                                <div class='comment-list'>
-                                    <p class='text-center text-muted'>Loading comments...</p>
-                                </div>
-                            </div>
-                        </div>
-                    ";
-                    sendResponse(true, ['content' => $content]);
-                } else {
-                    sendResponse(false, [], 'Sermon not found', 404);
-                }
-                break;
-                
-            case 'get_sermon_reactions':
-                $sermonId = intval($_GET['sermon_id']);
-                $stmt = $db->prepare("SELECT reaction_type, COUNT(*) as count FROM sermon_reactions WHERE sermon_id = ? GROUP BY reaction_type");
-                $stmt->bind_param("i", $sermonId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $reactions = [];
-                while ($row = $result->fetch_assoc()) {
-                    $reactions[$row['reaction_type']] = $row['count'];
-                }
-                sendResponse(true, ['reactions' => $reactions]);
-                break;
-                
-            case 'get_sermon_comments':
-                $sermonId = intval($_GET['sermon_id']);
-                $stmt = $db->prepare("SELECT c.*, u.first_name, u.last_name FROM comments c LEFT JOIN users u ON c.user_id = u.id WHERE c.post_id = ? AND c.post_type = 'sermon' ORDER BY c.created_at DESC");
-                $stmt->bind_param("i", $sermonId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $comments = [];
-                while ($row = $result->fetch_assoc()) {
-                    $comments[] = $row;
-                }
-                sendResponse(true, ['comments' => $comments]);
-                break;
-                
-            case 'download_sermon':
-                $sermonId = intval($_GET['id']);
-                $stmt = $db->prepare("SELECT media_url, title FROM sermons WHERE id = ? AND media_url IS NOT NULL");
-                $stmt->bind_param("i", $sermonId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                if ($sermon = $result->fetch_assoc()) {
-                    sendResponse(true, ['download_url' => $sermon['media_url'], 'title' => $sermon['title']]);
-                } else {
-                    sendResponse(false, [], 'Download not available', 404);
-                }
-                break;
-        }
-    }
-    
-    if ($method === 'POST' && isset($_POST['action'])) {
-        $action = $_POST['action'];
-        
-        switch ($action) {
-            case 'add_sermon':
-                if (!$auth || $auth['role'] !== 'admin') {
-                    sendResponse(false, [], 'Unauthorized', 403);
-                }
-                
-                $title = trim($_POST['title']);
-                $sermonDate = $_POST['sermon_date'];
-                $sermonSeries = trim($_POST['sermon_series']);
-                $category = $_POST['category'];
-                $duration = intval($_POST['duration']);
-                $description = trim($_POST['description']);
-                $sermonText = trim($_POST['sermon_text']);
-                $mediaType = $_POST['media_type'];
-                $status = $_POST['status'];
-                $sermonId = intval($_POST['sermon_id']);
-                
-                if (empty($title) || empty($sermonDate)) {
-                    sendResponse(false, [], 'Title and sermon date are required', 400);
-                }
-                
-                // Handle file upload
-                $mediaUrl = null;
-                if (isset($_FILES['media_file']) && $_FILES['media_file']['error'] === 0) {
-                    $uploadDir = 'uploads/sermons/';
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
-                    }
-                    
-                    $fileName = time() . '_' . basename($_FILES['media_file']['name']);
-                    $targetPath = $uploadDir . $fileName;
-                    
-                    if (move_uploaded_file($_FILES['media_file']['tmp_name'], $targetPath)) {
-                        $mediaUrl = $targetPath;
-                    }
-                }
-                
-                if ($sermonId > 0) {
-                    $stmt = $db->prepare("UPDATE sermons SET title = ?, sermon_date = ?, sermon_series = ?, category = ?, duration = ?, description = ?, sermon_text = ?, media_type = ?, media_url = ?, status = ?, updated_at = NOW() WHERE id = ?");
-                    $stmt->bind_param("sssissssssi", $title, $sermonDate, $sermonSeries, $category, $duration, $description, $sermonText, $mediaType, $mediaUrl, $status, $sermonId);
-                } else {
-                    $stmt = $db->prepare("INSERT INTO sermons (title, sermon_date, sermon_series, category, duration, description, sermon_text, media_type, media_url, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-                    $stmt->bind_param("sssisssssssi", $title, $sermonDate, $sermonSeries, $category, $duration, $description, $sermonText, $mediaType, $mediaUrl, $status, $auth['id']);
-                }
-                
-                if ($stmt->execute()) {
-                    sendResponse(true, [], 'Sermon saved successfully');
-                } else {
-                    sendResponse(false, [], 'Failed to save sermon', 500);
-                }
-                break;
-                
-            case 'delete_sermon':
-                if (!$auth || $auth['role'] !== 'admin') {
-                    sendResponse(false, [], 'Unauthorized', 403);
-                }
-                
-                $sermonId = intval($_GET['id']);
-                $stmt = $db->prepare("DELETE FROM sermons WHERE id = ?");
-                $stmt->bind_param("i", $sermonId);
-                if ($stmt->execute()) {
-                    sendResponse(true, [], 'Sermon deleted successfully');
-                } else {
-                    sendResponse(false, [], 'Failed to delete sermon', 500);
-                }
-                break;
-        }
-    }
-}
+        $params[] = $limit;
+        $params[] = $offset;
+        $events = $db->fetchAll(
+            "SELECT id, title, description, event_date, end_date, event_time, location, category, status, image_url, is_recurring, created_at FROM events WHERE {$where} ORDER BY event_date ASC LIMIT ? OFFSET ?",
+            $params
+        );
 
-// NEWS MANAGEMENT
-if (strpos($request_uri, '/news') !== false) {
-    if ($method === 'GET' && isset($_GET['action'])) {
-        $action = $_GET['action'];
-        
-        switch ($action) {
-            case 'get_news':
-                $newsId = intval($_GET['id']);
-                $stmt = $db->prepare("SELECT * FROM news WHERE id = ?");
-                $stmt->bind_param("i", $newsId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                if ($news = $result->fetch_assoc()) {
-                    sendResponse(true, ['news' => $news]);
-                } else {
-                    sendResponse(false, [], 'News not found', 404);
-                }
-                break;
-                
-            case 'get_news_detail':
-                $newsId = intval($_GET['id']);
-                $stmt = $db->prepare("SELECT n.*, u.first_name, u.last_name FROM news n LEFT JOIN users u ON n.author_id = u.id WHERE n.id = ?");
-                $stmt->bind_param("i", $newsId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                if ($news = $result->fetch_assoc()) {
-                    // Generate HTML content
-                    $content = "
-                        <div class='news-detail'>
-                            <div class='news-header mb-4'>
-                                <h2 class='news-title'>" . htmlspecialchars($news['title']) . "</h2>
-                                <div class='news-meta'>
-                                    <span class='news-category badge bg-primary'>" . htmlspecialchars($news['category']) . "</span>
-                                    <span class='news-date'>" . date('F j, Y', strtotime($news['created_at'])) . "</span>
-                                    <span class='news-views'><i class='fas fa-eye'></i> " . number_format($news['views'] ?? 0) . " views</span>
-                                </div>
-                            </div>
-                            <div class='news-content'>
-                                " . nl2br(htmlspecialchars($news['content'])) . "
-                            </div>
-                            <div class='comments-section'>
-                                <div class='comments-header'>
-                                    <h3 class='comments-title'>Comments</h3>
-                                    <span class='comment-count'>0 comments</span>
-                                </div>
-                                <div class='comment-form'>
-                                    <textarea class='comment-input' placeholder='Write a comment...' rows='3'></textarea>
-                                    <div class='comment-actions'>
-                                        <button class='btn-comment' onclick='addComment(" . $newsId . ")'>Post Comment</button>
-                                    </div>
-                                </div>
-                                <div class='comment-list'>
-                                    <p class='text-center text-muted'>Loading comments...</p>
-                                </div>
-                            </div>
-                        </div>
-                    ";
-                    sendResponse(true, ['content' => $content]);
-                } else {
-                    sendResponse(false, [], 'News not found', 404);
-                }
-                break;
-                
-            case 'get_reactions':
-                $newsId = intval($_GET['news_id']);
-                $stmt = $db->prepare("SELECT reaction_type, COUNT(*) as count FROM news_reactions WHERE news_id = ? GROUP BY reaction_type");
-                $stmt->bind_param("i", $newsId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $reactions = [];
-                while ($row = $result->fetch_assoc()) {
-                    $reactions[$row['reaction_type']] = $row['count'];
-                }
-                sendResponse(true, ['reactions' => $reactions]);
-                break;
-                
-            case 'get_comments':
-                $newsId = intval($_GET['news_id']);
-                $stmt = $db->prepare("SELECT c.*, u.first_name, u.last_name FROM comments c LEFT JOIN users u ON c.user_id = u.id WHERE c.post_id = ? AND c.post_type = 'news' ORDER BY c.created_at DESC");
-                $stmt->bind_param("i", $newsId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $comments = [];
-                while ($row = $result->fetch_assoc()) {
-                    $comments[] = $row;
-                }
-                sendResponse(true, ['comments' => $comments]);
-                break;
-        }
-    }
-    
-    if ($method === 'POST' && isset($_POST['action'])) {
-        $action = $_POST['action'];
-        
-        switch ($action) {
-            case 'add_news':
-                if (!$auth || $auth['role'] !== 'admin') {
-                    sendResponse(false, [], 'Unauthorized', 403);
-                }
-                
-                $title = trim($_POST['title']);
-                $category = $_POST['category'];
-                $excerpt = trim($_POST['excerpt']);
-                $content = trim($_POST['content']);
-                $status = $_POST['status'];
-                $newsId = intval($_POST['news_id']);
-                
-                if (empty($title) || empty($content)) {
-                    sendResponse(false, [], 'Title and content are required', 400);
-                }
-                
-                if ($newsId > 0) {
-                    $stmt = $db->prepare("UPDATE news SET title = ?, category = ?, excerpt = ?, content = ?, status = ?, updated_at = NOW() WHERE id = ?");
-                    $stmt->bind_param("sssssi", $title, $category, $excerpt, $content, $status, $newsId);
-                } else {
-                    $stmt = $db->prepare("INSERT INTO news (title, category, excerpt, content, status, author_id, created_at, published_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
-                    $stmt->bind_param("sssssi", $title, $category, $excerpt, $content, $status, $auth['id']);
-                }
-                
-                if ($stmt->execute()) {
-                    sendResponse(true, [], 'News saved successfully');
-                } else {
-                    sendResponse(false, [], 'Failed to save news', 500);
-                }
-                break;
-                
-            case 'delete_news':
-                if (!$auth || $auth['role'] !== 'admin') {
-                    sendResponse(false, [], 'Unauthorized', 403);
-                }
-                
-                $newsId = intval($_GET['id']);
-                $stmt = $db->prepare("DELETE FROM news WHERE id = ?");
-                $stmt->bind_param("i", $newsId);
-                if ($stmt->execute()) {
-                    sendResponse(true, [], 'News deleted successfully');
-                } else {
-                    sendResponse(false, [], 'Failed to delete news', 500);
-                }
-                break;
-        }
-    }
-}
+        apiSuccess([
+            'data' => $events,
+            'pagination' => [
+                'page'        => $page,
+                'per_page'    => $limit,
+                'total'       => $total,
+                'total_pages' => $totalPages,
+            ],
+        ]);
+        break;
 
-// SUPREME ADMIN LOGIC: Reagan Otema makes anyone an admin
-if ($action === 'grant_admin' && $method === 'POST') {
-    // Reagan Otema supreme check
-    if (!$auth || $auth['email'] !== 'reaganotemas@gmail.com') {
-        sendResponse(false, [], 'Supreme developer access required', 403);
-    }
-    
-    $targetUserId = $input['userId'] ?? 0;
-    if ($targetUserId > 0) {
-        $stmt = $db->prepare("UPDATE users SET role = 'admin' WHERE id = ?");
-        $stmt->bind_param("i", $targetUserId);
-        if ($stmt->execute()) {
-            sendResponse(true, [], 'User promoted to admin successfully');
-        }
-    }
-    sendResponse(false, [], 'Invalid user ID', 400);
-}
+    // ──────────────────────────────────────────
+    // GET NEWS
+    // ──────────────────────────────────────────
+    case 'get_news':
+        if ($method !== 'GET') apiError('Method not allowed', 405);
 
-$db->close();
-sendResponse(false, [], 'Endpoint not found', 404);
-?>
+        $category = $_GET['category'] ?? '';
+        $search   = $_GET['search'] ?? '';
+        $page     = max(1, intval($_GET['page'] ?? 1));
+        $limit    = intval($_GET['limit'] ?? ITEMS_PER_PAGE);
+        $offset   = ($page - 1) * $limit;
+
+        $where  = "status = 'published'";
+        $params = [];
+
+        if (!empty($category)) {
+            $where .= " AND category = ?";
+            $params[] = $category;
+        }
+        if (!empty($search)) {
+            $where .= " AND (title LIKE ? OR content LIKE ? OR excerpt LIKE ?)";
+            $searchTerm = "%{$search}%";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+
+        $total = $db->count('news', $where, $params);
+        $totalPages = max(1, ceil($total / $limit));
+
+        $params[] = $limit;
+        $params[] = $offset;
+        $articles = $db->fetchAll(
+            "SELECT id, title, category, excerpt, content, image_url, views, created_at FROM news WHERE {$where} ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            $params
+        );
+
+        apiSuccess([
+            'data' => $articles,
+            'pagination' => [
+                'page'        => $page,
+                'per_page'    => $limit,
+                'total'       => $total,
+                'total_pages' => $totalPages,
+            ],
+        ]);
+        break;
+
+    // ──────────────────────────────────────────
+    // GET GALLERY
+    // ──────────────────────────────────────────
+    case 'get_gallery':
+        if ($method !== 'GET') apiError('Method not allowed', 405);
+
+        $album    = $_GET['album'] ?? '';
+        $category = $_GET['category'] ?? '';
+        $page     = max(1, intval($_GET['page'] ?? 1));
+        $limit    = intval($_GET['limit'] ?? ITEMS_PER_PAGE);
+        $offset   = ($page - 1) * $limit;
+
+        $where  = "1=1";
+        $params = [];
+
+        if (!empty($album)) {
+            $where .= " AND album = ?";
+            $params[] = $album;
+        }
+        if (!empty($category)) {
+            $where .= " AND category = ?";
+            $params[] = $category;
+        }
+
+        $total = $db->count('gallery', $where, $params);
+        $totalPages = max(1, ceil($total / $limit));
+
+        $params[] = $limit;
+        $params[] = $offset;
+        $items = $db->fetchAll(
+            "SELECT id, title, file_url, file_type, album, category, description, created_at FROM gallery WHERE {$where} ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            $params
+        );
+
+        apiSuccess([
+            'data' => $items,
+            'pagination' => [
+                'page'        => $page,
+                'per_page'    => $limit,
+                'total'       => $total,
+                'total_pages' => $totalPages,
+            ],
+        ]);
+        break;
+
+    // ──────────────────────────────────────────
+    // SEARCH (across sermons, events, news)
+    // ──────────────────────────────────────────
+    case 'search':
+        if ($method !== 'GET') apiError('Method not allowed', 405);
+
+        $query = trim($_GET['query'] ?? '');
+        if (empty($query)) {
+            apiError('Please provide a search query.');
+        }
+
+        $term = "%{$query}%";
+
+        $sermons = $db->fetchAll(
+            "SELECT id, title, sermon_date, category, 'sermon' AS type FROM sermons WHERE status = 'published' AND (title LIKE ? OR description LIKE ?) ORDER BY sermon_date DESC LIMIT 10",
+            [$term, $term]
+        );
+
+        $events = $db->fetchAll(
+            "SELECT id, title, event_date, category, 'event' AS type FROM events WHERE (status = 'published' OR status = 'upcoming') AND (title LIKE ? OR description LIKE ?) ORDER BY event_date ASC LIMIT 10",
+            [$term, $term]
+        );
+
+        $news = $db->fetchAll(
+            "SELECT id, title, created_at, category, 'news' AS type FROM news WHERE status = 'published' AND (title LIKE ? OR content LIKE ?) ORDER BY created_at DESC LIMIT 10",
+            [$term, $term]
+        );
+
+        apiSuccess([
+            'data' => [
+                'sermons' => $sermons,
+                'events'  => $events,
+                'news'    => $news,
+            ],
+            'total' => count($sermons) + count($events) + count($news),
+        ]);
+        break;
+
+    // ──────────────────────────────────────────
+    // GET TESTIMONIALS (approved only)
+    // ──────────────────────────────────────────
+    case 'get_testimonials':
+        if ($method !== 'GET') apiError('Method not allowed', 405);
+
+        $page  = max(1, intval($_GET['page'] ?? 1));
+        $limit = intval($_GET['limit'] ?? ITEMS_PER_PAGE);
+        $offset = ($page - 1) * $limit;
+
+        $total = $db->count('testimonials', "status = 'approved'");
+        $totalPages = max(1, ceil($total / $limit));
+
+        $testimonials = $db->fetchAll(
+            "SELECT id, name, occupation, testimonial, rating, created_at FROM testimonials WHERE status = 'approved' ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            [$limit, $offset]
+        );
+
+        apiSuccess([
+            'data' => $testimonials,
+            'pagination' => [
+                'page'        => $page,
+                'per_page'    => $limit,
+                'total'       => $total,
+                'total_pages' => $totalPages,
+            ],
+        ]);
+        break;
+
+    // ──────────────────────────────────────────
+    // GET BIBLE VERSE
+    // ──────────────────────────────────────────
+    case 'get_bible_verse':
+        if ($method !== 'GET') apiError('Method not allowed', 405);
+
+        $verse = $db->fetch("SELECT id, verse_text, reference, category FROM bible_verses ORDER BY RAND() LIMIT 1");
+
+        if (!$verse) {
+            $verse = [
+                'verse_text' => 'For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.',
+                'reference'  => 'Jeremiah 29:11',
+                'category'   => 'promise',
+            ];
+        }
+
+        apiSuccess(['data' => $verse]);
+        break;
+
+    // ──────────────────────────────────────────
+    // USER LOGIN
+    // ──────────────────────────────────────────
+    case 'login':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $data     = apiInput();
+        $email    = trim($data['email'] ?? $_POST['email'] ?? '');
+        $password = $data['password'] ?? $_POST['password'] ?? '';
+
+        if (empty($email) || empty($password)) {
+            apiError('Email and password are required.');
+        }
+        if (!validateEmail($email)) {
+            apiError('Please provide a valid email address.');
+        }
+
+        $user = $db->fetch(
+            "SELECT id, first_name, last_name, email, phone, role, password_hash, is_active FROM users WHERE email = ?",
+            [$email]
+        );
+
+        if (!$user) {
+            apiError('Invalid email or password.');
+        }
+        if (!$user['is_active']) {
+            apiError('Your account has been deactivated. Please contact the administrator.');
+        }
+        if (!password_verify($password, $user['password_hash'])) {
+            apiError('Invalid email or password.');
+        }
+
+        $db->update('users', ['last_login' => date('Y-m-d H:i:s')], 'id = ?', [$user['id']]);
+
+        session_regenerate_id(true);
+        $_SESSION['user_logged_in'] = true;
+        $_SESSION['user_id']        = $user['id'];
+        $_SESSION['user_name']      = $user['first_name'] . ' ' . $user['last_name'];
+        $_SESSION['user_email']     = $user['email'];
+        $_SESSION['user_role']      = $user['role'];
+        $_SESSION['user_login_time'] = time();
+
+        unset($user['password_hash']);
+
+        apiSuccess(['user' => $user], 'Login successful. Welcome back!');
+        break;
+
+    // ──────────────────────────────────────────
+    // USER REGISTER
+    // ──────────────────────────────────────────
+    case 'register':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $data            = apiInput();
+        $first_name      = trim($data['first_name'] ?? $_POST['first_name'] ?? '');
+        $last_name       = trim($data['last_name'] ?? $_POST['last_name'] ?? '');
+        $email           = trim($data['email'] ?? $_POST['email'] ?? '');
+        $phone           = trim($data['phone'] ?? $_POST['phone'] ?? '');
+        $password        = $data['password'] ?? $_POST['password'] ?? '';
+        $confirm_password = $data['confirm_password'] ?? $_POST['confirm_password'] ?? '';
+
+        if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
+            apiError('First name, last name, email, and password are required.');
+        }
+        if (!validateEmail($email)) {
+            apiError('Please provide a valid email address.');
+        }
+        if (strlen($password) < 8) {
+            apiError('Password must be at least 8 characters long.');
+        }
+        if ($password !== $confirm_password) {
+            apiError('Passwords do not match.');
+        }
+        if (!empty($phone) && !validatePhone($phone)) {
+            apiError('Please provide a valid phone number.');
+        }
+
+        $existing = $db->fetch("SELECT id FROM users WHERE email = ?", [$email]);
+        if ($existing) {
+            apiError('An account with this email already exists.');
+        }
+
+        $userId = $db->insert('users', [
+            'first_name'    => $first_name,
+            'last_name'     => $last_name,
+            'email'         => $email,
+            'phone'         => $phone,
+            'password_hash' => password_hash($password, HASH_ALGO, ['cost' => HASH_COST]),
+            'role'          => 'member',
+            'is_active'     => 1,
+            'created_at'    => date('Y-m-d H:i:s'),
+            'last_login'    => date('Y-m-d H:i:s'),
+        ]);
+
+        session_regenerate_id(true);
+        $_SESSION['user_logged_in']  = true;
+        $_SESSION['user_id']         = $userId;
+        $_SESSION['user_name']       = $first_name . ' ' . $last_name;
+        $_SESSION['user_email']      = $email;
+        $_SESSION['user_role']       = 'member';
+        $_SESSION['user_login_time'] = time();
+
+        apiSuccess([
+            'user' => [
+                'id'         => $userId,
+                'first_name' => $first_name,
+                'last_name'  => $last_name,
+                'email'      => $email,
+                'phone'      => $phone,
+                'role'       => 'member',
+            ],
+        ], 'Registration successful! Welcome to Salem Dominion Ministries.');
+        break;
+
+    // ──────────────────────────────────────────
+    // USER LOGOUT
+    // ──────────────────────────────────────────
+    case 'logout':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+
+        $userId = $_SESSION['user_id'] ?? 0;
+        if ($userId) {
+            logActivity($db, 'logout', 'auth', $userId, 'User logged out');
+        }
+
+        session_destroy();
+        apiSuccess([], 'Logged out successfully.');
+        break;
+
+    // ──────────────────────────────────────────
+    // GET USER PROFILE
+    // ──────────────────────────────────────────
+    case 'get_profile':
+        if ($method !== 'GET') apiError('Method not allowed', 405);
+
+        $user = requireAuth();
+
+        apiSuccess(['user' => $user]);
+        break;
+
+    // ──────────────────────────────────────────
+    // UPDATE PROFILE
+    // ──────────────────────────────────────────
+    case 'update_profile':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+        $currentUser = requireAuth();
+
+        $data       = apiInput();
+        $first_name = trim($data['first_name'] ?? '');
+        $last_name  = trim($data['last_name'] ?? '');
+        $phone      = trim($data['phone'] ?? '');
+
+        if (empty($first_name) || empty($last_name)) {
+            apiError('First name and last name are required.');
+        }
+
+        $db->update('users', [
+            'first_name' => $first_name,
+            'last_name'  => $last_name,
+            'phone'      => $phone,
+        ], 'id = ?', [$currentUser['id']]);
+
+        $_SESSION['user_name'] = $first_name . ' ' . $last_name;
+
+        apiSuccess([], 'Profile updated successfully.');
+        break;
+
+    // ──────────────────────────────────────────
+    // DEFAULT
+    // ──────────────────────────────────────────
+    default:
+        apiError('Invalid or unsupported action.', 404);
+        break;
+}

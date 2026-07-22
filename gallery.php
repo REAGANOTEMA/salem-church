@@ -1,1140 +1,325 @@
 <?php
-// GALLERY PAGE - Salem Dominion Ministries - Professional & Mobile Responsive
-require_once 'db_connection.php';
+$pageTitle = 'Gallery | Salem Dominion Ministries';
+$currentPage = 'gallery';
+$pageDescription = 'Browse photos and videos from worship services, events, and community life at Salem Dominion Ministries.';
+
 require_once 'config.php';
+require_once 'db_connection.php';
 
 $conn = createDatabaseConnection();
 
-// Pagination and filtering
-$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = 12;
 $offset = ($page - 1) * $per_page;
-$category_filter = isset($_GET['category']) ? $_GET['category'] : '';
-$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$category_filter = trim($_GET['category'] ?? '');
+$album_filter = trim($_GET['album'] ?? '');
 
-// Initialize variables
 $gallery_items = [];
 $total_items = 0;
 $total_pages = 1;
 $categories = [];
+$albums = [];
+$show_db = false;
+
+$default_gallery = [
+    ['src' => 'assets/church-choir-worship.jpeg', 'title' => 'Church Choir Worship', 'category' => 'Worship'],
+    ['src' => 'assets/praise-worship-team.jpeg', 'title' => 'Praise & Worship Team', 'category' => 'Worship'],
+    ['src' => 'assets/apostle-faty-preaching.jpeg', 'title' => 'Apostle Faty Preaching', 'category' => 'Preaching'],
+    ['src' => 'assets/ourmembers.jpeg', 'title' => 'Our Members', 'category' => 'Community'],
+    ['src' => 'assets/children-celebrating-Z18oVWUU.jpeg', 'title' => 'Children Celebrating', 'category' => 'Children'],
+    ['src' => 'assets/kids-supports-are-welcome.jpeg', 'title' => 'Kids - Support Is Welcome', 'category' => 'Children'],
+    ['src' => 'assets/support-children-now-Dqa2JhXn.jpeg', 'title' => 'Support Children Now', 'category' => 'Children'],
+];
 
 try {
     if ($conn) {
-        // Check if gallery table exists
-        $table_check = $conn->query("SHOW TABLES LIKE 'gallery'");
-        if ($table_check && $table_check->num_rows > 0) {
-            // Get categories
-            $categories_stmt = $conn->prepare("SELECT DISTINCT category FROM gallery WHERE category IS NOT NULL AND category != '' AND status = 'published' ORDER BY category");
-            if ($categories_stmt) {
-                $categories_stmt->execute();
-                $categories_result = $categories_stmt->get_result();
-                $categories = $categories_result->fetch_all(MYSQLI_ASSOC);
-                $categories_stmt->close();
+        $tableCheck = $conn->query("SHOW TABLES LIKE 'gallery'");
+        if ($tableCheck && $tableCheck->num_rows > 0) {
+            $show_db = true;
+
+            $catStmt = $conn->prepare("SELECT DISTINCT category, COUNT(*) as count FROM gallery WHERE status = 'published' AND category IS NOT NULL AND category != '' GROUP BY category ORDER BY category");
+            if ($catStmt) {
+                $catStmt->execute();
+                $categories = $catStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                $catStmt->close();
             }
-            
-            // Get gallery items with proper error handling
-            $query = "SELECT g.*, CONCAT(u.first_name, ' ', u.last_name) as uploader_name 
-                      FROM gallery g 
-                      LEFT JOIN users u ON g.uploaded_by = u.id 
-                      WHERE g.status = 'published'";
-            
+
+            $albStmt = $conn->prepare("SELECT DISTINCT album_name, COUNT(*) as count FROM gallery WHERE status = 'published' AND album_name IS NOT NULL AND album_name != '' GROUP BY album_name ORDER BY album_name");
+            if ($albStmt) {
+                $albStmt->execute();
+                $albums = $albStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                $albStmt->close();
+            }
+
+            $where = "WHERE g.status = 'published'";
             $params = [];
             $types = '';
-            
             if ($category_filter) {
-                $query .= " AND g.category = ?";
+                $where .= " AND g.category = ?";
                 $params[] = $category_filter;
                 $types .= 's';
             }
-            
-            if ($search) {
-                $query .= " AND (g.title LIKE ? OR g.description LIKE ?)";
-                $search_param = "%$search%";
-                $params[] = $search_param;
-                $params[] = $search_param;
-                $types .= 'ss';
+            if ($album_filter) {
+                $where .= " AND g.album_name = ?";
+                $params[] = $album_filter;
+                $types .= 's';
             }
-            
-            $query .= " ORDER BY g.created_at DESC LIMIT ? OFFSET ?";
-            $params[] = $per_page;
-            $params[] = $offset;
-            $types .= 'ii';
-            
+
+            $countStmt = $conn->prepare("SELECT COUNT(*) FROM gallery g {$where}");
+            if ($countStmt) {
+                if (!empty($params)) $countStmt->bind_param($types, ...$params);
+                $countStmt->execute();
+                $total_items = $countStmt->get_result()->fetch_row()[0];
+                $total_pages = max(1, ceil($total_items / $per_page));
+                $page = min($page, $total_pages);
+                $countStmt->close();
+            }
+
+            $query = "SELECT g.*, CONCAT(u.first_name, ' ', u.last_name) as uploader_name FROM gallery g LEFT JOIN users u ON g.uploaded_by = u.id {$where} ORDER BY g.created_at DESC LIMIT ? OFFSET ?";
             $stmt = $conn->prepare($query);
             if ($stmt) {
-                if (!empty($params)) {
-                    $stmt->bind_param($types, ...$params);
-                }
+                $fp = array_merge($params, [$per_page, $offset]);
+                $ft = $types . 'ii';
+                $stmt->bind_param($ft, ...$fp);
                 $stmt->execute();
-                $result = $stmt->get_result();
-                $gallery_items = $result->fetch_all(MYSQLI_ASSOC);
+                $gallery_items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
             }
-            
-            // Get total count for pagination
-            $count_query = "SELECT COUNT(*) as total FROM gallery WHERE status = 'published'";
-            $count_params = [];
-            $count_types = '';
-            
-            if ($category_filter) {
-                $count_query .= " AND category = ?";
-                $count_params[] = $category_filter;
-                $count_types .= 's';
-            }
-            
-            if ($search) {
-                $count_query .= " AND (title LIKE ? OR description LIKE ?)";
-                $search_param = "%$search%";
-                $count_params[] = $search_param;
-                $count_params[] = $search_param;
-                $count_types .= 'ss';
-            }
-            
-            $count_stmt = $conn->prepare($count_query);
-            if ($count_stmt) {
-                if (!empty($count_params)) {
-                    $count_stmt->bind_param($count_types, ...$count_params);
-                }
-                $count_stmt->execute();
-                $count_result = $count_stmt->get_result();
-                $total_items = $count_result->fetch_assoc()['total'];
-                $count_stmt->close();
-            }
-            
-            $total_pages = ceil($total_items / $per_page);
-        } else {
-            // Gallery table doesn't exist, set empty defaults
-            $gallery_items = [];
-            $total_items = 0;
-            $total_pages = 1;
-            $categories = [];
         }
-        
-        $conn->close();
     }
 } catch (Exception $e) {
-    $gallery_items = [];
-    $total_items = 0;
-    $total_pages = 1;
-    $categories = [];
+    error_log("Gallery page error: " . $e->getMessage());
 }
 
-// Helper function for safe HTML output
-function safe_html($string, $default = '') {
-    return htmlspecialchars($string ?? $default, ENT_QUOTES, 'UTF-8');
-}
-
-// Helper function to format date
-function format_gallery_date($date) {
-    return date('F j, Y', strtotime($date));
-}
-
-// Helper function to get media icon
-function get_media_icon($file_type) {
-    $icons = [
-        'image' => 'fa-image',
-        'video' => 'fa-video',
-        'audio' => 'fa-music',
-        'document' => 'fa-file-alt'
-    ];
-    return $icons[$file_type] ?? 'fa-file';
-}
+include 'components/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src <?php echo CSP_DEFAULT_SRC; ?>; script-src <?php echo CSP_SCRIPT_SRC; ?>; style-src <?php echo CSP_STYLE_SRC; ?>; font-src <?php echo CSP_FONT_SRC; ?>; img-src <?php echo CSP_IMG_SRC; ?>; connect-src <?php echo CSP_CONNECT_SRC; ?>">
-    <title>Gallery | Salem Dominion Ministries</title>
-    <meta name="description" content="Explore our gallery of events, services, and ministry moments at Salem Dominion Ministries">
-    <link rel="icon" href="public/logo-icon.jpeg">
-    <link rel="shortcut icon" href="public/logo-icon.jpeg">
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Mobile Responsive CSS -->
-    <link href="assets/mobile-responsive.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
-    
-    <style>
-        /* ICONIC DESIGN SYSTEM - Top Notch Colors Only */
-        :root {
-            /* Primary Palette - Ultra Premium */
-            --midnight-blue: #0f172a;
-            --ocean-blue: #0ea5e9;
-            --sky-blue: #38bdf8;
-            --ice-blue: #7dd3fc;
-            --snow-white: #ffffff;
-            --pearl-white: #f8fafc;
-            
-            /* Divine Accents */
-            --heavenly-gold: #fbbf24;
-            --divine-light: #fef3c7;
-            
-            /* Shadows & Effects */
-            --shadow-divine: 0 20px 40px rgba(15, 23, 42, 0.15);
-            --shadow-heavenly: 0 25px 50px rgba(251, 191, 36, 0.2);
-            --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.08);
-            --shadow-glow: 0 0 40px rgba(14, 165, 233, 0.3);
-            
-            /* Gradients - Iconic */
-            --gradient-ocean: linear-gradient(135deg, var(--midnight-blue) 0%, var(--ocean-blue) 50%, var(--sky-blue) 100%);
-            --gradient-heaven: linear-gradient(135deg, var(--snow-white) 0%, var(--pearl-white) 50%, var(--ice-blue) 100%);
-            --gradient-divine: linear-gradient(135deg, var(--heavenly-gold) 0%, var(--divine-light) 100%);
-        }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<style>
+.gallery-hero {
+    background: linear-gradient(135deg, rgba(15,23,42,0.85), rgba(14,165,233,0.75)), url('assets/hero-choir-6lo-hX_h.jpg') center/cover no-repeat;
+    padding: 100px 0 60px;
+    color: #fff;
+    text-align: center;
+}
+.gallery-hero h1 { font-family: 'Playfair Display', serif; font-size: 2.8rem; font-weight: 700; }
+.gallery-hero p { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 15px auto 0; }
 
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: var(--midnight-blue);
-            color: var(--snow-white);
-            min-height: 100vh;
-        }
+.album-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 30px; }
+.album-tab { border: 2px solid #e2e8f0; background: #fff; padding: 8px 20px; border-radius: 30px; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.album-tab:hover { border-color: #0ea5e9; color: #0ea5e9; }
+.album-tab.active { background: linear-gradient(135deg, #0ea5e9, #0284c7); border-color: #0ea5e9; color: #fff; box-shadow: 0 4px 15px rgba(14,165,233,0.3); }
+.album-tab .count { background: rgba(255,255,255,0.2); padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; }
 
-        /* Navigation */
-        .navbar {
-            background: rgba(15, 23, 42, 0.95) !important;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            padding: 1rem 0;
-        }
+.masonry-grid { columns: 3; column-gap: 16px; }
+.masonry-item { break-inside: avoid; margin-bottom: 16px; border-radius: 14px; overflow: hidden; position: relative; cursor: pointer; }
+.masonry-item img { width: 100%; display: block; transition: transform 0.5s ease; }
+.masonry-item:hover img { transform: scale(1.05); }
+.masonry-item .overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 16px 16px; background: linear-gradient(transparent, rgba(0,0,0,0.85)); color: #fff; opacity: 0; transition: opacity 0.3s ease; }
+.masonry-item:hover .overlay { opacity: 1; }
+.masonry-item .overlay h6 { font-family: 'Montserrat', sans-serif; font-size: 0.85rem; margin: 0; font-weight: 600; }
+.masonry-item .overlay small { font-size: 0.7rem; color: #cbd5e1; }
+.masonry-item .view-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0); width: 50px; height: 50px; background: rgba(251,191,36,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0f172a; font-size: 1.1rem; transition: all 0.3s ease; }
+.masonry-item:hover .view-btn { transform: translate(-50%,-50%) scale(1); }
+.masonry-item .video-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 60px; height: 60px; background: rgba(251,191,36,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0f172a; font-size: 1.3rem; box-shadow: 0 4px 20px rgba(251,191,36,0.4); }
+.masonry-item .type-badge { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-family: 'Montserrat', sans-serif; }
 
-        .navbar-brand {
-            color: var(--heavenly-gold) !important;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            text-decoration: none !important;
-            display: flex;
-            align-items: center;
-        }
+.lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.lightbox .close-lb { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 2rem; cursor: pointer; background: none; border: none; z-index: 10; }
+.lightbox .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); color: #fff; font-size: 2rem; cursor: pointer; background: rgba(255,255,255,0.1); border: none; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+.lightbox .nav-btn:hover { background: rgba(255,255,255,0.2); }
+.lightbox .nav-btn.prev { left: 20px; }
+.lightbox .nav-btn.next { right: 20px; }
+.lightbox .lb-title { position: absolute; bottom: 30px; color: #fff; font-family: 'Montserrat', sans-serif; font-size: 0.95rem; text-align: center; max-width: 80vw; }
+.lightbox .lb-counter { position: absolute; top: 20px; left: 20px; color: rgba(255,255,255,0.7); font-family: 'Montserrat', sans-serif; font-size: 0.85rem; }
 
-        .navbar-brand img {
-            width: 40px;
-            height: 40px;
-            margin-right: 10px;
-            border-radius: 50%;
-        }
+.btn-gold { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #0f172a; font-weight: 600; border: none; border-radius: 10px; padding: 10px 24px; font-family: 'Montserrat', sans-serif; }
+.btn-gold:hover { background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; transform: translateY(-2px); }
+.empty-state { text-align: center; padding: 80px 20px; }
+.empty-state h3 { font-family: 'Playfair Display', serif; color: #0f172a; }
 
-        .navbar-nav .nav-link {
-            color: var(--snow-white) !important;
-            font-weight: 400;
-            margin: 0 10px;
-            transition: all 0.3s ease;
-        }
+@media(max-width:992px) { .masonry-grid { columns: 2; } }
+@media(max-width:576px) { .masonry-grid { columns: 1; } .gallery-hero h1 { font-size: 2rem; } }
+</style>
 
-        .navbar-nav .nav-link:hover {
-            color: var(--heavenly-gold) !important;
-        }
+<section class="gallery-hero" data-aos="fade-in">
+    <div class="container">
+        <h1 data-aos="fade-up">Gallery</h1>
+        <p data-aos="fade-up" data-delay="100">Visual memories from our worship, events, and community life</p>
+    </div>
+</section>
 
-        /* Hero Section */
-        .hero-section {
-            background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), url('assets/gallery-hero.jpg');
-            background-size: cover;
-            background-position: center;
-            padding: 120px 0 80px;
-            text-align: center;
-            position: relative;
-        }
-
-        .hero-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 3.5rem;
-            font-weight: 700;
-            color: var(--heavenly-gold);
-            margin-bottom: 1rem;
-        }
-
-        .hero-subtitle {
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 2rem;
-        }
-
-        /* Search and Filter Section */
-        .search-section {
-            padding: 60px 0;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .search-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-        }
-
-        .form-control, .form-select {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: var(--snow-white);
-            border-radius: 15px;
-            padding: 12px 20px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus, .form-select:focus {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--heavenly-gold);
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
-            color: var(--snow-white);
-        }
-
-        .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        /* Gallery Section */
-        .gallery-section {
-            padding: 80px 0;
-        }
-
-        .section-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--heavenly-gold);
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
-
-        .gallery-item {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 20px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .gallery-item:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-            border-color: var(--heavenly-gold);
-        }
-
-        .gallery-media {
-            position: relative;
-            width: 100%;
-            height: 250px;
-            background: rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .gallery-media img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-        .gallery-item:hover .gallery-media img {
-            transform: scale(1.05);
-        }
-
-        .media-overlay {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: var(--snow-white);
-            padding: 0.5rem;
-            border-radius: 50px;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .media-icon {
-            font-size: 1.2rem;
-            color: var(--heavenly-gold);
-        }
-
-        .gallery-content {
-            padding: 1.5rem;
-        }
-
-        .gallery-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--heavenly-gold);
-            margin-bottom: 0.5rem;
-        }
-
-        .gallery-description {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .gallery-meta {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.8rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .gallery-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 1rem;
-        }
-
-        .btn-gallery {
-            background: var(--gradient-divine);
-            color: var(--snow-white);
-            border: none;
-            border-radius: 50px;
-            padding: 8px 16px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .btn-gallery:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
-            color: var(--snow-white);
-            text-decoration: none;
-        }
-
-        /* Categories Section */
-        .categories-section {
-            padding: 60px 0;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .category-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 15px;
-            padding: 1.5rem;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .category-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--heavenly-gold);
-        }
-
-        .category-card.active {
-            background: var(--gradient-divine);
-            border-color: var(--heavenly-gold);
-        }
-
-        .category-icon {
-            font-size: 2rem;
-            color: var(--heavenly-gold);
-            margin-bottom: 1rem;
-        }
-
-        .category-name {
-            color: var(--snow-white);
-            font-weight: 600;
-        }
-
-        /* Pagination */
-        .pagination-section {
-            padding: 40px 0;
-        }
-
-        .pagination .page-link {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: var(--snow-white);
-            margin: 0 5px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .pagination .page-link:hover {
-            background: var(--gradient-divine);
-            border-color: var(--heavenly-gold);
-            color: var(--snow-white);
-        }
-
-        .pagination .page-item.active .page-link {
-            background: var(--gradient-divine);
-            border-color: var(--heavenly-gold);
-            color: var(--snow-white);
-        }
-
-        /* Footer */
-        .footer {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 60px 0 20px;
-            margin-top: 80px;
-        }
-        
-        .footer-widget h4 {
-            position: relative;
-            padding-bottom: 15px;
-            color: var(--heavenly-gold);
-        }
-        
-        .footer-widget h4::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 50px;
-            height: 2px;
-            background: var(--heavenly-gold);
-        }
-        
-        .footer-links li {
-            margin-bottom: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .footer-links li:hover {
-            transform: translateX(5px);
-        }
-        
-        .footer-links a:hover {
-            color: var(--heavenly-gold) !important;
-        }
-        
-        .social-icon {
-            transition: all 0.3s ease;
-            display: inline-block;
-        }
-        
-        .social-icon:hover {
-            transform: translateY(-3px);
-            color: var(--heavenly-gold) !important;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.5rem;
-            }
-            
-            .hero-subtitle {
-                font-size: 1rem;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .gallery-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 1.5rem;
-            }
-            
-            .navbar-brand {
-                font-size: 1.4rem;
-            }
-            
-            .navbar-brand img {
-                width: 30px;
-                height: 30px;
-            }
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            color: var(--heavenly-gold);
-            margin-bottom: 1rem;
-        }
-
-        .empty-state h3 {
-            color: var(--heavenly-gold);
-            margin-bottom: 1rem;
-        }
-
-        /* Lightbox Modal */
-        .modal-content {
-            background: var(--midnight-blue);
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 20px;
-        }
-
-        .modal-header {
-            border-bottom: 1px solid rgba(251, 191, 36, 0.2);
-        }
-
-        .modal-footer {
-            border-top: 1px solid rgba(251, 191, 36, 0.2);
-        }
-
-        .btn-close {
-            filter: invert(1);
-        }
-    </style>
-</head>
-<body>
-    <!-- Professional Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <img src="public/logo-icon.jpeg" alt="Salem Dominion Ministries Logo" class="me-2" style="height: 40px; width: auto; border-radius: 50%; object-fit: cover;">
-                <span class="fw-bold">Salem Dominion Ministries</span>
+<section style="padding: 40px 0 60px;">
+    <div class="container">
+        <div class="album-tabs" data-aos="fade-up">
+            <a href="?album=&category=" class="album-tab <?= empty($album_filter) && empty($category_filter) ? 'active' : '' ?>">
+                <i class="fas fa-images"></i> All
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.php"><i class="fas fa-home me-1"></i> Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="about.php"><i class="fas fa-info-circle me-1"></i> About</a></li>
-                    <li class="nav-item"><a class="nav-link" href="leadership.php"><i class="fas fa-users me-1"></i> Leadership</a></li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="ministriesDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-hands-helping me-1"></i> Ministries
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="ministries.php">All Ministries</a></li>
-                            <li><a class="dropdown-item" href="children_ministry.php">Children Ministry</a></li>
-                            <li><a class="dropdown-item" href="prophetic-school.php">Prophetic School</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="mediaDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-play-circle me-1"></i> Media
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="sermons.php">Sermons</a></li>
-                            <li><a class="dropdown-item" href="gallery.php" class="active">Gallery</a></li>
-                            <li><a class="dropdown-item" href="news.php">News & Updates</a></li>
-                            <li><a class="dropdown-item" href="testimonials.php">Testimonials</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="events.php"><i class="fas fa-calendar-alt me-1"></i> Events</a></li>
-                    <li class="nav-item"><a class="nav-link" href="book_pastor_call.php"><i class="fas fa-phone-alt me-1"></i> Book Pastor</a></li>
-                    <li class="nav-item"><a class="nav-link" href="donate.php"><i class="fas fa-heart me-1"></i> Donate</a></li>
-                    <li class="nav-item"><a class="nav-link" href="contact.php"><i class="fas fa-envelope me-1"></i> Contact</a></li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="login.php">
-                            <i class="fas fa-user me-1"></i> Login
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container">
-            <h1 class="hero-title">Gallery</h1>
-            <p class="hero-subtitle">Explore moments of worship, fellowship, and ministry through our visual journey</p>
-        </div>
-    </section>
-
-    <!-- Search and Filter Section -->
-    <section class="search-section">
-        <div class="container">
-            <div class="search-card">
-                <form method="GET" class="row g-3">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <input type="text" name="search" class="form-control" placeholder="Search gallery..." value="<?= safe_html($search) ?>">
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <select name="category" class="form-select">
-                                <option value="">All Categories</option>
-                                <?php foreach ($categories as $cat): ?>
-                                    <option value="<?= safe_html($cat['category']) ?>" <?= $category_filter == $cat['category'] ? 'selected' : '' ?>>
-                                        <?= safe_html($cat['category']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-gallery w-100">
-                            <i class="fas fa-search me-2"></i>Search
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <!-- Gallery Section -->
-    <section class="gallery-section">
-        <div class="container">
-            <h2 class="section-title">Our Gallery</h2>
-            
-            <?php if (!empty($gallery_items)): ?>
-                <div class="gallery-grid">
-                    <?php foreach ($gallery_items as $item): ?>
-                        <div class="gallery-item" onclick="openLightbox('<?= safe_html($item['file_url']) ?>', '<?= safe_html($item['title']) ?>', '<?= safe_html($item['description']) ?>')">
-                            <div class="gallery-media">
-                                <?php if ($item['file_type'] == 'image'): ?>
-                                    <img src="<?= safe_html($item['file_url']) ?>" alt="<?= safe_html($item['title']) ?>">
-                                <?php else: ?>
-                                    <div class="media-icon">
-                                        <i class="fas <?= get_media_icon($item['file_type']) ?> fa-3x"></i>
-                                    </div>
-                                <?php endif; ?>
-                                <div class="media-overlay">
-                                    <i class="fas <?= get_media_icon($item['file_type']) ?>"></i>
-                                    <span><?= safe_html($item['file_type']) ?></span>
-                                </div>
-                            </div>
-                            <div class="gallery-content">
-                                <h3 class="gallery-title"><?= safe_html($item['title']) ?></h3>
-                                <p class="gallery-description"><?= safe_html($item['description']) ?></p>
-                                <div class="gallery-meta">
-                                    <span><i class="fas fa-calendar me-1"></i><?= format_gallery_date($item['created_at']) ?></span>
-                                    <?php if ($item['uploader_name']): ?>
-                                        <span><i class="fas fa-user me-1"></i><?= safe_html($item['uploader_name']) ?></span>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="gallery-actions">
-                                    <a href="#" class="btn btn-gallery" onclick="event.stopPropagation()">
-                                        <i class="fas fa-heart me-2"></i>Like
-                                    </a>
-                                    <a href="#" class="btn btn-gallery" onclick="event.stopPropagation()">
-                                        <i class="fas fa-share me-2"></i>Share
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
+            <?php if ($show_db && !empty($albums)): ?>
+                <?php foreach ($albums as $alb): ?>
+                <a href="?album=<?= urlencode($alb['album_name']) ?>" class="album-tab <?= $album_filter === $alb['album_name'] ? 'active' : '' ?>">
+                    <?= htmlspecialchars($alb['album_name']) ?>
+                    <span class="count"><?= $alb['count'] ?></span>
+                </a>
+                <?php endforeach; ?>
             <?php else: ?>
-                <div class="empty-state">
-                    <i class="fas fa-images"></i>
-                    <h3>No Gallery Items Found</h3>
-                    <p>Check back soon for new photos and videos from our events and services.</p>
-                </div>
+                <?php
+                $defaultCats = array_unique(array_column($default_gallery, 'category'));
+                foreach ($defaultCats as $dc): ?>
+                <a href="?category=<?= urlencode($dc) ?>" class="album-tab <?= $category_filter === $dc ? 'active' : '' ?>">
+                    <?= htmlspecialchars($dc) ?>
+                    <span class="count"><?= count(array_filter($default_gallery, fn($g) => $g['category'] === $dc)) ?></span>
+                </a>
+                <?php endforeach; ?>
             <?php endif; ?>
         </div>
-    </section>
 
-    <!-- Categories Section -->
-    <?php if (!empty($categories)): ?>
-        <section class="categories-section">
-            <div class="container">
-                <h2 class="section-title">Browse by Category</h2>
-                <div class="row g-3">
-                    <?php foreach ($categories as $category): ?>
-                        <div class="col-lg-3 col-md-4 col-sm-6">
-                            <div class="category-card <?= $category_filter == $category['category'] ? 'active' : '' ?>" onclick="window.location.href='?category=<?= urlencode($category['category']) ?>'">
-                                <div class="category-icon">
-                                    <i class="fas fa-folder"></i>
-                                </div>
-                                <h4 class="category-name"><?= safe_html($category['category']) ?></h4>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
+        <?php if ($show_db && !empty($gallery_items)): ?>
+        <div class="masonry-grid" data-aos="fade-up">
+            <?php foreach ($gallery_items as $idx => $item):
+                $isVideo = in_array(strtolower(pathinfo($item['file_path'] ?? '', PATHINFO_EXTENSION)), ['mp4', 'webm', 'ogg']);
+            ?>
+            <div class="masonry-item" onclick="openLightbox(<?= $idx ?>)" data-title="<?= htmlspecialchars($item['title'] ?? '') ?>" data-src="<?= htmlspecialchars($item['file_path'] ?? '') ?>">
+                <?php if ($isVideo): ?>
+                    <video src="<?= htmlspecialchars($item['file_path']) ?>" preload="metadata" style="width:100%;display:block;" muted></video>
+                    <div class="video-overlay"><i class="fas fa-play"></i></div>
+                <?php else: ?>
+                    <img src="<?= htmlspecialchars($item['file_path'] ?? '') ?>" alt="<?= htmlspecialchars($item['title'] ?? 'Gallery image') ?>" loading="lazy">
+                <?php endif; ?>
+                <div class="view-btn"><i class="fas fa-expand"></i></div>
+                <?php if ($item['type'] ?? '' === 'video'): ?>
+                    <span class="type-badge"><i class="fas fa-video me-1"></i>Video</span>
+                <?php endif; ?>
+                <div class="overlay">
+                    <h6><?= htmlspecialchars($item['title'] ?? '') ?></h6>
+                    <?php if (!empty($item['category'])): ?>
+                        <small><?= htmlspecialchars($item['category']) ?></small>
+                    <?php endif; ?>
                 </div>
             </div>
-        </section>
-    <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
 
-    <!-- Pagination -->
-    <?php if ($total_pages > 1): ?>
-        <section class="pagination-section">
-            <div class="container">
-                <nav aria-label="Gallery pagination">
-                    <ul class="pagination justify-content-center">
-                        <?php if ($page > 1): ?>
-                            <li class="page-item">
-                                <a class="page-link" href="?page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>&category=<?= urlencode($category_filter) ?>">
-                                    <i class="fas fa-chevron-left"></i> Previous
-                                </a>
-                            </li>
-                        <?php endif; ?>
-                        
-                        <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
-                            <li class="page-item <?= $i == $page ? 'active' : '' ?>">
-                                <a class="page-link" href="?page=<?= $i ?>&search=<?= urlencode($search) ?>&category=<?= urlencode($category_filter) ?>">
-                                    <?= $i ?>
-                                </a>
-                            </li>
-                        <?php endfor; ?>
-                        
-                        <?php if ($page < $total_pages): ?>
-                            <li class="page-item">
-                                <a class="page-link" href="?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>&category=<?= urlencode($category_filter) ?>">
-                                    Next <i class="fas fa-chevron-right"></i>
-                                </a>
-                            </li>
-                        <?php endif; ?>
-                    </ul>
-                </nav>
-            </div>
-        </section>
-    <?php endif; ?>
-
-    <!-- Lightbox Modal -->
-    <div class="modal fade" id="lightboxModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="lightboxTitle">Gallery Item</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <img id="lightboxImage" src="" alt="" class="img-fluid rounded" style="max-height: 500px;">
-                    <p id="lightboxDescription" class="mt-3"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-gallery">
-                        <i class="fas fa-download me-2"></i>Download
-                    </button>
-                </div>
+        <?php if ($total_pages > 1): ?>
+        <div class="d-flex justify-content-center mt-5">
+            <div class="d-flex gap-2">
+                <?php if ($page > 1): ?>
+                    <a href="?page=<?= $page - 1 ?>&album=<?= urlencode($album_filter) ?>&category=<?= urlencode($category_filter) ?>" class="btn btn-gold btn-sm"><i class="fas fa-chevron-left me-1"></i>Prev</a>
+                <?php endif; ?>
+                <span class="btn btn-sm btn-outline-secondary" style="pointer-events:none;">Page <?= $page ?> of <?= $total_pages ?></span>
+                <?php if ($page < $total_pages): ?>
+                    <a href="?page=<?= $page + 1 ?>&album=<?= urlencode($album_filter) ?>&category=<?= urlencode($category_filter) ?>" class="btn btn-gold btn-sm">Next<i class="fas fa-chevron-right ms-1"></i></a>
+                <?php endif; ?>
             </div>
         </div>
+        <?php endif; ?>
+
+        <?php else: ?>
+        <div class="masonry-grid" data-aos="fade-up">
+            <?php
+            $displayGallery = $default_gallery;
+            if (!empty($category_filter)) {
+                $displayGallery = array_filter($displayGallery, fn($g) => $g['category'] === $category_filter);
+            }
+            foreach ($displayGallery as $idx => $item): ?>
+            <div class="masonry-item" onclick="openLightbox(<?= $idx ?>)" data-title="<?= htmlspecialchars($item['title']) ?>" data-src="<?= htmlspecialchars($item['src']) ?>">
+                <img src="<?= htmlspecialchars($item['src']) ?>" alt="<?= htmlspecialchars($item['title']) ?>" loading="lazy">
+                <div class="view-btn"><i class="fas fa-expand"></i></div>
+                <div class="overlay">
+                    <h6><?= htmlspecialchars($item['title']) ?></h6>
+                    <small><?= htmlspecialchars($item['category']) ?></small>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!$show_db && empty($displayGallery)): ?>
+        <div class="empty-state" data-aos="fade-up">
+            <div style="font-size:5rem;color:#cbd5e1;margin-bottom:20px;"><i class="fas fa-images"></i></div>
+            <h3>Gallery Coming Soon</h3>
+            <p style="color:#64748b;">We are curating beautiful moments from our ministry. Check back soon!</p>
+            <a href="index.php" class="btn btn-gold mt-3"><i class="fas fa-home me-2"></i>Return Home</a>
+        </div>
+        <?php endif; ?>
     </div>
+</section>
 
-    <!-- Professional Footer with 3D Effects -->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="footer-widget footer-3d">
-                        <h4 class="text-white mb-3 footer-title-3d">
-                            <i class="fas fa-church me-2"></i>Salem Dominion Ministries
-                        </h4>
-                        <p class="text-white-50">Empowering lives through the Word of God and the Power of the Holy Spirit. Join us in spreading the Gospel and making disciples.</p>
-                        <div class="mt-3">
-                            <a href="https://Salemdominionministries.com" target="_blank" class="text-white me-3 social-icon-3d">
-                                <i class="fas fa-globe fa-lg"></i>
-                            </a>
-                            <a href="https://youtube.com/@musasizifaty?si=BxEArdVKNKVSac3X" target="_blank" class="text-white me-3 social-icon-3d">
-                                <i class="fab fa-youtube fa-lg"></i>
-                            </a>
-                            <a href="https://www.tiktok.com/@salem1dominionchurch?_r=1&_t=ZS-95E1n40LieS" target="_blank" class="text-white me-3 social-icon-3d">
-                                <i class="fab fa-tiktok fa-lg"></i>
-                            </a>
-                            <a href="https://www.facebook.com/share/1CoCEmvnBB/" target="_blank" class="text-white social-icon-3d">
-                                <i class="fab fa-facebook fa-lg"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <div class="footer-widget footer-3d">
-                        <h5 class="text-white mb-3 footer-title-3d">Quick Links</h5>
-                        <ul class="list-unstyled footer-links">
-                            <li><a href="about.php" class="text-white-50 text-decoration-none footer-link-3d">About Us</a></li>
-                            <li><a href="leadership.php" class="text-white-50 text-decoration-none footer-link-3d">Leadership</a></li>
-                            <li><a href="sermons.php" class="text-white-50 text-decoration-none footer-link-3d">Sermons</a></li>
-                            <li><a href="events.php" class="text-white-50 text-decoration-none footer-link-3d">Events</a></li>
-                            <li><a href="ministries.php" class="text-white-50 text-decoration-none footer-link-3d">Ministries</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="footer-widget footer-3d">
-                        <h5 class="text-white mb-3 footer-title-3d">Services</h5>
-                        <ul class="list-unstyled footer-links">
-                            <li><a href="prophetic-school.php" class="text-white-50 text-decoration-none footer-link-3d">Prophetic School</a></li>
-                            <li><a href="book_pastor_call.php" class="text-white-50 text-decoration-none footer-link-3d">Book Pastor Call</a></li>
-                            <li><a href="children_ministry.php" class="text-white-50 text-decoration-none footer-link-3d">Children Ministry</a></li>
-                            <li><a href="donate.php" class="text-white-50 text-decoration-none footer-link-3d">Give & Donate</a></li>
-                            <li><a href="testimonials.php" class="text-white-50 text-decoration-none footer-link-3d">Testimonials</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="footer-widget footer-3d">
-                        <h5 class="text-white mb-3 footer-title-3d">Contact Info</h5>
-                        <ul class="list-unstyled footer-contact">
-                            <li class="mb-2">
-                                <i class="fas fa-map-marker-alt me-2 text-primary"></i>
-                                <span class="text-white-50">Nampirika, Iganga District, Uganda</span>
-                            </li>
-                            <li class="mb-2">
-                                <i class="fas fa-phone me-2 text-primary"></i>
-                                <span class="text-white-50">+256 753 244 480</span>
-                            </li>
-                            <li class="mb-2">
-                                <i class="fas fa-envelope me-2 text-primary"></i>
-                                <span class="text-white-50">info@salem-dominion-ministries.com</span>
-                            </li>
-                            <li class="mb-2">
-                                <i class="fas fa-globe me-2 text-primary"></i>
-                                <span class="text-white-50">www.salemdominionministries.com</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <hr class="bg-white my-4">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="text-white-50 mb-0">&copy; <?= date('Y') ?> Salem Dominion Ministries. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <a href="privacy.php" class="text-white-50 me-3 text-decoration-none">Privacy Policy</a>
-                    <a href="terms.php" class="text-white-50 text-decoration-none">Terms of Service</a>
-                </div>
-            </div>
-            <div class="row mt-4">
-                <div class="col-12 text-center">
-                    <div class="designer-credit-3d">
-                        <p class="text-white-50 mb-2">
-                            <i class="fas fa-code me-2"></i>Designed & Developed by
-                        </p>
-                        <h5 class="designer-name-3d text-warning mb-2">Mr. Reagan Otema</h5>
-                        <a href="https://wa.me/256772514889" target="_blank" class="designer-contact-3d">
-                            <i class="fab fa-whatsapp me-2"></i>+256 772 514 889
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+    <span class="lb-counter" id="lbCounter"></span>
+    <button class="close-lb" onclick="closeLightbox(event)">&times;</button>
+    <button class="nav-btn prev" onclick="navLightbox(-1, event)"><i class="fas fa-chevron-left"></i></button>
+    <img id="lbImage" src="" alt="">
+    <div class="lb-title" id="lbTitle"></div>
+    <button class="nav-btn next" onclick="navLightbox(1, event)"><i class="fas fa-chevron-right"></i></button>
+</div>
 
-    <style>
-        /* 3D Footer Effects */
-        .footer-3d {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 2rem;
-            transform: perspective(1000px) rotateX(0deg);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+<script>
+const allItems = [];
+document.querySelectorAll('.masonry-item').forEach(item => {
+    allItems.push({
+        src: item.getAttribute('data-src'),
+        title: item.getAttribute('data-title')
+    });
+});
+let currentLbIndex = 0;
+
+function openLightbox(idx) {
+    currentLbIndex = idx;
+    updateLightbox();
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(e) {
+    if (e.target === document.getElementById('lightbox') || e.target.closest('.close-lb')) {
+        document.getElementById('lightbox').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+function navLightbox(dir, e) {
+    e.stopPropagation();
+    currentLbIndex = (currentLbIndex + dir + allItems.length) % allItems.length;
+    updateLightbox();
+}
+
+function updateLightbox() {
+    const item = allItems[currentLbIndex];
+    if (!item) return;
+    const img = document.getElementById('lbImage');
+    if (item.src.match(/\.(mp4|webm|ogg)$/i)) {
+        img.style.display = 'none';
+        let vid = document.getElementById('lbVideo');
+        if (!vid) {
+            vid = document.createElement('video');
+            vid.id = 'lbVideo';
+            vid.controls = true;
+            vid.autoplay = true;
+            vid.style.maxWidth = '90vw';
+            vid.style.maxHeight = '85vh';
+            vid.style.borderRadius = '8px';
+            img.parentNode.insertBefore(vid, img.nextSibling);
         }
+        vid.src = item.src;
+        vid.style.display = 'block';
+    } else {
+        let vid = document.getElementById('lbVideo');
+        if (vid) vid.style.display = 'none';
+        img.src = item.src;
+        img.style.display = 'block';
+    }
+    document.getElementById('lbTitle').textContent = item.title;
+    document.getElementById('lbCounter').textContent = (currentLbIndex + 1) + ' / ' + allItems.length;
+}
 
-        .footer-3d:hover {
-            transform: perspective(1000px) rotateX(-5deg) translateY(-10px);
-            box-shadow: 0 20px 60px rgba(251, 191, 36, 0.2);
-            border-color: rgba(251, 191, 36, 0.3);
-        }
+document.addEventListener('keydown', function(e) {
+    if (!document.getElementById('lightbox').classList.contains('active')) return;
+    if (e.key === 'Escape') { document.getElementById('lightbox').classList.remove('active'); document.body.style.overflow = ''; }
+    if (e.key === 'ArrowLeft') navLightbox(-1, e);
+    if (e.key === 'ArrowRight') navLightbox(1, e);
+});
+</script>
 
-        .footer-title-3d {
-            position: relative;
-            text-shadow: 0 2px 10px rgba(251, 191, 36, 0.5);
-            transform: translateZ(20px);
-            transition: all 0.3s ease;
-        }
-
-        .footer-title-3d:hover {
-            transform: translateZ(30px) scale(1.05);
-            text-shadow: 0 4px 20px rgba(251, 191, 36, 0.8);
-        }
-
-        .social-icon-3d {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            line-height: 50px;
-            text-align: center;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            transform: translateZ(10px);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .social-icon-3d::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.3), transparent);
-            transition: all 0.6s ease;
-        }
-
-        .social-icon-3d:hover::before {
-            left: 100%;
-        }
-
-        .social-icon-3d:hover {
-            transform: translateZ(30px) rotateY(360deg) scale(1.2);
-            background: linear-gradient(135deg, var(--heavenly-gold), var(--ocean-blue));
-            border-color: var(--heavenly-gold);
-            box-shadow: 0 15px 40px rgba(251, 191, 36, 0.4);
-        }
-
-        .footer-link-3d {
-            display: inline-block;
-            transform: translateZ(5px);
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .footer-link-3d::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--heavenly-gold);
-            transition: all 0.3s ease;
-        }
-
-        .footer-link-3d:hover {
-            transform: translateZ(15px) translateX(5px);
-            color: var(--heavenly-gold) !important;
-        }
-
-        .footer-link-3d:hover::after {
-            width: 100%;
-        }
-
-        .designer-credit-3d {
-            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(14, 165, 233, 0.1));
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 15px;
-            padding: 1.5rem;
-            transform: perspective(1000px) rotateX(0deg);
-            transition: all 0.5s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .designer-credit-3d::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(251, 191, 36, 0.1), transparent);
-            animation: designerShimmer 3s infinite;
-        }
-
-        @keyframes designerShimmer {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-            100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-        }
-
-        .designer-credit-3d:hover {
-            transform: perspective(1000px) rotateX(-5deg) translateY(-5px);
-            box-shadow: 0 15px 40px rgba(251, 191, 36, 0.3);
-        }
-
-        .designer-name-3d {
-            transform: translateZ(20px);
-            text-shadow: 0 2px 15px rgba(251, 191, 36, 0.6);
-            animation: designerGlow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes designerGlow {
-            0% { text-shadow: 0 2px 15px rgba(251, 191, 36, 0.6); }
-            100% { text-shadow: 0 4px 25px rgba(251, 191, 36, 0.9); }
-        }
-
-        .designer-contact-3d {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background: linear-gradient(135deg, #25D366, #128C7E);
-            color: white;
-            border-radius: 25px;
-            text-decoration: none;
-            transform: translateZ(15px);
-            transition: all 0.4s ease;
-            box-shadow: 0 5px 20px rgba(37, 211, 102, 0.3);
-        }
-
-        .designer-contact-3d:hover {
-            transform: translateZ(25px) scale(1.1);
-            box-shadow: 0 10px 30px rgba(37, 211, 102, 0.5);
-            text-decoration: none;
-            color: white;
-        }
-
-        /* Mobile Responsive 3D Effects */
-        @media (max-width: 768px) {
-            .footer-3d {
-                transform: none;
-                padding: 1.5rem;
-            }
-            
-            .footer-3d:hover {
-                transform: translateY(-5px);
-            }
-            
-            .social-icon-3d {
-                width: 40px;
-                height: 40px;
-                line-height: 40px;
-                font-size: 0.9rem;
-            }
-            
-            .social-icon-3d:hover {
-                transform: scale(1.1);
-            }
-            
-            .designer-credit-3d {
-                padding: 1rem;
-                transform: none;
-            }
-            
-            .designer-credit-3d:hover {
-                transform: translateY(-3px);
-            }
-        }
-    </style>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        function openLightbox(imageUrl, title, description) {
-            document.getElementById('lightboxImage').src = imageUrl;
-            document.getElementById('lightboxTitle').textContent = title;
-            document.getElementById('lightboxDescription').textContent = description;
-            
-            const modal = new bootstrap.Modal(document.getElementById('lightboxModal'));
-            modal.show();
-        }
-    </script>
-</body>
-</html>
+<?php include 'components/footer.php'; ?>

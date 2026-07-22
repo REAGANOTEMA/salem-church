@@ -1,126 +1,156 @@
 <?php
 /**
- * Database Configuration for Hosting Platforms
- * Update these values for your hosting environment
+ * Salem Dominion Ministries - Application Configuration
+ * Production-ready configuration for all environments
  */
 
-// Dynamic base URL detection for universal compatibility
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-$host = $_SERVER['HTTP_HOST'];
-$base_url = $protocol . '://' . $host;
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Define constants for universal usage
-define('BASE_URL', $base_url);
-define('CHURCH_LOGO', 'public/logo-icon.jpeg');
-define('LOGO_PATH', BASE_URL . '/' . CHURCH_LOGO);
-define('LOGO_SERVE_URL', BASE_URL . '/serve_logo.php');
-
-// Ultimate fallback - base64 encoded simple logo
-define('LOGO_FALLBACK', 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/8A8A');
-
-// Function to get safe logo URL with fallbacks
-function getSafeLogoUrl() {
-    // Try direct path first
-    if (file_exists('public/logo-icon.jpeg') && is_readable('public/logo-icon.jpeg')) {
-        return LOGO_PATH;
+// Load .env file into $_ENV-style array
+function _sdm_load_env(string $path): array {
+    $vars = [];
+    if (!file_exists($path)) {
+        return $vars;
     }
-    
-    // Try serve script
-    if (file_exists('serve_logo.php')) {
-        return LOGO_SERVE_URL;
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#') {
+            continue;
+        }
+        if (strpos($line, '=') === false) {
+            continue;
+        }
+        [$key, $value] = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim(trim($value), '"\'');
+        $vars[$key] = $value;
     }
-    
-    // Use base64 fallback
-    return LOGO_FALLBACK;
+    return $vars;
 }
 
-// Function to generate logo img tag
-function getLogoImg($width = 30, $height = 30, $extra_style = '') {
-    $url = getSafeLogoUrl();
-    $style = "width: {$width}px; height: {$height}px;" . ($extra_style ? " {$extra_style}" : "");
-    return "<img src='{$url}' alt='Salem Dominion Ministries' style='{$style}'>";
+$_env = _sdm_load_env(__DIR__ . '/.env');
+function _sdm_env(string $key, string $default = ''): string {
+    global $_env;
+    return $_env[$key] ?? getenv($key) ?: $default;
 }
 
-// Database Configuration - Multiple fallbacks for hosting platforms
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'salem_dominion_ministries');
-define('DB_PORT', 3306);
+// Base URL
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$baseUrl = $protocol . '://' . $host;
+$siteUrl = $baseUrl;
 
-// Alternative configurations for different hosting platforms
-// Uncomment the appropriate configuration for your hosting:
+define('BASE_URL', $baseUrl);
+define('SITE_URL', $siteUrl);
 
-// cPanel/Shared Hosting (most common)
-// define('DB_HOST', 'localhost');
-// define('DB_USER', 'salem_admin');
-// define('DB_PASS', '');
-// define('DB_NAME', 'salem_dominion_ministries');
+// Paths
+define('ROOT_PATH', __DIR__);
+define('INCLUDES_PATH', ROOT_PATH . '/includes');
+define('ADMIN_PATH', ROOT_PATH . '/admin');
+define('UPLOADS_PATH', ROOT_PATH . '/uploads');
+define('ASSETS_PATH', ROOT_PATH . '/assets');
+define('PUBLIC_PATH', ROOT_PATH . '/public');
 
-// Plesk Hosting
-// define('DB_HOST', 'localhost');
-// define('DB_USER', 'salem_admin');
-// define('DB_PASS', 'your_password_here');
-// define('DB_NAME', 'salem_dominion_ministries');
+// Database Constants from .env
+define('DB_HOST', _sdm_env('DB_HOST', 'localhost'));
+define('DB_USER', _sdm_env('DB_USER', 'root'));
+define('DB_PASS', _sdm_env('DB_PASSWORD', _sdm_env('DB_PASS', '')));
+define('DB_NAME', _sdm_env('DB_NAME', 'salem_dominion_ministries'));
+define('DB_PORT', _sdm_env('DB_PORT', '3306'));
+define('DB_CHARSET', _sdm_env('DB_CHARSET', 'utf8mb4'));
 
-// VPS/Dedicated Server
-// define('DB_HOST', 'localhost');
-// define('DB_USER', 'salem_admin');
-// define('DB_PASS', 'your_password_here');
-// define('DB_NAME', 'salem_dominion_ministries');
-
-// Cloud Hosting (AWS, DigitalOcean, etc.)
-// define('DB_HOST', 'your_database_host');
-// define('DB_USER', 'salem_admin');
-// define('DB_PASS', 'your_password_here');
-// define('DB_NAME', 'salem_dominion_ministries');
-
-// Alternative configurations (uncomment if needed)
-// define('DB_HOST', '127.0.0.1');
-// define('DB_USER', 'salem_admin');
-// define('DB_PASS', 'your_database_password');
-// define('DB_NAME', 'salem_dominion_ministries');
-
-// Environment variables fallback (recommended for production)
-if (!defined('DB_HOST') && isset($_ENV['DB_HOST'])) {
-    define('DB_HOST_ENV', $_ENV['DB_HOST']);
-}
-if (!defined('DB_USER') && isset($_ENV['DB_USER'])) {
-    define('DB_USER_ENV', $_ENV['DB_USER']);
-}
-if (!defined('DB_PASS') && isset($_ENV['DB_PASS'])) {
-    define('DB_PASS_ENV', $_ENV['DB_PASS']);
-}
-if (!defined('DB_NAME') && isset($_ENV['DB_NAME'])) {
-    define('DB_NAME_ENV', $_ENV['DB_NAME']);
-}
-
-// Church Branding
+// Church Info
 define('CHURCH_NAME', 'Salem Dominion Ministries');
 define('CHURCH_PASTOR', 'Pastor Faty Musasizi');
+define('CHURCH_PHONE', '+256 753 244 480');
+define('CHURCH_EMAIL', 'info@salem-dominion-ministries.com');
+define('CHURCH_ADDRESS', 'Nampirika, Iganga District, Uganda');
+define('CHURCH_WEBSITE', 'www.salemdominionministries.com');
 
-// Content Security Policy Constants for consistent font loading
-define('CSP_DEFAULT_SRC', "'self'");
-define('CSP_SCRIPT_SRC', "'self' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com 'unsafe-inline'");
-define('CSP_STYLE_SRC', "'self' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline'");
-define('CSP_FONT_SRC', "'self' https://fonts.gstatic.com https://fonts.googleapis.com https://cdnjs.cloudflare.com");
-define('CSP_IMG_SRC', "'self' data: https:");
-define('CSP_CONNECT_SRC', "'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com");
+// Logo
+define('LOGO_PATH', PUBLIC_PATH . '/logo-icon.jpeg');
+define('LOGO_URL', SITE_URL . '/public/logo-icon.jpeg');
+define('LOGO_FALLBACK', 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23333" width="100" height="100" rx="50"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="40">S</text></svg>');
 
-// Dynamic website URL for different environments
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-define('CHURCH_WEBSITE', $protocol . '://' . $host);
-define('CHURCH_DESCRIPTION', 'Salem Dominion Ministries - A vibrant church community led by Pastor Faty Musasizi. Join us for worship, fellowship, and spiritual growth.');
+// Upload Config
+define('MAX_FILE_SIZE', 50 * 1024 * 1024);
+define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+define('ALLOWED_VIDEO_TYPES', ['video/mp4', 'video/webm', 'video/ogg']);
+define('ALLOWED_AUDIO_TYPES', ['audio/mpeg', 'audio/wav', 'audio/ogg']);
+define('ALLOWED_DOC_TYPES', ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']);
 
-// Upload Configuration
-define('UPLOAD_PATH', 'uploads/');
-define('MAX_FILE_SIZE', 50 * 1024 * 1024); // 50MB
-
-// Email Configuration (for contact forms)
-define('ADMIN_EMAIL', 'admin@salem-church.org');
-define('CHURCH_EMAIL', 'info@salem-church.org');
+// Admin emails
+define('ADMIN_EMAIL', 'admin@salem-dominion-ministries.com');
 
 // Security
-define('HASH_SALT', 'salem_dominion_2024');
-?>
+define('CSRF_TOKEN_NAME', 'csrf_token');
+define('HASH_ALGO', PASSWORD_BCRYPT);
+define('HASH_COST', 12);
+
+// Session Config
+define('SESSION_LIFETIME', 3600);
+define('ADMIN_SESSION_LIFETIME', 7200);
+
+// Pagination
+define('ITEMS_PER_PAGE', 12);
+define('ADMIN_ITEMS_PER_PAGE', 20);
+
+// Social Media
+define('YOUTUBE_URL', 'https://youtube.com/@musasizifaty');
+define('TIKTOK_URL', 'https://www.tiktok.com/@salem1dominionchurch');
+define('FACEBOOK_URL', 'https://www.facebook.com/share/1CoCEmvnBB/');
+define('WHATSAPP_URL', 'https://wa.me/256753244480');
+
+// Payment Gateways (set keys in .env or here)
+define('STRIPE_SECRET_KEY', _sdm_env('STRIPE_SECRET_KEY', ''));
+define('STRIPE_PUBLIC_KEY', _sdm_env('STRIPE_PUBLIC_KEY', ''));
+define('FLUTTERWAVE_SECRET_KEY', _sdm_env('FLUTTERWAVE_SECRET_KEY', ''));
+define('FLUTTERWAVE_PUBLIC_KEY', _sdm_env('FLUTTERWAVE_PUBLIC_KEY', ''));
+define('PAYPAL_CLIENT_ID', _sdm_env('PAYPAL_CLIENT_ID', ''));
+define('PAYPAL_CLIENT_SECRET', _sdm_env('PAYPAL_CLIENT_SECRET', ''));
+define('PAYPAL_MODE', 'sandbox');
+
+// App Environment
+define('APP_ENV', _sdm_env('APP_ENV', 'development'));
+define('APP_DEBUG', APP_ENV !== 'production');
+
+// Timezone
+date_default_timezone_set('Africa/Kampala');
+
+// Error Reporting - disable display in production
+if (APP_ENV === 'production') {
+    error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
+    ini_set('display_errors', '0');
+} else {
+    error_reporting(E_ALL);
+    ini_set('display_errors', '1');
+}
+ini_set('log_errors', '1');
+ini_set('error_log', UPLOADS_PATH . '/error.log');
+
+// Auto-create upload directories
+$dirs = [
+    UPLOADS_PATH,
+    UPLOADS_PATH . '/sermons/video',
+    UPLOADS_PATH . '/sermons/audio',
+    UPLOADS_PATH . '/gallery/image',
+    UPLOADS_PATH . '/gallery/video',
+    UPLOADS_PATH . '/gallery/audio',
+    UPLOADS_PATH . '/news',
+    UPLOADS_PATH . '/avatars',
+    UPLOADS_PATH . '/temp',
+];
+foreach ($dirs as $dir) {
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+}
+
+// Security Headers
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: SAMEORIGIN');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
