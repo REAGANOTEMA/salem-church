@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 23, 2026 at 09:11 AM
+-- Generation Time: Jul 23, 2026 at 10:43 AM
 -- Server version: 10.6.23-MariaDB-cll-lve
 -- PHP Version: 7.4.33
 
@@ -56,6 +56,7 @@ CREATE TABLE `announcements` (
   `id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
   `content` text NOT NULL,
+  `priority` varchar(20) NOT NULL DEFAULT 'normal',
   `is_pinned` tinyint(1) NOT NULL DEFAULT 0,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
@@ -69,10 +70,10 @@ CREATE TABLE `announcements` (
 -- Dumping data for table `announcements`
 --
 
-INSERT INTO `announcements` (`id`, `title`, `content`, `is_pinned`, `start_date`, `end_date`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'New Building Project - Phase 1 Begins', 'We are thrilled to announce that Phase 1 of our new church building project has officially begun. We encourage every member to contribute towards this vision. See the finance team for details.', 1, '2026-06-23', '2027-07-23', 'active', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(2, 'Easter Sunday Service Special', 'Join us for a powerful Easter Sunday celebration. We will have a special sunrise service at 6:00 AM followed by the main service at 9:00 AM. Invite your friends and family!', 0, '2026-07-09', '2026-07-30', 'active', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(3, 'Church Registration Drive', 'All members are encouraged to register with the church database for better communication and pastoral care. Please see the secretary after any service to complete your registration.', 0, '2026-05-24', '2026-08-22', 'inactive', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
+INSERT INTO `announcements` (`id`, `title`, `content`, `priority`, `is_pinned`, `start_date`, `end_date`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'New Building Project - Phase 1 Begins', 'We are thrilled to announce that Phase 1 of our new church building project has officially begun. We encourage every member to contribute towards this vision. See the finance team for details.', 'normal', 1, '2026-06-23', '2027-07-23', 'active', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(2, 'Easter Sunday Service Special', 'Join us for a powerful Easter Sunday celebration. We will have a special sunrise service at 6:00 AM followed by the main service at 9:00 AM. Invite your friends and family!', 'normal', 0, '2026-07-09', '2026-07-30', 'active', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(3, 'Church Registration Drive', 'All members are encouraged to register with the church database for better communication and pastoral care. Please see the secretary after any service to complete your registration.', 'normal', 0, '2026-05-24', '2026-08-22', 'inactive', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -166,6 +167,7 @@ CREATE TABLE `contact_messages` (
   `status` enum('unread','read','replied','archived') NOT NULL DEFAULT 'unread',
   `is_read` tinyint(1) NOT NULL DEFAULT 0,
   `read_at` datetime DEFAULT NULL,
+  `read_by` int(11) DEFAULT NULL,
   `replied_at` datetime DEFAULT NULL,
   `reply_message` text DEFAULT NULL,
   `replied_by` int(11) DEFAULT NULL,
@@ -176,10 +178,10 @@ CREATE TABLE `contact_messages` (
 -- Dumping data for table `contact_messages`
 --
 
-INSERT INTO `contact_messages` (`id`, `name`, `email`, `phone`, `subject`, `message`, `status`, `is_read`, `read_at`, `replied_at`, `reply_message`, `replied_by`, `created_at`) VALUES
-(1, 'Grace N.', 'grace.n@example.com', '+256733344555', 'Service Times Inquiry', 'Good morning. I would like to know the service times for Sunday. I am new in the area and looking for a church to attend. Thank you.', 'unread', 0, NULL, NULL, NULL, NULL, '2026-07-23 05:07:34'),
-(2, 'Peter M.', 'peter.m@example.com', '+256744455666', 'Volunteer Registration', 'I would like to volunteer in the children ministry. I have experience working with kids and would love to serve. Please get back to me.', 'read', 1, NULL, NULL, NULL, NULL, '2026-07-23 05:07:34'),
-(3, 'Linda A.', 'linda.a@example.com', '+256755566777', 'Booking Request', 'I would like to book a meeting with Apostle Faty for spiritual counseling. Please let me know the available dates. God bless.', 'unread', 0, NULL, NULL, NULL, NULL, '2026-07-23 05:07:34');
+INSERT INTO `contact_messages` (`id`, `name`, `email`, `phone`, `subject`, `message`, `status`, `is_read`, `read_at`, `read_by`, `replied_at`, `reply_message`, `replied_by`, `created_at`) VALUES
+(1, 'Grace N.', 'grace.n@example.com', '+256733344555', 'Service Times Inquiry', 'Good morning. I would like to know the service times for Sunday. I am new in the area and looking for a church to attend. Thank you.', 'unread', 0, NULL, NULL, NULL, NULL, NULL, '2026-07-23 05:07:34'),
+(2, 'Peter M.', 'peter.m@example.com', '+256744455666', 'Volunteer Registration', 'I would like to volunteer in the children ministry. I have experience working with kids and would love to serve. Please get back to me.', 'read', 1, NULL, NULL, NULL, NULL, NULL, '2026-07-23 05:07:34'),
+(3, 'Linda A.', 'linda.a@example.com', '+256755566777', 'Booking Request', 'I would like to book a meeting with Apostle Faty for spiritual counseling. Please let me know the available dates. God bless.', 'unread', 0, NULL, NULL, NULL, NULL, NULL, '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -221,6 +223,7 @@ CREATE TABLE `donations` (
   `donor_email` varchar(255) DEFAULT NULL,
   `donor_phone` varchar(20) DEFAULT NULL,
   `amount` decimal(10,2) NOT NULL,
+  `currency` varchar(3) NOT NULL DEFAULT 'UGX',
   `donation_type` enum('tithe','offering','building_fund','missions','children_ministry','special','general','benevolence','other') NOT NULL DEFAULT 'general',
   `payment_method` enum('mobile_money','bank_transfer','cash','online','card') NOT NULL DEFAULT 'mobile_money',
   `transaction_id` varchar(100) DEFAULT NULL,
@@ -240,10 +243,10 @@ CREATE TABLE `donations` (
 -- Dumping data for table `donations`
 --
 
-INSERT INTO `donations` (`id`, `donor_name`, `donor_email`, `donor_phone`, `amount`, `donation_type`, `payment_method`, `transaction_id`, `status`, `confirmed_by`, `confirmed_at`, `payment_reference`, `notes`, `is_anonymous`, `confirmation_code`, `ip_address`, `created_at`, `updated_at`) VALUES
-(1, 'John Doe', 'john.doe@example.com', '+256700123456', 50000.00, 'tithe', 'mobile_money', NULL, 'completed', NULL, NULL, NULL, NULL, 0, 'DON-SDM-2026-001', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(2, 'Jane Smith', 'jane.smith@example.com', '+256751234567', 25000.00, 'offering', 'mobile_money', NULL, 'completed', NULL, NULL, NULL, NULL, 0, 'DON-SDM-2026-002', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(3, 'Michael Johnson', 'michael.j@example.com', '+256702345678', 100000.00, 'building_fund', 'bank_transfer', NULL, 'confirmed', NULL, NULL, NULL, NULL, 0, 'DON-SDM-2026-003', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
+INSERT INTO `donations` (`id`, `donor_name`, `donor_email`, `donor_phone`, `amount`, `currency`, `donation_type`, `payment_method`, `transaction_id`, `status`, `confirmed_by`, `confirmed_at`, `payment_reference`, `notes`, `is_anonymous`, `confirmation_code`, `ip_address`, `created_at`, `updated_at`) VALUES
+(1, 'John Doe', 'john.doe@example.com', '+256700123456', 50000.00, 'UGX', 'tithe', 'mobile_money', NULL, 'completed', NULL, NULL, NULL, NULL, 0, 'DON-SDM-2026-001', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(2, 'Jane Smith', 'jane.smith@example.com', '+256751234567', 25000.00, 'UGX', 'offering', 'mobile_money', NULL, 'completed', NULL, NULL, NULL, NULL, 0, 'DON-SDM-2026-002', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(3, 'Michael Johnson', 'michael.j@example.com', '+256702345678', 100000.00, 'UGX', 'building_fund', 'bank_transfer', NULL, 'confirmed', NULL, NULL, NULL, NULL, 0, 'DON-SDM-2026-003', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -286,12 +289,15 @@ CREATE TABLE `events` (
   `event_time` time NOT NULL,
   `end_time` time DEFAULT NULL,
   `location` varchar(255) DEFAULT NULL,
+  `category` varchar(100) DEFAULT 'general',
   `venue` varchar(255) DEFAULT NULL,
   `speaker` varchar(255) DEFAULT NULL,
   `banner_image` text DEFAULT NULL,
+  `image_url` text DEFAULT NULL,
   `max_attendees` int(11) DEFAULT NULL,
   `registration_url` varchar(500) DEFAULT NULL,
   `is_featured` tinyint(1) NOT NULL DEFAULT 0,
+  `is_recurring` tinyint(1) NOT NULL DEFAULT 0,
   `status` enum('upcoming','ongoing','completed','cancelled') NOT NULL DEFAULT 'upcoming',
   `created_by` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -302,12 +308,12 @@ CREATE TABLE `events` (
 -- Dumping data for table `events`
 --
 
-INSERT INTO `events` (`id`, `title`, `slug`, `description`, `event_date`, `event_time`, `end_time`, `location`, `venue`, `speaker`, `banner_image`, `max_attendees`, `registration_url`, `is_featured`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'Sunday Morning Worship Service', NULL, 'Join us for a powerful time of worship and the Word. Every Sunday we gather to lift the name of Jesus and receive fresh anointing for the week ahead. Come expecting a miracle!', '2026-07-30', '09:00:00', '12:00:00', 'Main Sanctuary', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 500, NULL, 1, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(2, 'Midweek Prayer Meeting', NULL, 'Experience the presence of God through corporate prayer and intercession. Join us every Wednesday evening as we pray for the church, the nation, and one another. Prayer changes things!', '2026-07-25', '18:30:00', '20:30:00', 'Prayer Hall', 'Salem Dominion Ministries HQ', 'Pastor Faty Musasizi', NULL, 200, NULL, 0, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(3, 'Youth Conference 2026', NULL, 'A special conference designed to empower and equip the next generation for kingdom impact. Three days of intense worship, teaching, and ministry. Register now to secure your spot!', '2026-08-22', '10:00:00', '18:00:00', 'Main Sanctuary', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 800, NULL, 1, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(4, 'Easter Sunday Celebration', NULL, 'Celebrate the resurrection of our Lord Jesus Christ with us! A special Easter service filled with praise, worship, and a powerful Easter message of hope and new beginnings.', '2026-04-24', '08:00:00', '12:00:00', 'Main Sanctuary', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 500, NULL, 1, 'completed', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(5, 'Leadership Summit 2025', NULL, 'An equipping session for all ministry leaders and department heads. Topics include effective leadership, team management, and spiritual growth for leaders.', '2026-06-08', '09:00:00', '16:00:00', 'Conference Room', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 100, NULL, 0, 'completed', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
+INSERT INTO `events` (`id`, `title`, `slug`, `description`, `event_date`, `event_time`, `end_time`, `location`, `category`, `venue`, `speaker`, `banner_image`, `image_url`, `max_attendees`, `registration_url`, `is_featured`, `is_recurring`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'Sunday Morning Worship Service', NULL, 'Join us for a powerful time of worship and the Word. Every Sunday we gather to lift the name of Jesus and receive fresh anointing for the week ahead. Come expecting a miracle!', '2026-07-30', '09:00:00', '12:00:00', 'Main Sanctuary', 'general', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, NULL, 500, NULL, 1, 0, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(2, 'Midweek Prayer Meeting', NULL, 'Experience the presence of God through corporate prayer and intercession. Join us every Wednesday evening as we pray for the church, the nation, and one another. Prayer changes things!', '2026-07-25', '18:30:00', '20:30:00', 'Prayer Hall', 'general', 'Salem Dominion Ministries HQ', 'Pastor Faty Musasizi', NULL, NULL, 200, NULL, 0, 0, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(3, 'Youth Conference 2026', NULL, 'A special conference designed to empower and equip the next generation for kingdom impact. Three days of intense worship, teaching, and ministry. Register now to secure your spot!', '2026-08-22', '10:00:00', '18:00:00', 'Main Sanctuary', 'general', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, NULL, 800, NULL, 1, 0, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(4, 'Easter Sunday Celebration', NULL, 'Celebrate the resurrection of our Lord Jesus Christ with us! A special Easter service filled with praise, worship, and a powerful Easter message of hope and new beginnings.', '2026-04-24', '08:00:00', '12:00:00', 'Main Sanctuary', 'general', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, NULL, 500, NULL, 1, 0, 'completed', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(5, 'Leadership Summit 2025', NULL, 'An equipping session for all ministry leaders and department heads. Topics include effective leadership, team management, and spiritual growth for leaders.', '2026-06-08', '09:00:00', '16:00:00', 'Conference Room', 'general', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, NULL, 100, NULL, 0, 0, 'completed', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -521,6 +527,7 @@ CREATE TABLE `news` (
   `status` enum('draft','published','archived') NOT NULL DEFAULT 'published',
   `is_featured` tinyint(1) NOT NULL DEFAULT 0,
   `scheduled_at` datetime DEFAULT NULL,
+  `published_at` datetime DEFAULT NULL,
   `author_id` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -530,12 +537,12 @@ CREATE TABLE `news` (
 -- Dumping data for table `news`
 --
 
-INSERT INTO `news` (`id`, `title`, `content`, `excerpt`, `category`, `tags`, `featured_image`, `views`, `status`, `is_featured`, `scheduled_at`, `author_id`, `created_at`, `updated_at`) VALUES
-(1, 'New Church Building Project Announced', 'We are excited to announce the beginning of our new church building project that will accommodate our growing congregation and expand our ministry outreach. The project, which has been in the planning phase for over a year, will feature a modern auditorium with seating for 2,000 people, a state-of-the-art sound system, and dedicated spaces for children and youth ministry. We invite every member to be part of this historic milestone through their generous contributions and prayers.', 'Exciting news about our expansion plans to better serve our community and accommodate our growing family.', 'Announcements', 'building,expansion,project', NULL, 0, 'published', 1, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(2, 'Pastor Faty Musasizi Receives Community Service Award', 'Our beloved Apostle and Founder, Faty Musasizi, was honored with the prestigious Community Service Award at the annual Gospel Ministers Summit. The award recognizes his outstanding contributions to community development through spiritual leadership, education support, and humanitarian aid. Pastor Faty dedicated the award to the entire Salem Dominion Ministries family, stating that none of it would have been possible without the support of the congregation.', 'Recognition for our pastor\'s tireless dedication to community service and transformation.', 'Announcements', 'award,pastor,recognition', NULL, 0, 'published', 0, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(3, 'Children\'s Ministry Expansion Program', 'We are expanding our children\'s ministry with new programs and facilities designed to better serve our young ones. The expansion includes a new curriculum based on interactive storytelling, worship sessions tailored for different age groups, and an outdoor play area. We are also looking for volunteer teachers who have a heart for children.', 'New programs and facilities to nurture our children in faith and love.', 'Ministry News', 'children,expansion,ministry', NULL, 0, 'draft', 0, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(4, 'Annual Prayer and Fasting Week Announced', 'Join us for our annual week of prayer and fasting scheduled for next month. This spiritual exercise has been a cornerstone of our ministry for years, and we have seen countless breakthroughs as a result. The theme for this year is \"Breaking Every Chain\" and will include nightly prayer sessions, worship, and prophetic declarations.', 'Our annual spiritual retreat to seek God\'s face for breakthroughs and transformation.', 'Announcements', 'prayer,fasting,spiritual', NULL, 0, 'draft', 0, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(5, 'Youth Conference 2025 Recap', 'Our Youth Conference 2025 was a tremendous success with over 500 young people in attendance. The three-day event featured powerful worship, insightful teachings, and transformative workshops. Guest speakers included Apostle Faty Musasizi and several other anointed men of God. Many young people made commitments to serve God and their communities.', 'A look back at the impactful Youth Conference that empowered the next generation.', 'Events Recap', 'youth,conference,2025', NULL, 0, 'archived', 0, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
+INSERT INTO `news` (`id`, `title`, `content`, `excerpt`, `category`, `tags`, `featured_image`, `views`, `status`, `is_featured`, `scheduled_at`, `published_at`, `author_id`, `created_at`, `updated_at`) VALUES
+(1, 'New Church Building Project Announced', 'We are excited to announce the beginning of our new church building project that will accommodate our growing congregation and expand our ministry outreach. The project, which has been in the planning phase for over a year, will feature a modern auditorium with seating for 2,000 people, a state-of-the-art sound system, and dedicated spaces for children and youth ministry. We invite every member to be part of this historic milestone through their generous contributions and prayers.', 'Exciting news about our expansion plans to better serve our community and accommodate our growing family.', 'Announcements', 'building,expansion,project', NULL, 0, 'published', 1, NULL, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(2, 'Pastor Faty Musasizi Receives Community Service Award', 'Our beloved Apostle and Founder, Faty Musasizi, was honored with the prestigious Community Service Award at the annual Gospel Ministers Summit. The award recognizes his outstanding contributions to community development through spiritual leadership, education support, and humanitarian aid. Pastor Faty dedicated the award to the entire Salem Dominion Ministries family, stating that none of it would have been possible without the support of the congregation.', 'Recognition for our pastor\'s tireless dedication to community service and transformation.', 'Announcements', 'award,pastor,recognition', NULL, 0, 'published', 0, NULL, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(3, 'Children\'s Ministry Expansion Program', 'We are expanding our children\'s ministry with new programs and facilities designed to better serve our young ones. The expansion includes a new curriculum based on interactive storytelling, worship sessions tailored for different age groups, and an outdoor play area. We are also looking for volunteer teachers who have a heart for children.', 'New programs and facilities to nurture our children in faith and love.', 'Ministry News', 'children,expansion,ministry', NULL, 0, 'draft', 0, NULL, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(4, 'Annual Prayer and Fasting Week Announced', 'Join us for our annual week of prayer and fasting scheduled for next month. This spiritual exercise has been a cornerstone of our ministry for years, and we have seen countless breakthroughs as a result. The theme for this year is \"Breaking Every Chain\" and will include nightly prayer sessions, worship, and prophetic declarations.', 'Our annual spiritual retreat to seek God\'s face for breakthroughs and transformation.', 'Announcements', 'prayer,fasting,spiritual', NULL, 0, 'draft', 0, NULL, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(5, 'Youth Conference 2025 Recap', 'Our Youth Conference 2025 was a tremendous success with over 500 young people in attendance. The three-day event featured powerful worship, insightful teachings, and transformative workshops. Guest speakers included Apostle Faty Musasizi and several other anointed men of God. Many young people made commitments to serve God and their communities.', 'A look back at the impactful Youth Conference that empowered the next generation.', 'Events Recap', 'youth,conference,2025', NULL, 0, 'archived', 0, NULL, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -640,7 +647,12 @@ CREATE TABLE `pastor_bookings` (
   `subject` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `status` enum('pending','confirmed','cancelled','completed','no_show') NOT NULL DEFAULT 'pending',
+  `confirmed_by` int(11) DEFAULT NULL,
+  `confirmed_at` datetime DEFAULT NULL,
   `confirmation_code` varchar(50) DEFAULT NULL,
+  `cancel_reason` text DEFAULT NULL,
+  `cancelled_by` int(11) DEFAULT NULL,
+  `cancelled_at` datetime DEFAULT NULL,
   `notes` text DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
