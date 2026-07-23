@@ -111,6 +111,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             background: var(--bg-page);
             color: #1e293b;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* Sidebar */
@@ -145,10 +146,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             border: 2px solid rgba(255,255,255,0.1);
         }
 
-        .sidebar-brand {
-            flex: 1;
-            min-width: 0;
-        }
+        .sidebar-brand { flex: 1; min-width: 0; }
 
         .sidebar-brand h2 {
             font-size: 14px;
@@ -241,11 +239,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             flex-shrink: 0;
         }
 
-        .sidebar-user {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; }
 
         .sidebar-avatar {
             width: 34px;
@@ -261,10 +255,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             flex-shrink: 0;
         }
 
-        .sidebar-user-info {
-            flex: 1;
-            min-width: 0;
-        }
+        .sidebar-user-info { flex: 1; min-width: 0; }
 
         .sidebar-user-name {
             font-size: 12px;
@@ -303,11 +294,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             z-index: 900;
         }
 
-        .topbar-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
+        .topbar-left { display: flex; align-items: center; gap: 16px; }
 
         .sidebar-toggle {
             display: none;
@@ -316,12 +303,14 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             font-size: 20px;
             color: #475569;
             cursor: pointer;
-            padding: 6px;
-            border-radius: 8px;
-            transition: background 0.2s;
+            padding: 8px;
+            border-radius: 10px;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .sidebar-toggle:hover { background: #f1f5f9; }
+        .sidebar-toggle:active { background: #e2e8f0; transform: scale(0.95); }
 
         .topbar-title {
             font-size: 18px;
@@ -330,11 +319,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             letter-spacing: -0.3px;
         }
 
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .topbar-right { display: flex; align-items: center; gap: 8px; }
 
         .topbar-btn {
             position: relative;
@@ -350,6 +335,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-btn:hover { background: #f1f5f9; color: #334155; }
@@ -376,6 +362,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             cursor: pointer;
             transition: background 0.2s;
             position: relative;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .admin-profile-btn:hover { background: #f1f5f9; }
@@ -451,11 +438,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
         .dropdown-item:hover { background: #f8fafc; color: #0f172a; }
         .dropdown-item i { width: 16px; text-align: center; font-size: 14px; }
 
-        .dropdown-divider {
-            height: 1px;
-            background: #f1f5f9;
-            margin: 4px 0;
-        }
+        .dropdown-divider { height: 1px; background: #f1f5f9; margin: 4px 0; }
 
         .dropdown-item.danger { color: #dc2626; }
         .dropdown-item.danger:hover { background: #fef2f2; color: #dc2626; }
@@ -485,6 +468,17 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             width: 300px;
             height: 300px;
             background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .welcome-banner::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: 20%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.08) 0%, transparent 70%);
             border-radius: 50%;
         }
 
@@ -533,13 +527,14 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             align-items: flex-start;
             gap: 16px;
             box-shadow: var(--shadow-sm);
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             border: 1px solid var(--border-color);
         }
 
         .stat-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             box-shadow: var(--shadow-md);
+            border-color: transparent;
         }
 
         .stat-icon {
@@ -551,7 +546,10 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             justify-content: center;
             font-size: 20px;
             flex-shrink: 0;
+            transition: transform 0.3s ease;
         }
+
+        .stat-card:hover .stat-icon { transform: scale(1.1); }
 
         .stat-icon.blue { background: #eff6ff; color: #2563eb; }
         .stat-icon.green { background: #f0fdf4; color: #16a34a; }
@@ -588,7 +586,10 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-color);
             overflow: hidden;
+            transition: box-shadow 0.25s ease;
         }
+
+        .card:hover { box-shadow: var(--shadow-md); }
 
         .card-header {
             padding: 18px 22px;
@@ -626,14 +627,14 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             color: #334155;
             font-size: 13px;
             font-weight: 600;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .quick-action-btn:hover {
             border-color: var(--bg-accent);
             color: var(--bg-accent);
             box-shadow: var(--shadow-sm);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
         }
 
         .quick-action-btn i {
@@ -700,11 +701,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
         }
 
         /* 404 */
-        .not-found {
-            text-align: center;
-            padding: 80px 20px;
-        }
-
+        .not-found { text-align: center; padding: 80px 20px; }
         .not-found i { font-size: 64px; color: #cbd5e1; margin-bottom: 20px; }
         .not-found h2 { font-size: 20px; color: #334155; margin-bottom: 8px; }
         .not-found p { font-size: 14px; color: #64748b; margin-bottom: 24px; }
@@ -735,7 +732,11 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             background: rgba(0,0,0,0.5);
             z-index: 999;
             backdrop-filter: blur(2px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
+
+        .sidebar-overlay.open { display: block; opacity: 1; }
 
         /* Responsive */
         @media (max-width: 1024px) {
@@ -744,34 +745,51 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
         }
 
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            .sidebar-overlay.open { display: block; }
+            .sidebar { transform: translateX(-100%); box-shadow: none; }
+            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 30px rgba(0,0,0,0.3); }
             .main-content { margin-left: 0; }
             .sidebar-toggle { display: flex; }
             .content-area { padding: 16px; }
-            .stats-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-            .stat-card { padding: 16px; }
-            .stat-icon { width: 40px; height: 40px; font-size: 17px; border-radius: 10px; }
-            .stat-value { font-size: 20px; }
-            .quick-actions { grid-template-columns: 1fr 1fr; }
-            .topbar { padding: 0 16px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 14px; gap: 10px; flex-direction: column; align-items: center; text-align: center; }
+            .stat-icon { width: 42px; height: 42px; font-size: 18px; border-radius: 10px; }
+            .stat-value { font-size: 18px; }
+            .stat-label { font-size: 11px; }
+            .quick-actions { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .quick-action-btn { padding: 12px; font-size: 12px; gap: 8px; }
+            .quick-action-btn i { width: 32px; height: 32px; font-size: 13px; }
+            .topbar { padding: 0 12px; height: 56px; }
             .topbar-title { font-size: 15px; }
             .admin-name-display { display: none; }
             .dropdown-arrow { display: none; }
-            .welcome-banner { padding: 20px; }
-            .welcome-banner h1 { font-size: 18px; }
+            .welcome-banner { padding: 18px; margin-bottom: 16px; border-radius: 10px; }
+            .welcome-banner h1 { font-size: 17px; }
+            .welcome-banner p { font-size: 13px; }
+            .card-header { padding: 14px 16px; }
+            .card-body { padding: 16px; }
+            .grid-2 { gap: 12px; margin-bottom: 16px; }
         }
 
         @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-            .quick-actions { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .stat-card { padding: 12px 8px; }
+            .stat-value { font-size: 16px; }
+            .quick-actions { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .quick-action-btn { padding: 10px; font-size: 11px; }
+            .welcome-banner { padding: 14px; }
+            .welcome-banner h1 { font-size: 15px; }
+            .content-area { padding: 12px; }
         }
 
-        /* Animation for page load */
+        /* Animations */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .animate-in {
@@ -787,6 +805,101 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
         .animate-in:nth-child(8) { animation-delay: 0.35s; }
         .animate-in:nth-child(9) { animation-delay: 0.4s; }
         .animate-in:nth-child(10) { animation-delay: 0.45s; }
+
+        /* Touch-friendly */
+        @media (hover: none) and (pointer: coarse) {
+            .stat-card:hover { transform: none; box-shadow: var(--shadow-sm); }
+            .quick-action-btn:hover { transform: none; }
+        }
+
+        /* Module Styles - Mobile-First */
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--bg-accent);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .btn {
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--bg-accent);
+            border-color: var(--bg-accent);
+        }
+
+        .btn-primary:hover {
+            background: #0284c7;
+            border-color: #0284c7;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        .badge {
+            font-weight: 600;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .table {
+            font-size: 13px;
+        }
+
+        .table th {
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #64748b;
+            border-bottom-width: 1px;
+        }
+
+        .pagination .page-link {
+            border-radius: 8px;
+            margin: 0 2px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--bg-accent);
+            border-color: var(--bg-accent);
+        }
+
+        @media (max-width: 768px) {
+            .card .d-flex { flex-wrap: wrap; gap: 8px; }
+            .card .d-flex h4 { font-size: 15px; }
+            .table { font-size: 12px; }
+            .table th { font-size: 10px; padding: 10px 8px; }
+            .table td { padding: 10px 8px; vertical-align: middle; }
+            .btn-group-sm .btn { padding: 4px 8px; font-size: 11px; }
+            .pagination { flex-wrap: wrap; justify-content: center; gap: 4px; }
+            .pagination .page-link { padding: 6px 10px; font-size: 12px; }
+            .form-control, .form-select { min-height: 44px; }
+            .modal-content { border-radius: 16px; }
+            .modal-header { padding: 16px 20px; }
+            .modal-body { padding: 16px 20px; }
+            .modal-footer { padding: 12px 20px; }
+        }
     </style>
 </head>
 <body>
@@ -1023,41 +1136,73 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
     </main>
 
     <script>
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        const toggle = document.getElementById('sidebarToggle');
-        const profileBtn = document.getElementById('profileDropdownBtn');
-        const profileDropdown = document.getElementById('profileDropdown');
+        (function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const toggle = document.getElementById('sidebarToggle');
+            const profileBtn = document.getElementById('profileDropdownBtn');
+            const profileDropdown = document.getElementById('profileDropdown');
 
-        toggle.addEventListener('click', function() {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('open');
-        });
-
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('open');
-        });
-
-        profileBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            profileDropdown.classList.toggle('open');
-        });
-
-        document.addEventListener('click', function(e) {
-            if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
-                profileDropdown.classList.remove('open');
+            function openSidebar() {
+                sidebar.classList.add('open');
+                overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
             }
-        });
 
-        document.querySelectorAll('.nav-item').forEach(function(item) {
-            item.addEventListener('click', function() {
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.remove('open');
-                    overlay.classList.remove('open');
+            function closeSidebar() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+
+            toggle.addEventListener('click', function() {
+                if (sidebar.classList.contains('open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
                 }
             });
-        });
+
+            overlay.addEventListener('click', closeSidebar);
+
+            profileBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
+                    profileDropdown.classList.remove('open');
+                }
+            });
+
+            document.querySelectorAll('.nav-item').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        closeSidebar();
+                    }
+                });
+            });
+
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('open')) {
+                        closeSidebar();
+                    }
+                }, 100);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                    closeSidebar();
+                }
+                if (e.key === 'Escape' && profileDropdown.classList.contains('open')) {
+                    profileDropdown.classList.remove('open');
+                }
+            });
+        })();
     </script>
 </body>
 </html>

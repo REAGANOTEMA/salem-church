@@ -879,6 +879,270 @@ switch ($action) {
         break;
 
     // ──────────────────────────────────────────
+    // ADD COMMENT
+    // ──────────────────────────────────────────
+    case 'add_comment':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $user = null;
+        if (!empty($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true) {
+            $user = $dbMembers->fetch(
+                "SELECT id, first_name, last_name, email FROM users WHERE id = ? AND is_active = 1",
+                [$_SESSION['user_id']]
+            );
+        }
+
+        $data         = apiInput();
+        $content_type = $data['content_type'] ?? $_POST['content_type'] ?? '';
+        $content_id   = intval($data['content_id'] ?? $_POST['content_id'] ?? 0);
+        $comment_text = trim($data['comment'] ?? $_POST['comment'] ?? '');
+        $parent_id    = intval($data['parent_id'] ?? $_POST['parent_id'] ?? 0);
+
+        if (!in_array($content_type, ['sermon', 'news', 'event', 'gallery'])) {
+            apiError('Invalid content type.');
+        }
+        if ($content_id <= 0) {
+            apiError('Invalid content ID.');
+        }
+        if (empty($comment_text)) {
+            apiError('Please write a comment.');
+        }
+        if (strlen($comment_text) > 2000) {
+            apiError('Comment is too long. Maximum 2000 characters.');
+        }
+
+        $commentId = $db->insert('comments', [
+            'content_type' => $content_type,
+            'content_id'   => $content_id,
+            'user_id'      => $user ? $user['id'] : null,
+            'user_name'    => $user ? $user['first_name'] . ' ' . $user['last_name'] : 'Guest',
+            'user_email'   => $user ? $user['email'] : null,
+            'comment'      => $comment_text,
+            'status'       => 'approved',
+            'parent_id'    => $parent_id > 0 ? $parent_id : null,
+            'ip_address'   => $_SERVER['REMOTE_ADDR'] ?? '',
+        ]);
+
+        $saved = $db->fetch("SELECT id, content_type, content_id, user_name, comment, status, parent_id, created_at FROM comments WHERE id = ?", [$commentId]);
+
+        apiSuccess(['comment' => $saved], 'Comment posted successfully!');
+        break;
+
+    // ──────────────────────────────────────────
+    // GET COMMENTS
+    // ──────────────────────────────────────────
+    case 'get_comments':
+        if ($method !== 'GET') apiError('Method not allowed', 405);
+
+        $content_type = $_GET['content_type'] ?? '';
+        $content_id   = intval($_GET['content_id'] ?? 0);
+        $page         = max(1, intval($_GET['page'] ?? 1));
+        $limit        = min(50, max(1, intval($_GET['limit'] ?? 20)));
+        $offset       = ($page - 1) * $limit;
+
+        if (!in_array($content_type, ['sermon', 'news', 'event', 'gallery'])) {
+            apiError('Invalid content type.');
+        }
+        if ($content_id <= 0) {
+            apiError('Invalid content ID.');
+        }
+
+        $total = $db->count('comments', "content_type = ? AND content_id = ? AND status = 'approved' AND (parent_id IS NULL OR parent_id = 0)", [$content_type, $content_id]);
+        $totalPages = max(1, ceil($total / $limit));
+
+        $comments = $db->fetchAll(
+            "SELECT id, user_name, comment, parent_id, created_at FROM comments WHERE content_type = ? AND content_id = ? AND status = 'approved' AND (parent_id IS NULL OR parent_id = 0) ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            [$content_type, $content_id, $limit, $offset]
+        );
+
+        $totalAll = $db->count('comments', "content_type = ? AND content_id = ? AND status = 'approved'", [$content_type, $content_id]);
+
+        apiSuccess([
+            'data' => $comments,
+            'total' => $totalAll,
+            'pagination' => [
+                'page'        => $page,
+                'per_page'    => $limit,
+                'total'       => $total,
+                'total_pages' => $totalPages,
+            ],
+        ]);
+        break;
+
+    // ──────────────────────────────────────────
+    // TOGGLE LIKE
+    // ──────────────────────────────────────────
+    case 'toggle_like':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $data         = apiInput();
+        $content_type = $data['content_type'] ?? $_POST['content_type'] ?? '';
+        $content_id   = intval($data['content_id'] ?? $_POST['content_id'] ?? 0);
+        $visitor_hash = $data['visitor_hash'] ?? $_POST['visitor_hash'] ?? '';
+
+        if (!in_array($content_type, ['sermon', 'news', 'event', 'gallery'])) {
+            apiError('Invalid content type.');
+        }
+        if ($content_id <= 0) {
+            apiError('Invalid content ID.');
+        }
+
+        $user_id = null;
+        if (!empty($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true) {
+            $user_id = $_SESSION['user_id'] ?? null;
+        }
+
+        if (!$user_id && empty($visitor_hash)) {
+            apiError('Unable to process like. Please try again.');
+        }
+
+        $existing = null;
+        if ($user_id) {
+            $existing = $db->fetch(
+                "SELECT id FROM likes WHERE content_type = ? AND content_id = ? AND user_id = ?",
+                [$content_type, $content_id, $user_id]
+            );
+        } elseif ($visitor_hash) {
+            $visitor_hash = hash('sha256', $visitor_hash);
+            $existing = $db->fetch(
+                "SELECT id FROM likes WHERE content_type = ? AND content_id = ? AND visitor_hash = ?",
+                [$content_type, $content_id, $visitor_hash]
+            );
+        }
+
+        if ($existing) {
+            $db->delete('likes', 'id = ?', [$existing['id']]);
+            $liked = false;
+        } else {
+            $db->insert('likes', [
+                'content_type' => $content_type,
+                'content_id'   => $content_id,
+                'user_id'      => $user_id,
+                'visitor_hash' => $user_id ? null : ($visitor_hash ? hash('sha256', $visitor_hash) : null),
+            ]);
+            $liked = true;
+        }
+
+        $likeCount = $db->count('likes', "content_type = ? AND content_id = ?", [$content_type, $content_id]);
+
+        apiSuccess([
+            'liked'  => $liked,
+            'count'  => $likeCount,
+        ]);
+        break;
+
+    // ──────────────────────────────────────────
+    // GET INTERACTION COUNTS
+    // ──────────────────────────────────────────
+    case 'get_counts':
+        if ($method !== 'GET') apiError('Method not allowed', 405);
+
+        $content_type = $_GET['content_type'] ?? '';
+        $content_id   = intval($_GET['content_id'] ?? 0);
+
+        if (!in_array($content_type, ['sermon', 'news', 'event', 'gallery'])) {
+            apiError('Invalid content type.');
+        }
+        if ($content_id <= 0) {
+            apiError('Invalid content ID.');
+        }
+
+        $likeCount   = $db->count('likes', "content_type = ? AND content_id = ?", [$content_type, $content_id]);
+        $commentCount = $db->count('comments', "content_type = ? AND content_id = ? AND status = 'approved'", [$content_type, $content_id]);
+        $shareCount  = $db->count('shares', "content_type = ? AND content_id = ?", [$content_type, $content_id]);
+
+        $userLiked = false;
+        if (!empty($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true) {
+            $liked = $db->fetch(
+                "SELECT id FROM likes WHERE content_type = ? AND content_id = ? AND user_id = ?",
+                [$content_type, $content_id, $_SESSION['user_id']]
+            );
+            $userLiked = (bool)$liked;
+        }
+
+        apiSuccess([
+            'likes'   => $likeCount,
+            'comments' => $commentCount,
+            'shares'  => $shareCount,
+            'user_liked' => $userLiked,
+        ]);
+        break;
+
+    // ──────────────────────────────────────────
+    // RECORD SHARE
+    // ──────────────────────────────────────────
+    case 'record_share':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $data           = apiInput();
+        $content_type   = $data['content_type'] ?? $_POST['content_type'] ?? '';
+        $content_id     = intval($data['content_id'] ?? $_POST['content_id'] ?? 0);
+        $share_platform = trim($data['platform'] ?? $_POST['platform'] ?? 'link');
+
+        if (!in_array($content_type, ['sermon', 'news', 'event', 'gallery'])) {
+            apiError('Invalid content type.');
+        }
+        if ($content_id <= 0) {
+            apiError('Invalid content ID.');
+        }
+
+        $user_id = null;
+        if (!empty($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true) {
+            $user_id = $_SESSION['user_id'] ?? null;
+        }
+
+        $db->insert('shares', [
+            'content_type'   => $content_type,
+            'content_id'     => $content_id,
+            'user_id'        => $user_id,
+            'share_platform' => $share_platform,
+            'ip_address'     => $_SERVER['REMOTE_ADDR'] ?? '',
+        ]);
+
+        $shareCount = $db->count('shares', "content_type = ? AND content_id = ?", [$content_type, $content_id]);
+
+        apiSuccess(['count' => $shareCount], 'Share recorded!');
+        break;
+
+    // ──────────────────────────────────────────
+    // DELETE COMMENT (own comment only)
+    // ──────────────────────────────────────────
+    case 'delete_comment':
+        if ($method !== 'POST') apiError('Method not allowed', 405);
+        requireCsrf();
+
+        $user = null;
+        if (!empty($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true) {
+            $user = $_SESSION['user_id'];
+        }
+        if (!$user) {
+            apiError('Please log in to delete comments.', 401);
+        }
+
+        $data        = apiInput();
+        $comment_id  = intval($data['comment_id'] ?? $_POST['comment_id'] ?? 0);
+
+        if ($comment_id <= 0) {
+            apiError('Invalid comment ID.');
+        }
+
+        $comment = $db->fetch("SELECT id, user_id FROM comments WHERE id = ?", [$comment_id]);
+        if (!$comment) {
+            apiError('Comment not found.');
+        }
+        if ($comment['user_id'] != $user) {
+            apiError('You can only delete your own comments.', 403);
+        }
+
+        $db->update('comments', ['status' => 'deleted'], 'id = ?', [$comment_id]);
+
+        apiSuccess([], 'Comment deleted.');
+        break;
+
+    // ──────────────────────────────────────────
     // DEFAULT
     // ──────────────────────────────────────────
     default:

@@ -461,24 +461,27 @@ $admin_name = $_SESSION['admin_name'] ?? 'Admin';
                 right: -320px;
                 width: 300px;
                 height: 100vh;
+                height: 100dvh;
                 background: var(--white);
                 flex-direction: column;
                 align-items: stretch;
-                padding: 100px 20px 30px;
+                padding: 90px 20px 30px;
                 gap: 4px;
                 box-shadow: -4px 0 30px rgba(0,0,0,0.15);
                 transition: right var(--transition-smooth);
                 z-index: 1050;
                 overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
 
             .sdm-nav-links.open { right: 0; }
 
             .sdm-nav-links .sdm-nav-link {
                 color: var(--gray-700) !important;
-                padding: 12px 16px;
+                padding: 14px 16px;
                 border-radius: 12px;
                 font-size: 0.95rem;
+                min-height: 48px;
             }
 
             .sdm-nav-links .sdm-nav-link:hover,
@@ -506,8 +509,13 @@ $admin_name = $_SESSION['admin_name'] ?? 'Admin';
             }
 
             .sdm-dropdown.show .sdm-dropdown-menu {
-                max-height: 300px;
+                max-height: 400px;
                 padding: 8px;
+            }
+
+            .sdm-dropdown-item {
+                padding: 12px 14px;
+                min-height: 44px;
             }
 
             .sdm-nav-auth {
@@ -519,6 +527,12 @@ $admin_name = $_SESSION['admin_name'] ?? 'Admin';
                 align-items: stretch;
             }
 
+            .sdm-btn-login {
+                min-height: 48px;
+                justify-content: center;
+                font-size: 0.95rem;
+            }
+
             .sdm-hamburger { display: flex; }
             .sdm-spacer { height: 68px; }
         }
@@ -527,7 +541,9 @@ $admin_name = $_SESSION['admin_name'] ?? 'Admin';
             .sdm-brand-name { font-size: 1rem; }
             .sdm-brand-tagline { font-size: 0.65rem; }
             .sdm-brand-logo { width: 40px; height: 40px; }
-            .sdm-nav-links { width: 85vw; }
+            .sdm-nav-links { width: 88vw; max-width: 300px; }
+            .sdm-nav-container { padding: 0 16px; }
+            .sdm-hamburger { width: 42px; height: 42px; border-radius: 10px; }
         }
     </style>
 </head>

@@ -147,6 +147,91 @@ include 'components/header.php';
 .pagination .page-link:hover { background: #f1f5f9; border-color: #0ea5e9; color: #0ea5e9; }
 .series-tag { background: rgba(14,165,233,0.1); color: #0ea5e9; font-size: 0.7rem; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
 @media(max-width:768px) { .sermons-hero h1 { font-size: 2rem; } .filter-bar { padding: 15px; } }
+
+.sdm-interactions { border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 16px; }
+.sdm-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sdm-action-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border: 2px solid #e2e8f0; border-radius: 10px;
+    background: #fff; color: #475569; font-size: 0.85rem; font-weight: 600;
+    font-family: 'Montserrat', sans-serif; cursor: pointer; transition: all 0.3s;
+    text-decoration: none; white-space: nowrap;
+}
+.sdm-action-btn:hover { border-color: #0ea5e9; color: #0ea5e9; background: rgba(14,165,233,0.05); }
+.sdm-action-btn.liked { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.05); }
+.sdm-action-btn.liked i { animation: sdmHeartPop 0.3s ease; }
+@keyframes sdmHeartPop { 0%{transform:scale(1)} 50%{transform:scale(1.3)} 100%{transform:scale(1)} }
+.sdm-action-btn i { font-size: 0.9rem; }
+.sdm-share-menu { position: relative; display: inline-block; }
+.sdm-share-dropdown {
+    display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: #fff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    padding: 8px; z-index: 100; min-width: 180px;
+}
+.sdm-share-dropdown.show { display: block; animation: sdmFadeIn 0.2s ease; }
+@keyframes sdmFadeIn { from{opacity:0;transform:translateX(-50%) translateY(4px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+.sdm-share-dropdown a {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    border-radius: 8px; font-size: 0.85rem; font-family: 'Montserrat', sans-serif;
+    color: #475569; text-decoration: none; transition: background 0.2s;
+}
+.sdm-share-dropdown a:hover { background: #f1f5f9; }
+.sdm-share-dropdown a i { width: 20px; text-align: center; }
+.sdm-share-dropdown .fa-whatsapp { color: #25d366; }
+.sdm-share-dropdown .fa-facebook-f { color: #1877f2; }
+.sdm-share-dropdown .fa-twitter { color: #1da1f2; }
+.sdm-share-dropdown .fa-telegram { color: #0088cc; }
+.sdm-share-dropdown .fa-link { color: #64748b; }
+.sdm-comments-section { margin-top: 20px; }
+.sdm-comments-header { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: #0f172a; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.sdm-comments-header span { background: #0ea5e9; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; font-family: 'Montserrat', sans-serif; font-weight: 600; }
+.sdm-comment-form { display: flex; gap: 12px; margin-bottom: 20px; }
+.sdm-comment-form .avatar {
+    width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700;
+    font-size: 0.85rem; flex-shrink: 0; font-family: 'Montserrat', sans-serif;
+}
+.sdm-comment-form .form-body { flex: 1; }
+.sdm-comment-form textarea {
+    width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0; border-radius: 12px;
+    font-size: 0.9rem; font-family: 'Montserrat', sans-serif; resize: vertical;
+    min-height: 60px; transition: border-color 0.3s; outline: none; color: #0f172a;
+}
+.sdm-comment-form textarea:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+.sdm-comment-form .char-count { font-size: 0.75rem; color: #94a3b8; text-align: right; margin-top: 4px; }
+.sdm-comment-form .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+.sdm-comment-form .btn-post {
+    padding: 8px 20px; background: linear-gradient(135deg, #0ea5e9, #0284c7); color: #fff;
+    border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    font-family: 'Montserrat', sans-serif; transition: all 0.3s;
+}
+.sdm-comment-form .btn-post:hover { background: linear-gradient(135deg, #0284c7, #0369a1); }
+.sdm-comment-form .btn-post:disabled { opacity: 0.5; cursor: not-allowed; }
+.sdm-comment-form .btn-cancel {
+    padding: 8px 16px; background: transparent; color: #64748b; border: 2px solid #e2e8f0;
+    border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+}
+.sdm-comment-item { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f1f5f9; animation: sdmFadeIn 0.3s ease; }
+.sdm-comment-item .avatar {
+    width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    display: flex; align-items: center; justify-content: center; color: #0f172a; font-weight: 700;
+    font-size: 0.75rem; flex-shrink: 0; font-family: 'Montserrat', sans-serif;
+}
+.sdm-comment-item .comment-body { flex: 1; }
+.sdm-comment-item .comment-author { font-weight: 700; color: #0f172a; font-size: 0.85rem; font-family: 'Montserrat', sans-serif; }
+.sdm-comment-item .comment-time { color: #94a3b8; font-size: 0.75rem; margin-left: 8px; }
+.sdm-comment-item .comment-text { color: #475569; font-size: 0.9rem; line-height: 1.6; margin-top: 4px; word-wrap: break-word; }
+.sdm-comment-item .comment-delete { color: #94a3b8; font-size: 0.75rem; cursor: pointer; margin-top: 4px; border: none; background: none; padding: 0; font-family: 'Montserrat', sans-serif; }
+.sdm-comment-item .comment-delete:hover { color: #ef4444; }
+.sdm-login-prompt { text-align: center; padding: 16px; background: #f8fafc; border-radius: 12px; color: #64748b; font-size: 0.85rem; font-family: 'Montserrat', sans-serif; }
+.sdm-login-prompt a { color: #0ea5e9; font-weight: 700; text-decoration: none; }
+.sdm-login-prompt a:hover { text-decoration: underline; }
+.sdm-load-more { display: block; width: 100%; padding: 10px; border: 2px dashed #e2e8f0; border-radius: 10px; background: transparent; color: #64748b; font-size: 0.85rem; font-family: 'Montserrat', sans-serif; cursor: pointer; transition: all 0.3s; text-align: center; }
+.sdm-load-more:hover { border-color: #0ea5e9; color: #0ea5e9; }
+.sdm-copied-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 10px 24px; border-radius: 10px; font-size: 0.85rem; font-family: 'Montserrat', sans-serif; z-index: 9999; animation: sdmToastIn 0.3s ease; }
+@keyframes sdmToastIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+@media(max-width:480px) { .sdm-actions { gap: 8px; } .sdm-action-btn { padding: 7px 12px; font-size: 0.8rem; } }
 </style>
 
 <section class="sermons-hero" data-aos="fade-in">
@@ -266,6 +351,7 @@ include 'components/header.php';
             <div class="col-lg-4 col-md-6" data-aos="fade-up" data-delay="<?= ($idx % 3) * 100 ?>">
                 <div class="sermon-card">
                     <div class="thumb-wrap" style="cursor:pointer;" onclick="openSermonModal(<?= htmlspecialchars(json_encode([
+                        'id' => $sermon['id'],
                         'title' => $sermon['title'],
                         'preacher' => $sermon['preacher'] ?? 'Apostle Faty Musasizi',
                         'date' => formatDate($sermon['sermon_date'] ?? $sermon['created_at'], 'F j, Y'),
@@ -353,7 +439,43 @@ include 'components/header.php';
                 <h5 class="modal-title" id="sermonModalTitle" style="font-family:'Playfair Display',serif;"></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-0" id="sermonModalBody">
+            <div class="modal-body p-0">
+                <div id="sermonModalBody"></div>
+                <div class="p-4" id="sermonInteractionsWrap">
+                    <div class="sdm-interactions">
+                        <div class="sdm-actions">
+                            <button class="sdm-action-btn sdm-like-btn" data-sdm-type="sermon"><i class="far fa-heart"></i> <span class="like-count sdm-like-count">0</span></button>
+                            <button class="sdm-action-btn sdm-toggle-comments"><i class="far fa-comment"></i> <span class="sdm-comment-count">0</span></button>
+                            <div class="sdm-share-menu">
+                                <button class="sdm-action-btn sdm-share-btn"><i class="fas fa-share-alt"></i> <span class="sdm-share-count">0</span></button>
+                                <div class="sdm-share-dropdown">
+                                    <a href="#" class="sdm-share-link" data-platform="whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                                    <a href="#" class="sdm-share-link" data-platform="facebook"><i class="fab fa-facebook-f"></i> Facebook</a>
+                                    <a href="#" class="sdm-share-link" data-platform="twitter"><i class="fab fa-twitter"></i> Twitter</a>
+                                    <a href="#" class="sdm-share-link" data-platform="telegram"><i class="fab fa-telegram"></i> Telegram</a>
+                                    <a href="#" class="sdm-share-link" data-platform="link"><i class="fas fa-link"></i> Copy Link</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sdm-comments-section" style="display:none;">
+                            <h6 class="sdm-comments-header"><i class="fas fa-comments"></i> Comments <span>0</span></h6>
+                            <div class="sdm-comment-form">
+                                <div class="avatar"><?= !empty($_SESSION['user_name']) ? strtoupper(substr($_SESSION['user_name'],0,1)) : 'G' ?></div>
+                                <div class="form-body">
+                                    <form class="sdm-comment-form-form">
+                                        <textarea placeholder="<?= !empty($_SESSION['user_logged_in']) ? 'Share your thoughts...' : 'Log in to comment...' ?>" <?= empty($_SESSION['user_logged_in']) ? 'disabled' : '' ?> maxlength="2000"></textarea>
+                                        <div class="char-count">0/2000</div>
+                                        <div class="form-actions">
+                                            <button type="submit" class="btn-post" <?= empty($_SESSION['user_logged_in']) ? 'disabled' : '' ?>>Post Comment</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="sdm-comments-list"></div>
+                            <button class="sdm-load-more" style="display:none;">Load more comments</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer bg-dark border-0 text-white">
                 <small id="sermonModalMeta" class="me-auto" style="font-family:'Montserrat',sans-serif;color:#94a3b8;"></small>
@@ -364,9 +486,140 @@ include 'components/header.php';
 </div>
 
 <script>
+var sdmCurrentSermon = { type: 'sermon', id: 0, csrf: '<?= $csrfToken ?>', loggedIn: <?= !empty($_SESSION['user_logged_in']) ? 'true' : 'false' ?> };
+function sdmHeaders() { return { 'Content-Type': 'application/json', 'X-CSRF-Token': sdmCurrentSermon.csrf }; }
+function sdmVisitorHash() { var h = localStorage.getItem('sdm_vh'); if (!h) { h = 'v_' + Math.random().toString(36).substring(2) + Date.now().toString(36); localStorage.setItem('sdm_vh', h); } return h; }
+function sdmEscapeHtml(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function sdmTimeAgo(dt) { var diff = Math.floor(Date.now()/1000) - Math.floor(new Date(dt).getTime()/1000); if (diff < 60) return 'Just now'; if (diff < 3600) return Math.floor(diff/60) + 'm ago'; if (diff < 86400) return Math.floor(diff/3600) + 'h ago'; if (diff < 604800) return Math.floor(diff/86400) + 'd ago'; return new Date(dt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+
+var sdmCommentsPage = 1, sdmLoadingComments = false;
+function sdmLoadComments(page) {
+    if (sdmLoadingComments) return;
+    sdmLoadingComments = true;
+    var s = sdmCurrentSermon;
+    fetch('api.php?action=get_comments&content_type=' + s.type + '&content_id=' + s.id + '&page=' + page + '&limit=10')
+    .then(function(r){return r.json();}).then(function(res) {
+        sdmLoadingComments = false;
+        var list = document.querySelector('#sermonInteractionsWrap .sdm-comments-list');
+        var hdr = document.querySelector('#sermonInteractionsWrap .sdm-comments-header');
+        if (!list) return;
+        if (page === 1) list.innerHTML = '';
+        if (hdr) hdr.innerHTML = '<i class="fas fa-comments"></i> Comments <span>' + (res.total||0) + '</span>';
+        if (!res.data || res.data.length === 0) {
+            if (page === 1) list.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:16px;font-size:0.85rem;font-family:Montserrat,sans-serif;">No comments yet. Be the first!</p>';
+            var mb = list.parentElement.querySelector('.sdm-load-more'); if(mb) mb.style.display='none';
+            return;
+        }
+        res.data.forEach(function(c) {
+            var ini = c.user_name.split(' ').map(function(w){return w[0]}).join('').substring(0,2).toUpperCase();
+            var del = (sdmCurrentSermon.loggedIn && c.user_id == <?= $_SESSION['user_id'] ?? 0 ?>) ? '<button class="sdm-comment-delete comment-delete" data-id="'+c.id+'"><i class="fas fa-trash-alt me-1"></i>Delete</button>' : '';
+            list.insertAdjacentHTML('beforeend', '<div class="sdm-comment-item"><div class="avatar">'+ini+'</div><div class="comment-body"><div><span class="comment-author">'+sdmEscapeHtml(c.user_name)+'</span><span class="comment-time">'+sdmTimeAgo(c.created_at)+'</span></div><div class="comment-text">'+sdmEscapeHtml(c.comment)+'</div>'+del+'</div></div>');
+        });
+        var mb = list.parentElement.querySelector('.sdm-load-more');
+        if (mb) { mb.style.display = (page >= (res.pagination?res.pagination.total_pages:1)) ? 'none' : 'block'; }
+    }).catch(function(){ sdmLoadingComments = false; });
+}
+function sdmRefreshCounts() {
+    var s = sdmCurrentSermon;
+    fetch('api.php?action=get_counts&content_type=' + s.type + '&content_id=' + s.id)
+    .then(function(r){return r.json();}).then(function(res) {
+        if (!res.success) return;
+        var wrap = document.querySelector('#sermonInteractionsWrap');
+        if (!wrap) return;
+        var lk = wrap.querySelector('.sdm-like-count'); if(lk) lk.textContent = res.likes||0;
+        var cm = wrap.querySelector('.sdm-comment-count'); if(cm) cm.textContent = res.comments||0;
+        var sh = wrap.querySelector('.sdm-share-count'); if(sh) sh.textContent = res.shares||0;
+        if (res.user_liked) { var btn = wrap.querySelector('.sdm-like-btn'); if(btn){btn.classList.add('liked');btn.querySelector('i').className='fas fa-heart';} }
+    });
+}
+function sdmResetInteractions() {
+    sdmCommentsPage = 1;
+    var wrap = document.querySelector('#sermonInteractionsWrap');
+    if (!wrap) return;
+    var lk = wrap.querySelector('.sdm-like-count'); if(lk) lk.textContent='0';
+    var cm = wrap.querySelector('.sdm-comment-count'); if(cm) cm.textContent='0';
+    var sh = wrap.querySelector('.sdm-share-count'); if(sh) sh.textContent='0';
+    var btn = wrap.querySelector('.sdm-like-btn'); if(btn){btn.classList.remove('liked');btn.querySelector('i').className='far fa-heart';}
+    var list = wrap.querySelector('.sdm-comments-list'); if(list) list.innerHTML='';
+    var sec = wrap.querySelector('.sdm-comments-section'); if(sec) sec.style.display='none';
+    var mb = wrap.querySelector('.sdm-load-more'); if(mb) mb.style.display='none';
+    var hdr = wrap.querySelector('.sdm-comments-header'); if(hdr) hdr.innerHTML='<i class="fas fa-comments"></i> Comments <span>0</span>';
+}
+
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.sdm-like-btn')) {
+        e.preventDefault();
+        var s = sdmCurrentSermon;
+        fetch('api.php?action=toggle_like', {method:'POST',headers:sdmHeaders(),body:JSON.stringify({content_type:s.type,content_id:s.id,visitor_hash:sdmVisitorHash()})})
+        .then(function(r){return r.json();}).then(function(res){
+            if(!res.success){if(res.message)alert(res.message);return;}
+            var wrap = document.querySelector('#sermonInteractionsWrap');
+            var ct = wrap.querySelector('.like-count'); if(ct) ct.textContent=res.count||0;
+            var btn = wrap.querySelector('.sdm-like-btn');
+            btn.classList.toggle('liked',res.liked);
+            btn.querySelector('i').className = res.liked ? 'fas fa-heart' : 'far fa-heart';
+        });
+        return;
+    }
+    if (e.target.closest('.sdm-toggle-comments')) {
+        e.preventDefault();
+        var sec = document.querySelector('#sermonInteractionsWrap .sdm-comments-section');
+        if(sec){ sec.style.display = sec.style.display==='none'?'block':'none'; if(sec.style.display!=='none' && sec.dataset.loaded!=='1'){sdmLoadComments(1);sec.dataset.loaded='1';} }
+        return;
+    }
+    if (e.target.closest('.sdm-share-btn')) {
+        e.preventDefault();
+        var dd = e.target.closest('.sdm-share-menu').querySelector('.sdm-share-dropdown');
+        document.querySelectorAll('.sdm-share-dropdown.show').forEach(function(d){if(d!==dd)d.classList.remove('show');});
+        dd.classList.toggle('show');
+        return;
+    }
+    if (!e.target.closest('.sdm-share-dropdown')) { document.querySelectorAll('.sdm-share-dropdown.show').forEach(function(d){d.classList.remove('show');}); }
+    if (e.target.closest('.sdm-share-link')) {
+        e.preventDefault();
+        var link = e.target.closest('.sdm-share-link');
+        var platform = link.dataset.platform;
+        var shareText = document.title, shareUrl = window.location.href, url = '';
+        if(platform==='whatsapp') url='https://wa.me/?text='+encodeURIComponent(shareText+' '+shareUrl);
+        else if(platform==='facebook') url='https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(shareUrl);
+        else if(platform==='twitter') url='https://twitter.com/intent/tweet?url='+encodeURIComponent(shareUrl)+'&text='+encodeURIComponent(shareText);
+        else if(platform==='telegram') url='https://t.me/share/url?url='+encodeURIComponent(shareUrl)+'&text='+encodeURIComponent(shareText);
+        else if(platform==='link'){navigator.clipboard.writeText(shareUrl).then(function(){sdmShowCopied();});}
+        if(url) window.open(url,'_blank','width=600,height=400');
+        fetch('api.php?action=record_share',{method:'POST',headers:sdmHeaders(),body:JSON.stringify({content_type:sdmCurrentSermon.type,content_id:sdmCurrentSermon.id,platform:platform})})
+        .then(function(r){return r.json();}).then(function(res){if(res.success){var sh=document.querySelector('#sermonInteractionsWrap .sdm-share-count');if(sh)sh.textContent=res.count||0;}});
+        document.querySelectorAll('.sdm-share-dropdown.show').forEach(function(d){d.classList.remove('show');});
+        return;
+    }
+    if (e.target.closest('.sdm-comment-delete')) {
+        e.preventDefault();
+        if(!confirm('Delete this comment?'))return;
+        var cid = e.target.closest('.sdm-comment-delete').dataset.id;
+        fetch('api.php?action=delete_comment',{method:'POST',headers:sdmHeaders(),body:JSON.stringify({comment_id:cid})})
+        .then(function(r){return r.json();}).then(function(res){if(res.success){sdmLoadComments(1);sdmRefreshCounts();}else{alert(res.message||'Failed.');}});
+        return;
+    }
+    if (e.target.closest('.sdm-load-more')) { e.preventDefault(); sdmCommentsPage++; sdmLoadComments(sdmCommentsPage); return; }
+});
+document.addEventListener('submit', function(e) {
+    var form = e.target.closest('.sdm-comment-form-form');
+    if (!form) return;
+    e.preventDefault();
+    if (!sdmCurrentSermon.loggedIn) { alert('Please log in to comment.'); return; }
+    var ta = form.querySelector('textarea'), btn = form.querySelector('.btn-post'), text = ta.value.trim();
+    if (!text) return;
+    btn.disabled = true;
+    fetch('api.php?action=add_comment',{method:'POST',headers:sdmHeaders(),body:JSON.stringify({content_type:sdmCurrentSermon.type,content_id:sdmCurrentSermon.id,comment:text})})
+    .then(function(r){return r.json();}).then(function(res){btn.disabled=false;if(!res.success){alert(res.message||'Failed.');return;}ta.value='';var ct=form.querySelector('.char-count');if(ct)ct.textContent='0/2000';sdmLoadComments(1);sdmRefreshCounts();}).catch(function(){btn.disabled=false;});
+});
+document.addEventListener('input', function(e) { if(e.target.closest('.sdm-comment-form textarea')){var ct=e.target.closest('.sdm-comment-form').querySelector('.char-count');if(ct)ct.textContent=e.target.value.length+'/2000';} });
+function sdmShowCopied(){var t=document.createElement('div');t.className='sdm-copied-toast';t.textContent='Link copied!';document.body.appendChild(t);setTimeout(function(){t.remove();},2000);}
+
 function openSermonModal(data) {
     document.getElementById('sermonModalTitle').textContent = data.title;
-    let html = '';
+    sdmResetInteractions();
+    sdmCurrentSermon.id = data.id;
+    var html = '';
     if (data.yt_id) {
         html = '<div style="position:relative;padding-top:56.25%;"><iframe src="https://www.youtube.com/embed/' + data.yt_id + '?autoplay=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div>';
     } else if (data.audio_url) {
@@ -382,11 +635,12 @@ function openSermonModal(data) {
         html += '<div class="p-4"><p style="color:#475569;line-height:1.8;">' + data.description + '</p></div>';
     }
     document.getElementById('sermonModalBody').innerHTML = html;
-    let meta = data.preacher + ' &middot; ' + data.date;
+    var meta = data.preacher + ' &middot; ' + data.date;
     if (data.category) meta += ' &middot; ' + data.category;
     if (data.series) meta += ' &middot; Series: ' + data.series;
     document.getElementById('sermonModalMeta').innerHTML = meta;
     new bootstrap.Modal(document.getElementById('sermonModal')).show();
+    sdmRefreshCounts();
 }
 </script>
 

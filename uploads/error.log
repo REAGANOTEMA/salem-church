@@ -25328,3 +25328,63 @@ Stack trace:
 [20-Apr-2026 02:17:20 UTC] Environment Info: {"environment":"development","debug_mode":true,"database_host":"localhost","database_name":"salem_dominion_ministries","database_user":"root","app_url":"http:\/\/localhost\/salem-dominion-ministries","mail_enabled":false,"server_name":"localhost","http_host":"localhost","document_root":"C:\/xampp\/htdocs"}
 [20-Apr-2026 02:17:26 UTC] Environment Info: {"environment":"development","debug_mode":true,"database_host":"localhost","database_name":"salem_dominion_ministries","database_user":"root","app_url":"http:\/\/localhost\/salem-dominion-ministries","mail_enabled":false,"server_name":"localhost","http_host":"localhost","document_root":"C:\/xampp\/htdocs"}
 [20-Apr-2026 02:17:27 UTC] Environment Info: {"environment":"development","debug_mode":true,"database_host":"localhost","database_name":"salem_dominion_ministries","database_user":"root","app_url":"http:\/\/localhost\/salem-dominion-ministries","mail_enabled":false,"server_name":"localhost","http_host":"localhost","document_root":"C:\/xampp\/htdocs"}
+[23-Jul-2026 08:11:42 Africa/Kampala] Database connection failed (salemdominionmin_website): SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[23-Jul-2026 08:11:42 Africa/Kampala] About page DB error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[23-Jul-2026 08:12:04 Africa/Kampala] Database connection failed (salemdominionmin_website): SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[23-Jul-2026 08:12:04 Africa/Kampala] Leadership page DB error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[23-Jul-2026 08:12:41 Africa/Kampala] Database connection failed (salemdominionmin_website): SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[23-Jul-2026 08:12:41 Africa/Kampala] Ministries page DB error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[23-Jul-2026 08:12:54 Africa/Kampala] Database connection failed (salemdominionmin_website): SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[23-Jul-2026 08:12:54 Africa/Kampala] Ministries page DB error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[23-Jul-2026 08:12:58 Africa/Kampala] Database connection failed (salemdominionmin_website): SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[23-Jul-2026 08:12:58 Africa/Kampala] Ministries page DB error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[23-Jul-2026 08:13:13 Africa/Kampala] Database connection failed (salemdominionmin_admin): SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[23-Jul-2026 08:13:13 Africa/Kampala] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in C:\xampp\htdocs\salem-church\includes\database.php:21
+Stack trace:
+#0 C:\xampp\htdocs\salem-church\includes\database.php(21): PDO->__construct('mysql:host=loca...', 'salemdominionmi...', 'H9HcZvKLWsQmYdg...', Array)
+#1 C:\xampp\htdocs\salem-church\includes\database.php(48): Database->__construct('localhost', 'salemdominionmi...', 'H9HcZvKLWsQmYdg...', 'salemdominionmi...', '3306', 'utf8mb4')
+#2 C:\xampp\htdocs\salem-church\includes\auth.php(14): Database::getNamed('admin')
+#3 C:\xampp\htdocs\salem-church\includes\auth.php(181): Auth->__construct()
+#4 C:\xampp\htdocs\salem-church\includes\auth.php(191): auth()
+#5 C:\xampp\htdocs\salem-church\admin\login.php(6): isAdminLoggedIn()
+#6 {main}
+  thrown in C:\xampp\htdocs\salem-church\includes\database.php on line 21
+[23-Jul-2026 09:00:03 Africa/Kampala] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'album' in 'field list' in C:\xampp\htdocs\salem-church\includes\database.php:82
+Stack trace:
+#0 C:\xampp\htdocs\salem-church\includes\database.php(82): PDO->prepare('SELECT DISTINCT...')
+#1 C:\xampp\htdocs\salem-church\includes\database.php(94): Database->query('SELECT DISTINCT...', Array)
+#2 C:\xampp\htdocs\salem-church\admin\modules\gallery.php(134): Database->fetchAll('SELECT DISTINCT...')
+#3 C:\xampp\htdocs\salem-church\admin\dashboard.php(1124): require('C:\\xampp\\htdocs...')
+#4 {main}
+  thrown in C:\xampp\htdocs\salem-church\includes\database.php on line 82
+[23-Jul-2026 09:00:47 Africa/Kampala] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'created_at' in 'order clause' in C:\xampp\htdocs\salem-church\includes\helpers.php:187
+Stack trace:
+#0 C:\xampp\htdocs\salem-church\includes\helpers.php(187): PDO->prepare('SELECT * FROM n...')
+#1 C:\xampp\htdocs\salem-church\admin\modules\subscribers.php(81): paginate('newsletter_subs...', Object(Database), 20, 1, '1=1', Array)
+#2 C:\xampp\htdocs\salem-church\admin\dashboard.php(1124): require('C:\\xampp\\htdocs...')
+#3 {main}
+  thrown in C:\xampp\htdocs\salem-church\includes\helpers.php on line 187
+[23-Jul-2026 09:01:03 Africa/Kampala] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'created_at' in 'order clause' in C:\xampp\htdocs\salem-church\includes\helpers.php:187
+Stack trace:
+#0 C:\xampp\htdocs\salem-church\includes\helpers.php(187): PDO->prepare('SELECT * FROM t...')
+#1 C:\xampp\htdocs\salem-church\admin\modules\testimonials.php(81): paginate('testimonials', Object(Database), 20, 1, '1=1', Array)
+#2 C:\xampp\htdocs\salem-church\admin\dashboard.php(1124): require('C:\\xampp\\htdocs...')
+#3 {main}
+  thrown in C:\xampp\htdocs\salem-church\includes\helpers.php on line 187
+[23-Jul-2026 09:01:17 Africa/Kampala] PHP Warning:  Undefined array key "image" in C:\xampp\htdocs\salem-church\admin\modules\leadership.php on line 222
+[23-Jul-2026 09:01:17 Africa/Kampala] PHP Warning:  Undefined array key "image" in C:\xampp\htdocs\salem-church\admin\modules\leadership.php on line 222
+[23-Jul-2026 09:01:17 Africa/Kampala] PHP Warning:  Undefined array key "image" in C:\xampp\htdocs\salem-church\admin\modules\leadership.php on line 222
+[23-Jul-2026 09:01:19 Africa/Kampala] PHP Warning:  Undefined array key "image" in C:\xampp\htdocs\salem-church\admin\modules\ministries.php on line 284
+[23-Jul-2026 09:01:19 Africa/Kampala] PHP Warning:  Undefined array key "image" in C:\xampp\htdocs\salem-church\admin\modules\ministries.php on line 284
+[23-Jul-2026 09:01:19 Africa/Kampala] PHP Warning:  Undefined array key "image" in C:\xampp\htdocs\salem-church\admin\modules\ministries.php on line 284
+[23-Jul-2026 09:01:19 Africa/Kampala] PHP Warning:  Undefined array key "image" in C:\xampp\htdocs\salem-church\admin\modules\ministries.php on line 284
+[23-Jul-2026 09:01:19 Africa/Kampala] PHP Warning:  Undefined array key "image" in C:\xampp\htdocs\salem-church\admin\modules\ministries.php on line 284
+[23-Jul-2026 09:01:35 Africa/Kampala] PHP Parse error:  syntax error, unexpected token "=>", expecting ")" in C:\xampp\htdocs\salem-church\admin\modules\settings.php on line 65
+[23-Jul-2026 09:02:06 Africa/Kampala] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'created_at' in 'order clause' in C:\xampp\htdocs\salem-church\includes\database.php:82
+Stack trace:
+#0 C:\xampp\htdocs\salem-church\includes\database.php(82): PDO->prepare('SELECT * FROM a...')
+#1 C:\xampp\htdocs\salem-church\includes\database.php(94): Database->query('SELECT * FROM a...', Array)
+#2 C:\xampp\htdocs\salem-church\admin\modules\profile.php(93): Database->fetchAll('SELECT * FROM a...', Array)
+#3 C:\xampp\htdocs\salem-church\admin\dashboard.php(1124): require('C:\\xampp\\htdocs...')
+#4 {main}
+  thrown in C:\xampp\htdocs\salem-church\includes\database.php on line 82

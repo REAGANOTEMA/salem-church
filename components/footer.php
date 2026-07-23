@@ -639,13 +639,26 @@ function sdmSubscribe(e) {
     .sdm-footer-main { padding: 40px 0 30px; }
     .sdm-newsletter-wrap { padding: 20px; }
     .sdm-newsletter-input-wrap { flex-direction: column; border-radius: 14px; }
-    .sdm-newsletter-btn { justify-content: center; }
+    .sdm-newsletter-input { min-height: 48px; }
+    .sdm-newsletter-btn { justify-content: center; min-height: 48px; }
     .sdm-footer-brand { max-width: 100%; }
-    .sdm-back-to-top { bottom: 20px; right: 20px; width: 42px; height: 42px; }
+    .sdm-back-to-top { bottom: 20px; right: 20px; width: 44px; height: 44px; }
+    .sdm-footer-church-name { font-size: 1.15rem; }
+    .sdm-footer-logo { width: 48px; height: 48px; }
+    .sdm-contact-row { gap: 10px; }
+    .sdm-contact-icon { width: 36px; height: 36px; font-size: 0.8rem; }
 }
 
 @media (max-width: 576px) {
     .sdm-footer-bottom .text-center { text-align: center !important; }
+    .sdm-footer-main { padding: 32px 0 24px; }
+    .sdm-footer-heading { font-size: 1rem; margin-bottom: 14px; }
+    .sdm-footer-links a { font-size: 0.82rem; padding: 4px 0; min-height: 32px; display: flex; align-items: center; }
+    .sdm-footer-about { font-size: 0.85rem; }
+    .sdm-social-btn { width: 40px; height: 40px; }
+    .sdm-contact-row p { font-size: 0.82rem; }
+    .sdm-newsletter-title { font-size: 1.05rem; }
+    .sdm-newsletter-desc { font-size: 0.82rem; }
 }
 </style>
 </body>

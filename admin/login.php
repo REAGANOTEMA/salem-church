@@ -391,9 +391,14 @@ $csrf = generateCSRFToken();
 
         @media (max-width: 480px) {
             .login-container { padding: 16px; }
-            .login-card { padding: 36px 24px; border-radius: 16px; }
+            .login-card { padding: 32px 20px; border-radius: 16px; }
             .login-title { font-size: 20px; }
-            .login-logo { width: 60px; height: 60px; }
+            .login-logo { width: 60px; height: 60px; border-radius: 14px; }
+            .login-subtitle { font-size: 13px; }
+            .form-input { padding: 12px 12px 12px 40px; font-size: 15px; }
+            .input-icon { left: 12px; font-size: 15px; }
+            .password-toggle { right: 12px; }
+            .login-btn { padding: 14px; font-size: 15px; }
         }
     </style>
 </head>
