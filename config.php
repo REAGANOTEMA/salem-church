@@ -91,7 +91,7 @@ define('CHURCH_WEBSITE', 'www.salemdominionministries.com');
 // Logo
 define('LOGO_PATH', PUBLIC_PATH . '/logo-icon.jpeg');
 define('LOGO_URL', SITE_URL . '/public/logo-icon.jpeg');
-define('LOGO_FALLBACK', 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23333" width="100" height="100" rx="50"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="40">S</text></svg>');
+define('LOGO_FALLBACK', 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect fill=\'%23333\' width=\'100\' height=\'100\' rx=\'50\'/%3E%3Ctext x=\'50\' y=\'60\' text-anchor=\'middle\' fill=\'white\' font-size=\'40\'%3ES%3C/text%3E%3C/svg%3E');
 
 // Upload Config
 define('MAX_FILE_SIZE', 50 * 1024 * 1024);

@@ -27,11 +27,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
 // Handle login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
-    $password = trim($_POST['password'] ?? '');
-    
-    // Clear any existing session data
-    session_unset();
-    session_regenerate_id(true);
+    $password = $_POST['password'] ?? '';
     
     if (empty($username) || empty($password)) {
         $error = 'Please enter both username and password';
@@ -42,53 +38,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Database connection failed. Please try again later.';
                 error_log("Admin login: No database connection on " . ($_SERVER['HTTP_HOST'] ?? 'unknown'));
             } else {
-                $admin_stmt = $pdo->prepare("SELECT * FROM admin_users WHERE username = ? AND is_active = 1");
-                if ($admin_stmt) {
-                    $admin_stmt->execute([$username]);
-                    $admin = $admin_stmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    if ($admin) {
-                        error_log("Login attempt for username: " . $username . " from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
-                        
-                        if (password_verify($password, $admin['password'])) {
-                            $_SESSION['admin_logged_in'] = true;
-                            $_SESSION['admin_user_id'] = $admin['id'];
-                            $_SESSION['admin_username'] = $admin['username'];
-                            $_SESSION['admin_name'] = $admin['full_name'];
-                            $_SESSION['admin_role'] = $admin['role'];
-                            $_SESSION['login_time'] = time();
-                            $_SESSION['session_id'] = session_id();
-                            
-                            $update_stmt = $pdo->prepare("UPDATE admin_users SET last_login = NOW() WHERE id = ?");
-                            if ($update_stmt) {
-                                $update_stmt->execute([$admin['id']]);
-                            }
-                            
-                            error_log("Admin login successful for: " . $username . " from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
-                            
-                            if (ob_get_level()) {
-                                ob_end_clean();
-                            }
-                            
-                            header('Location: admin_dashboard.php');
-                            exit;
-                        } else {
-                            error_log("Admin login failed: Invalid password for username: " . $username . " from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
-                            $error = 'Invalid credentials. Please try again.';
-                        }
+                $admin_stmt = $pdo->prepare("SELECT * FROM admin_users WHERE (username = ? OR email = ?) AND is_active = 1");
+                $admin_stmt->execute([$username, $username]);
+                $admin = $admin_stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($admin) {
+                    if ($admin['locked_until'] && strtotime($admin['locked_until']) > time()) {
+                        $minutes = ceil((strtotime($admin['locked_until']) - time()) / 60);
+                        $error = "Account locked. Try again in {$minutes} minutes.";
+                        error_log("Admin login failed: Account locked for username: {$username}");
+                    } elseif (password_verify($password, $admin['password'])) {
+                        session_regenerate_id(true);
+                        $_SESSION['admin_logged_in'] = true;
+                        $_SESSION['admin_id'] = $admin['id'];
+                        $_SESSION['admin_username'] = $admin['username'];
+                        $_SESSION['admin_name'] = $admin['full_name'];
+                        $_SESSION['admin_role'] = $admin['role'];
+                        $_SESSION['admin_login_time'] = time();
+
+                        $update_stmt = $pdo->prepare("UPDATE admin_users SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?");
+                        $update_stmt->execute([$admin['id']]);
+
+                        error_log("Admin login successful for: {$username} from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+
+                        header('Location: admin_dashboard.php');
+                        exit;
                     } else {
-                        error_log("Admin login failed: User not found - username: " . $username . " from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
-                        $error = 'Invalid credentials. Please try again.';
+                        $attempts = $admin['login_attempts'] + 1;
+                        $lockUntil = $attempts >= 5 ? date('Y-m-d H:i:s', time() + 1800) : null;
+                        $upd = $pdo->prepare("UPDATE admin_users SET login_attempts = ?, locked_until = ? WHERE id = ?");
+                        $upd->execute([$attempts, $lockUntil, $admin['id']]);
+                        error_log("Admin login failed: Invalid password for username: {$username} (attempt {$attempts})");
+                        $error = 'Invalid username or password.';
                     }
                 } else {
-                    $error = 'Database query failed. Please try again later.';
-                    error_log("Admin login: Query preparation failed for username: " . $username);
+                    error_log("Admin login failed: User not found - username: {$username}");
+                    $error = 'Invalid username or password.';
                 }
             }
         } catch (Exception $e) {
             $error = 'Login failed. Please try again.';
             error_log("Admin login exception: " . $e->getMessage());
-            error_log("Exception trace: " . $e->getTraceAsString());
         }
     }
 }

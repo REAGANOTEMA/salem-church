@@ -5,8 +5,8 @@ session_start();
 require_once './db_connection.php';
 
 // Check if admin is logged in
-if (!isset($_SESSION['admin_logged_in'])) {
-    header('Location: admin/welcome.php');
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header('Location: admin/login.php');
     exit;
 }
 
