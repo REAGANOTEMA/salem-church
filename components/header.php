@@ -549,6 +549,38 @@ $admin_name = $_SESSION['admin_name'] ?? 'Admin';
             .sdm-nav-container { padding: 0 16px; }
             .sdm-hamburger { width: 42px; height: 42px; border-radius: 10px; }
         }
+
+        /* ===== SHARED RESPONSIVE BASE (All Pages) ===== */
+        .sdm-hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); }
+        .sdm-hero h2 { font-size: clamp(1.5rem, 4vw, 2.2rem); }
+        .sdm-hero p { font-size: clamp(0.9rem, 2.5vw, 1.1rem); padding: 0 16px; }
+
+        .section-gap { padding: 60px 0; }
+        .section-title-custom { font-size: clamp(1.6rem, 4vw, 2.5rem); }
+        .section-subtitle-custom { font-size: clamp(0.95rem, 2vw, 1.1rem); padding: 0 16px; }
+
+        .donate-form-card, .enroll-form-card, .form-card, .login-card {
+            padding: 24px 20px;
+            border-radius: 16px;
+        }
+
+        img { max-width: 100%; height: auto; }
+
+        .alert-success-custom, .alert-danger {
+            border-radius: 12px !important;
+            padding: 12px 16px !important;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .section-gap { padding: 40px 0; }
+            .section-gap.alt-bg { padding: 40px 0; }
+        }
+
+        @media (max-width: 576px) {
+            .section-gap { padding: 30px 0; }
+            .row { --bs-gutter-x: 16px; }
+        }
     </style>
 </head>
 <body>

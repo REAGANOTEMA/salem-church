@@ -25392,3 +25392,5 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in C:\xampp\htdocs\salem-church\events.php on line 40
+[23-Jul-2026 10:55:32 Africa/Kampala] PHP Warning:  session_regenerate_id(): Session ID cannot be regenerated after headers have already been sent in C:\xampp\htdocs\salem-church\includes\auth.php on line 48
+[23-Jul-2026 10:57:12 Africa/Kampala] PHP Warning:  session_regenerate_id(): Session ID cannot be regenerated after headers have already been sent in C:\xampp\htdocs\salem-church\includes\auth.php on line 48

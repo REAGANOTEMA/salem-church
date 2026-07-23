@@ -91,7 +91,7 @@ include 'components/header.php';
                 </div>
             </div>
             <div class="col-lg-6" data-aos="fade-left" data-aos-delay="300">
-                <img src="assets/children-with-books-Cc2LmxDu.jpeg" alt="Children learning" class="img-fluid" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; height: 400px; object-fit: cover;">
+                <img src="assets/children-with-books-Cc2LmxDu.jpeg" alt="Children learning" class="img-fluid" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-height: 400px; object-fit: cover;">
             </div>
         </div>
     </div>

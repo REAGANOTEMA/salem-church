@@ -78,7 +78,7 @@ include 'components/header.php';
     .leader-card-body .bio-excerpt { color: #64748b; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem; }
     .leader-card-actions { display: flex; justify-content: center; gap: 10px; }
     .leader-card-actions a {
-        width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
         text-decoration: none; transition: all 0.3s ease; font-size: 0.85rem;
     }
     .leader-card-actions .btn-email { background: #0ea5e9; color: #fff; }
@@ -91,6 +91,13 @@ include 'components/header.php';
     .modal-leader-name { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: #0f172a; }
     .modal-leader-role { color: #fbbf24; font-weight: 600; }
     .modal-leader-bio { color: #475569; line-height: 1.8; }
+    @media(max-width:768px) {
+        .leadership-hero h1 { font-size: 2rem; }
+        .leader-card-img { height: 260px; }
+    }
+    @media(max-width:480px) {
+        .leader-card-img { height: 220px; }
+    }
 </style>
 
 <!-- Hero -->

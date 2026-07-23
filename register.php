@@ -221,9 +221,14 @@ require_once __DIR__ . '/components/header.php';
     color: #15803d;
     border: 1px solid #bbf7d0;
 }
-@media (max-width: 480px) {
-    .auth-card { padding: 32px 24px; border-radius: 20px; }
+@media (max-width: 768px) {
+    .auth-card { padding: 36px 28px; }
     .auth-form .form-row { flex-direction: column; gap: 0; }
+}
+@media (max-width: 480px) {
+    .auth-card { padding: 28px 20px; border-radius: 20px; }
+    .auth-form .form-row { flex-direction: column; gap: 0; }
+    .auth-page { padding: 16px; }
 }
 </style>
 

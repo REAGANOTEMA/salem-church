@@ -105,7 +105,8 @@ include 'components/header.php';
 .btn-blue:hover { background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; transform: translateY(-2px); }
 
 .map-wrap { border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border: 4px solid #fff; }
-.map-wrap iframe { width: 100%; height: 400px; border: none; display: block; }
+.map-wrap iframe { width: 100%; height: 400px; border: none; display: block; border-radius: 16px; }
+@media(max-width:768px) { .map-wrap iframe { height: 250px; } }
 
 .prayer-card { background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 20px; padding: 35px; color: #fff; }
 .prayer-card h3 { font-family: 'Playfair Display', serif; color: #fbbf24; margin-bottom: 20px; }

@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please enter both username and password';
     } else {
         try {
-            $pdo = Database::getInstance()->getPdo();
+            $pdo = Database::getNamed('admin')->getPdo();
             if (!$pdo) {
                 $error = 'Database connection failed. Please try again later.';
                 error_log("Admin login: No database connection on " . ($_SERVER['HTTP_HOST'] ?? 'unknown'));

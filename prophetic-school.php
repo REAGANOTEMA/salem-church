@@ -103,7 +103,7 @@ include 'components/header.php';
                 </div>
             </div>
             <div class="col-lg-5" data-aos="fade-left" data-aos-delay="300">
-                <img src="assets/APOSTLE-IRENE-MIREMBE-CwWfzcRx.jpeg" alt="Apostle Irene Mirembe - Prophetic School Director" class="img-fluid" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; height: 400px; object-fit: cover;">
+                <img src="assets/APOSTLE-IRENE-MIREMBE-CwWfzcRx.jpeg" alt="Apostle Irene Mirembe - Prophetic School Director" class="img-fluid" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-height: 400px; object-fit: cover;">
                 <div style="text-align: center; margin-top: 1rem;">
                     <h5 style="font-family: 'Playfair Display', serif; color: #0f172a;">Apostle Irene Mirembe</h5>
                     <p style="color: #8b5cf6; font-weight: 600;">Prophetic School Director</p>

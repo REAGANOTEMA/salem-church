@@ -141,7 +141,8 @@ include 'components/header.php';
 .modal-detail .modal-header { background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; border: none; }
 .modal-detail .modal-body { padding: 30px; }
 
-@media(max-width:768px) { .events-hero h1 { font-size: 2rem; } .countdown-bar { padding: 20px; } .countdown-timer .cd-num { font-size: 1.5rem; } }
+@media(max-width:768px) { .events-hero h1 { font-size: 2rem; } .countdown-bar { padding: 20px; } .countdown-timer .cd-num { font-size: 1.5rem; } .featured-event .evt-img { height: 220px; } }
+@media(max-width:480px) { .countdown-bar { flex-direction: column; align-items: flex-start; gap: 16px; } .countdown-timer { gap: 10px; } .countdown-timer .cd-num { font-size: 1.2rem; } }
 
 .sdm-interactions { border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 16px; }
 .sdm-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }

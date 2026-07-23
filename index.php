@@ -434,7 +434,7 @@ include __DIR__ . '/components/header.php';
                         <iframe src="https://www.youtube.com/embed/live_stream?channel=UC_CHANNEL_ID" allowfullscreen loading="lazy" title="Live stream"></iframe>
                         <?php else: ?>
                         <div class="sdm-youtube-placeholder">
-                            <img src="assets/praise-worship-team.jpg" alt="Worship team performing" class="sdm-youtube-thumb" loading="lazy">
+                            <img src="assets/praise-worship-team.jpeg" alt="Worship team performing" class="sdm-youtube-thumb" loading="lazy">
                             <div class="sdm-youtube-placeholder-content">
                                 <div class="sdm-youtube-play-icon">
                                     <a href="<?php echo htmlspecialchars($youtube_channel); ?>" target="_blank" rel="noopener noreferrer">
@@ -516,7 +516,7 @@ include __DIR__ . '/components/header.php';
                 <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="<?php echo $idx * 100; ?>">
                     <div class="sdm-news-card">
                         <div class="sdm-news-thumb">
-                            <img src="assets/community-<?php echo ($idx + 1); ?>.jpg" alt="<?php echo htmlspecialchars($n['title']); ?>" loading="lazy" onerror="this.src='assets/hero-community-CDAgPtPb.jpg'">
+                            <img src="assets/hero-community-CDAgPtPb.jpg" alt="<?php echo htmlspecialchars($n['title']); ?>" loading="lazy">
                             <span class="sdm-news-date-tag"><?php echo $n['date']; ?></span>
                         </div>
                         <div class="sdm-news-body">
