@@ -60,7 +60,7 @@ $where = '1=1';
 $params = [];
 
 if ($search) {
-    $where .= " AND (name LIKE ? OR email LIKE ? OR request LIKE ?)";
+    $where .= " AND (name LIKE ? OR email LIKE ? OR request_text LIKE ?)";
     $params[] = "%{$search}%";
     $params[] = "%{$search}%";
     $params[] = "%{$search}%";
@@ -180,8 +180,8 @@ displayFlash();
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <span class="text-truncate d-inline-block" style="max-width:300px;" title="<?= sanitize($item['request'] ?? $item['prayer_request'] ?? '') ?>">
-                                    <?= sanitize(truncate($item['request'] ?? $item['prayer_request'] ?? '', 80)) ?>
+                                <span class="text-truncate d-inline-block" style="max-width:300px;" title="<?= sanitize($item['request_text'] ?? '') ?>">
+                                    <?= sanitize(truncate($item['request_text'] ?? '', 80)) ?>
                                 </span>
                             </td>
                             <td>
@@ -195,7 +195,7 @@ displayFlash();
                             <td><small><?= timeAgo($item['created_at']) ?></small></td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-outline-info" title="View Details" onclick="viewPrayerRequest(<?= $item['id'] ?>, '<?= sanitize(addslashes($item['name'] ?: 'Anonymous')) ?>', '<?= sanitize(addslashes($item['email'] ?? '')) ?>', '<?= sanitize(addslashes($item['request'] ?? $item['prayer_request'] ?? '')) ?>', '<?= $item['status'] ?>', '<?= $item['is_anonymous'] ?? ($item['is_private'] ?? 0) ?>')"><i class="fas fa-eye"></i></button>
+                                    <button type="button" class="btn btn-outline-info" title="View Details" onclick="viewPrayerRequest(<?= $item['id'] ?>, '<?= sanitize(addslashes($item['name'] ?: 'Anonymous')) ?>', '<?= sanitize(addslashes($item['email'] ?? '')) ?>', '<?= sanitize(addslashes($item['request_text'] ?? '')) ?>', '<?= $item['status'] ?>', '<?= $item['is_anonymous'] ?? ($item['is_private'] ?? 0) ?>')"><i class="fas fa-eye"></i></button>
                                     <?php if ($item['status'] !== 'answered'): ?>
                                     <form method="POST" class="d-inline">
                                         <?= csrfField() ?>

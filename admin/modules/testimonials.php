@@ -78,7 +78,7 @@ if ($filterStatus && in_array($filterStatus, ['pending', 'approved', 'rejected',
     $params[] = $filterStatus;
 }
 
-$pagination = paginate('testimonials', $db, $perPage, $page, $where, $params);
+$pagination = paginate('testimonials', $db, $perPage, $page, $where, $params, 'created_at DESC');
 $testimonials = $pagination['items'];
 $total = $pagination['total'];
 $totalPages = $pagination['total_pages'];
@@ -114,8 +114,8 @@ displayFlash();
                             <div class="d-flex justify-content-between mb-2">
                                 <div>
                                     <strong><?= sanitize($item['name'] ?: 'Anonymous') ?></strong>
-                                    <?php if (!empty($item['church_role'] ?? $item['role'] ?? '')): ?>
-                                        <br><small class="text-muted"><?= sanitize($item['church_role'] ?? $item['role'] ?? '') ?></small>
+                                    <?php if (!empty($item['occupation'] ?? '')): ?>
+                                        <br><small class="text-muted"><?= sanitize($item['occupation']) ?></small>
                                     <?php endif; ?>
                                 </div>
                                 <span class="badge bg-<?= ['pending'=>'warning','approved'=>'success','rejected'=>'danger','archived'=>'secondary'][$item['status']] ?? 'secondary' ?>">

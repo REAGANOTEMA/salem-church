@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$loginLogs = $db->fetchAll("SELECT * FROM admin_login_logs WHERE admin_id = ? ORDER BY created_at DESC LIMIT 20", [$admin['id']]);
+$loginLogs = $db->fetchAll("SELECT * FROM admin_login_logs WHERE admin_id = ? ORDER BY login_time DESC LIMIT 20", [$admin['id']]);
 
 displayFlash();
 ?>
@@ -201,7 +201,7 @@ displayFlash();
                                     <span class="badge bg-<?= $log['status'] === 'success' ? 'success' : 'danger' ?>"><?= $log['status'] ?></span>
                                     <small class="text-muted ms-2"><?= $log['ip_address'] ? 'from ' . $log['ip_address'] : '' ?></small>
                                 </div>
-                                <small class="text-muted"><?= timeAgo($log['created_at']) ?></small>
+                                <small class="text-muted"><?= timeAgo($log['login_time']) ?></small>
                             </div>
                             <?php if (!empty($log['failure_reason'])): ?>
                                 <small class="text-danger"><?= sanitize($log['failure_reason']) ?></small>

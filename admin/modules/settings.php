@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $theme = [
                 'primary_color' => trim($_POST['primary_color'] ?? '#0d6efd'),
                 'secondary_color' => trim($_POST['secondary_color'] ?? '#6c757d'),
-                'accent_color' => trim($_POST['accent_color'] => '#198754'),
+                'accent_color' => trim($_POST['accent_color'] ?? '#198754'),
             ];
             foreach ($theme as $key => $value) {
                 setSetting($key, $value);

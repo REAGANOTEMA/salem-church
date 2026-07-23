@@ -78,7 +78,7 @@ if ($search) {
     $params[] = "%{$search}%";
 }
 
-$pagination = paginate('newsletter_subscribers', $db, $perPage, $page, $where, $params);
+$pagination = paginate('newsletter_subscribers', $db, $perPage, $page, $where, $params, 'created_at DESC');
 $subscribers = $pagination['items'];
 $total = $pagination['total'];
 $totalPages = $pagination['total_pages'];

@@ -160,7 +160,7 @@ function deleteFile(string $filepath): bool {
 }
 
 // Pagination
-function paginate(string $table, $db, int $perPage = ITEMS_PER_PAGE, int $currentPage = 1, string $where = '', array $params = []): array {
+function paginate(string $table, $db, int $perPage = ITEMS_PER_PAGE, int $currentPage = 1, string $where = '', array $params = [], string $orderBy = 'id DESC'): array {
     if ($db instanceof Database) {
         $pdo = $db->getPdo();
     } elseif ($db instanceof PDO) {
@@ -183,7 +183,7 @@ function paginate(string $table, $db, int $perPage = ITEMS_PER_PAGE, int $curren
     if (!empty($where)) {
         $query .= " WHERE {$where}";
     }
-    $query .= " ORDER BY created_at DESC LIMIT {$perPage} OFFSET {$offset}";
+    $query .= " ORDER BY {$orderBy} LIMIT {$perPage} OFFSET {$offset}";
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);

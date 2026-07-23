@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'meeting_time' => $meeting_time,
                 'meeting_location' => $meeting_location,
                 'category' => $category,
-                'image' => $image,
+                'image_url' => $image,
                 'is_active' => $is_active,
                 'sort_order' => $sort_order,
                 'created_at' => date('Y-m-d H:i:s'),
@@ -98,9 +98,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!empty($_FILES['image']['name'])) {
                 $uploaded = uploadFile($_FILES['image'], 'ministries', ALLOWED_IMAGE_TYPES);
                 if ($uploaded) {
-                    $old = $db->fetch("SELECT image FROM ministries WHERE id = ?", [$id]);
-                    if ($old && $old['image']) deleteFile($old['image']);
-                    $updateData['image'] = $uploaded;
+                    $old = $db->fetch("SELECT image_url FROM ministries WHERE id = ?", [$id]);
+                    if ($old && $old['image_url']) deleteFile($old['image_url']);
+                    $updateData['image_url'] = $uploaded;
                 }
             }
 
@@ -114,8 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'delete':
             $id = (int)($_POST['id'] ?? 0);
             if ($id) {
-                $old = $db->fetch("SELECT image FROM ministries WHERE id = ?", [$id]);
-                if ($old && $old['image']) deleteFile($old['image']);
+                $old = $db->fetch("SELECT image_url FROM ministries WHERE id = ?", [$id]);
+                if ($old && $old['image_url']) deleteFile($old['image_url']);
                 $db->delete('ministries', 'id = ?', [$id]);
                 logActivity($db, 'deleted', 'ministries', $_SESSION['admin_id'], "Deleted ministry ID {$id}");
             }
@@ -229,8 +229,8 @@ displayFlash();
                     <div class="mb-3">
                         <label class="form-label">Image</label>
                         <input type="file" name="image" class="form-control" accept="image/*">
-                        <?php if ($editMinistry['image']): ?>
-                            <div class="mt-2"><img src="<?= BASE_URL . '/' . $editMinistry['image'] ?>" class="img-thumbnail" style="max-height:120px"></div>
+                        <?php if ($editMinistry['image_url']): ?>
+                            <div class="mt-2"><img src="<?= BASE_URL . '/' . $editMinistry['image_url'] ?>" class="img-thumbnail" style="max-height:120px"></div>
                         <?php endif; ?>
                     </div>
                     <div class="mb-3">
@@ -281,8 +281,8 @@ displayFlash();
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <?php if ($item['image']): ?>
-                                        <img src="<?= BASE_URL . '/' . $item['image'] ?>" class="rounded me-2" style="width:40px;height:40px;object-fit:cover;">
+                                    <?php if ($item['image_url']): ?>
+                                        <img src="<?= BASE_URL . '/' . $item['image_url'] ?>" class="rounded me-2" style="width:40px;height:40px;object-fit:cover;">
                                     <?php else: ?>
                                         <div class="rounded bg-info text-white d-flex align-items-center justify-content-center me-2" style="width:40px;height:40px;font-size:14px;"><i class="fas fa-hands-helping"></i></div>
                                     <?php endif; ?>

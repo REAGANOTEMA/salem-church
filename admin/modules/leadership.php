@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'bio' => $bio,
                 'email' => $email,
                 'phone' => $phone,
-                'image' => $image,
+                'image_url' => $image,
                 'order_position' => $order_position,
                 'is_active' => $is_active,
                 'created_at' => date('Y-m-d H:i:s'),
@@ -80,9 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!empty($_FILES['image']['name'])) {
                 $uploaded = uploadFile($_FILES['image'], 'leadership', ALLOWED_IMAGE_TYPES);
                 if ($uploaded) {
-                    $old = $db->fetch("SELECT image FROM leadership WHERE id = ?", [$id]);
-                    if ($old && $old['image']) deleteFile($old['image']);
-                    $updateData['image'] = $uploaded;
+                    $old = $db->fetch("SELECT image_url FROM leadership WHERE id = ?", [$id]);
+                    if ($old && $old['image_url']) deleteFile($old['image_url']);
+                    $updateData['image_url'] = $uploaded;
                 }
             }
 
@@ -96,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'delete':
             $id = (int)($_POST['id'] ?? 0);
             if ($id) {
-                $old = $db->fetch("SELECT image FROM leadership WHERE id = ?", [$id]);
-                if ($old && $old['image']) deleteFile($old['image']);
+                $old = $db->fetch("SELECT image_url FROM leadership WHERE id = ?", [$id]);
+                if ($old && $old['image_url']) deleteFile($old['image_url']);
                 $db->delete('leadership', 'id = ?', [$id]);
                 logActivity($db, 'deleted', 'leadership', $_SESSION['admin_id'], "Deleted leader ID {$id}");
             }
@@ -181,9 +181,9 @@ displayFlash();
                     <div class="mb-3">
                         <label class="form-label">Photo</label>
                         <input type="file" name="image" class="form-control" accept="image/*">
-                        <?php if ($editLeader['image']): ?>
+                        <?php if ($editLeader['image_url']): ?>
                             <div class="mt-2 text-center">
-                                <img src="<?= BASE_URL . '/' . $editLeader['image'] ?>" class="rounded-circle" style="width:100px;height:100px;object-fit:cover;">
+                                <img src="<?= BASE_URL . '/' . $editLeader['image_url'] ?>" class="rounded-circle" style="width:100px;height:100px;object-fit:cover;">
                             </div>
                         <?php endif; ?>
                     </div>
@@ -219,8 +219,8 @@ displayFlash();
         <div class="col-lg-4 col-md-6">
             <div class="card h-100">
                 <div class="card-body text-center">
-                    <?php if ($leader['image']): ?>
-                        <img src="<?= BASE_URL . '/' . $leader['image'] ?>" class="rounded-circle mb-3" style="width:100px;height:100px;object-fit:cover;">
+                    <?php if ($leader['image_url']): ?>
+                        <img src="<?= BASE_URL . '/' . $leader['image_url'] ?>" class="rounded-circle mb-3" style="width:100px;height:100px;object-fit:cover;">
                     <?php else: ?>
                         <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width:100px;height:100px;font-size:36px;">
                             <?= strtoupper(substr($leader['name'], 0, 1)) ?>

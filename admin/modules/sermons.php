@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'thumbnail' => $thumbnail,
                 'status' => $status,
                 'is_featured' => $is_featured,
+                'created_by' => $_SESSION['admin_id'],
                 'uploaded_by' => $_SESSION['admin_id'],
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),

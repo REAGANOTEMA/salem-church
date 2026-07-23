@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'title' => $title,
                     'is_live' => $is_live,
                     'is_enabled' => $is_enabled,
-                    'created_at' => date('Y-m-d H:i:s'),
+                    'created_by' => $_SESSION['admin_id'],
                     'updated_at' => date('Y-m-d H:i:s'),
                 ]);
             }

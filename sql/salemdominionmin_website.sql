@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 23, 2026 at 09:03 AM
+-- Generation Time: Jul 23, 2026 at 09:11 AM
 -- Server version: 10.6.23-MariaDB-cll-lve
 -- PHP Version: 7.4.33
 
@@ -59,7 +59,7 @@ CREATE TABLE `announcements` (
   `is_pinned` tinyint(1) NOT NULL DEFAULT 0,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
-  `status` enum('active','inactive','archived') NOT NULL DEFAULT 'active',
+  `status` enum('active','inactive','archived','expired') NOT NULL DEFAULT 'active',
   `created_by` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -163,8 +163,12 @@ CREATE TABLE `contact_messages` (
   `phone` varchar(20) DEFAULT NULL,
   `subject` varchar(255) DEFAULT NULL,
   `message` text NOT NULL,
+  `status` enum('unread','read','replied','archived') NOT NULL DEFAULT 'unread',
   `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `read_at` datetime DEFAULT NULL,
   `replied_at` datetime DEFAULT NULL,
+  `reply_message` text DEFAULT NULL,
+  `replied_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -172,10 +176,10 @@ CREATE TABLE `contact_messages` (
 -- Dumping data for table `contact_messages`
 --
 
-INSERT INTO `contact_messages` (`id`, `name`, `email`, `phone`, `subject`, `message`, `is_read`, `replied_at`, `created_at`) VALUES
-(1, 'Grace N.', 'grace.n@example.com', '+256733344555', 'Service Times Inquiry', 'Good morning. I would like to know the service times for Sunday. I am new in the area and looking for a church to attend. Thank you.', 0, NULL, '2026-07-23 05:07:34'),
-(2, 'Peter M.', 'peter.m@example.com', '+256744455666', 'Volunteer Registration', 'I would like to volunteer in the children ministry. I have experience working with kids and would love to serve. Please get back to me.', 1, NULL, '2026-07-23 05:07:34'),
-(3, 'Linda A.', 'linda.a@example.com', '+256755566777', 'Booking Request', 'I would like to book a meeting with Apostle Faty for spiritual counseling. Please let me know the available dates. God bless.', 0, NULL, '2026-07-23 05:07:34');
+INSERT INTO `contact_messages` (`id`, `name`, `email`, `phone`, `subject`, `message`, `status`, `is_read`, `read_at`, `replied_at`, `reply_message`, `replied_by`, `created_at`) VALUES
+(1, 'Grace N.', 'grace.n@example.com', '+256733344555', 'Service Times Inquiry', 'Good morning. I would like to know the service times for Sunday. I am new in the area and looking for a church to attend. Thank you.', 'unread', 0, NULL, NULL, NULL, NULL, '2026-07-23 05:07:34'),
+(2, 'Peter M.', 'peter.m@example.com', '+256744455666', 'Volunteer Registration', 'I would like to volunteer in the children ministry. I have experience working with kids and would love to serve. Please get back to me.', 'read', 1, NULL, NULL, NULL, NULL, '2026-07-23 05:07:34'),
+(3, 'Linda A.', 'linda.a@example.com', '+256755566777', 'Booking Request', 'I would like to book a meeting with Apostle Faty for spiritual counseling. Please let me know the available dates. God bless.', 'unread', 0, NULL, NULL, NULL, NULL, '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -189,6 +193,7 @@ CREATE TABLE `departments` (
   `description` text DEFAULT NULL,
   `head_name` varchar(255) DEFAULT NULL,
   `head_email` varchar(255) DEFAULT NULL,
+  `image_url` text DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -198,11 +203,11 @@ CREATE TABLE `departments` (
 -- Dumping data for table `departments`
 --
 
-INSERT INTO `departments` (`id`, `name`, `description`, `head_name`, `head_email`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'Worship & Praise', 'Leading worship and praise sessions during all services and special events.', 'Apostle Faty Musasizi', 'worship@salem-dominion-ministries.com', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(2, 'Media & Communications', 'Managing all media production, social media, and church communications.', 'Tech Team', 'media@salem-dominion-ministries.com', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(3, 'Finance & Administration', 'Overseeing church finances, budgeting, and administrative operations.', 'Finance Team', 'finance@salem-dominion-ministries.com', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(4, 'Hospitality & Ushering', 'Welcoming and serving all visitors and members during services and events.', 'Hospitality Team', 'hospitality@salem-dominion-ministries.com', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
+INSERT INTO `departments` (`id`, `name`, `description`, `head_name`, `head_email`, `image_url`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'Worship & Praise', 'Leading worship and praise sessions during all services and special events.', 'Apostle Faty Musasizi', 'worship@salem-dominion-ministries.com', NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(2, 'Media & Communications', 'Managing all media production, social media, and church communications.', 'Tech Team', 'media@salem-dominion-ministries.com', NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(3, 'Finance & Administration', 'Overseeing church finances, budgeting, and administrative operations.', 'Finance Team', 'finance@salem-dominion-ministries.com', NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(4, 'Hospitality & Ushering', 'Welcoming and serving all visitors and members during services and events.', 'Hospitality Team', 'hospitality@salem-dominion-ministries.com', NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -216,10 +221,12 @@ CREATE TABLE `donations` (
   `donor_email` varchar(255) DEFAULT NULL,
   `donor_phone` varchar(20) DEFAULT NULL,
   `amount` decimal(10,2) NOT NULL,
-  `donation_type` enum('tithe','offering','building_fund','missions','children_ministry','special','general') NOT NULL DEFAULT 'general',
+  `donation_type` enum('tithe','offering','building_fund','missions','children_ministry','special','general','benevolence','other') NOT NULL DEFAULT 'general',
   `payment_method` enum('mobile_money','bank_transfer','cash','online','card') NOT NULL DEFAULT 'mobile_money',
   `transaction_id` varchar(100) DEFAULT NULL,
-  `status` enum('pending','confirmed','completed','failed','cancelled') NOT NULL DEFAULT 'pending',
+  `status` enum('pending','confirmed','completed','failed','cancelled','rejected') NOT NULL DEFAULT 'pending',
+  `confirmed_by` int(11) DEFAULT NULL,
+  `confirmed_at` datetime DEFAULT NULL,
   `payment_reference` varchar(255) DEFAULT NULL,
   `notes` text DEFAULT NULL,
   `is_anonymous` tinyint(1) NOT NULL DEFAULT 0,
@@ -233,10 +240,10 @@ CREATE TABLE `donations` (
 -- Dumping data for table `donations`
 --
 
-INSERT INTO `donations` (`id`, `donor_name`, `donor_email`, `donor_phone`, `amount`, `donation_type`, `payment_method`, `transaction_id`, `status`, `payment_reference`, `notes`, `is_anonymous`, `confirmation_code`, `ip_address`, `created_at`, `updated_at`) VALUES
-(1, 'John Doe', 'john.doe@example.com', '+256700123456', 50000.00, 'tithe', 'mobile_money', NULL, 'completed', NULL, NULL, 0, 'DON-SDM-2026-001', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(2, 'Jane Smith', 'jane.smith@example.com', '+256751234567', 25000.00, 'offering', 'mobile_money', NULL, 'completed', NULL, NULL, 0, 'DON-SDM-2026-002', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(3, 'Michael Johnson', 'michael.j@example.com', '+256702345678', 100000.00, 'building_fund', 'bank_transfer', NULL, 'confirmed', NULL, NULL, 0, 'DON-SDM-2026-003', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
+INSERT INTO `donations` (`id`, `donor_name`, `donor_email`, `donor_phone`, `amount`, `donation_type`, `payment_method`, `transaction_id`, `status`, `confirmed_by`, `confirmed_at`, `payment_reference`, `notes`, `is_anonymous`, `confirmation_code`, `ip_address`, `created_at`, `updated_at`) VALUES
+(1, 'John Doe', 'john.doe@example.com', '+256700123456', 50000.00, 'tithe', 'mobile_money', NULL, 'completed', NULL, NULL, NULL, NULL, 0, 'DON-SDM-2026-001', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(2, 'Jane Smith', 'jane.smith@example.com', '+256751234567', 25000.00, 'offering', 'mobile_money', NULL, 'completed', NULL, NULL, NULL, NULL, 0, 'DON-SDM-2026-002', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(3, 'Michael Johnson', 'michael.j@example.com', '+256702345678', 100000.00, 'building_fund', 'bank_transfer', NULL, 'confirmed', NULL, NULL, NULL, NULL, 0, 'DON-SDM-2026-003', NULL, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -273,6 +280,7 @@ INSERT INTO `donation_campaigns` (`id`, `title`, `description`, `goal`, `raised`
 CREATE TABLE `events` (
   `id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
+  `slug` varchar(255) DEFAULT NULL,
   `description` longtext NOT NULL,
   `event_date` date NOT NULL,
   `event_time` time NOT NULL,
@@ -294,12 +302,12 @@ CREATE TABLE `events` (
 -- Dumping data for table `events`
 --
 
-INSERT INTO `events` (`id`, `title`, `description`, `event_date`, `event_time`, `end_time`, `location`, `venue`, `speaker`, `banner_image`, `max_attendees`, `registration_url`, `is_featured`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'Sunday Morning Worship Service', 'Join us for a powerful time of worship and the Word. Every Sunday we gather to lift the name of Jesus and receive fresh anointing for the week ahead. Come expecting a miracle!', '2026-07-30', '09:00:00', '12:00:00', 'Main Sanctuary', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 500, NULL, 1, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(2, 'Midweek Prayer Meeting', 'Experience the presence of God through corporate prayer and intercession. Join us every Wednesday evening as we pray for the church, the nation, and one another. Prayer changes things!', '2026-07-25', '18:30:00', '20:30:00', 'Prayer Hall', 'Salem Dominion Ministries HQ', 'Pastor Faty Musasizi', NULL, 200, NULL, 0, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(3, 'Youth Conference 2026', 'A special conference designed to empower and equip the next generation for kingdom impact. Three days of intense worship, teaching, and ministry. Register now to secure your spot!', '2026-08-22', '10:00:00', '18:00:00', 'Main Sanctuary', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 800, NULL, 1, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(4, 'Easter Sunday Celebration', 'Celebrate the resurrection of our Lord Jesus Christ with us! A special Easter service filled with praise, worship, and a powerful Easter message of hope and new beginnings.', '2026-04-24', '08:00:00', '12:00:00', 'Main Sanctuary', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 500, NULL, 1, 'completed', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(5, 'Leadership Summit 2025', 'An equipping session for all ministry leaders and department heads. Topics include effective leadership, team management, and spiritual growth for leaders.', '2026-06-08', '09:00:00', '16:00:00', 'Conference Room', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 100, NULL, 0, 'completed', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
+INSERT INTO `events` (`id`, `title`, `slug`, `description`, `event_date`, `event_time`, `end_time`, `location`, `venue`, `speaker`, `banner_image`, `max_attendees`, `registration_url`, `is_featured`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'Sunday Morning Worship Service', NULL, 'Join us for a powerful time of worship and the Word. Every Sunday we gather to lift the name of Jesus and receive fresh anointing for the week ahead. Come expecting a miracle!', '2026-07-30', '09:00:00', '12:00:00', 'Main Sanctuary', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 500, NULL, 1, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(2, 'Midweek Prayer Meeting', NULL, 'Experience the presence of God through corporate prayer and intercession. Join us every Wednesday evening as we pray for the church, the nation, and one another. Prayer changes things!', '2026-07-25', '18:30:00', '20:30:00', 'Prayer Hall', 'Salem Dominion Ministries HQ', 'Pastor Faty Musasizi', NULL, 200, NULL, 0, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(3, 'Youth Conference 2026', NULL, 'A special conference designed to empower and equip the next generation for kingdom impact. Three days of intense worship, teaching, and ministry. Register now to secure your spot!', '2026-08-22', '10:00:00', '18:00:00', 'Main Sanctuary', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 800, NULL, 1, 'upcoming', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(4, 'Easter Sunday Celebration', NULL, 'Celebrate the resurrection of our Lord Jesus Christ with us! A special Easter service filled with praise, worship, and a powerful Easter message of hope and new beginnings.', '2026-04-24', '08:00:00', '12:00:00', 'Main Sanctuary', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 500, NULL, 1, 'completed', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(5, 'Leadership Summit 2025', NULL, 'An equipping session for all ministry leaders and department heads. Topics include effective leadership, team management, and spiritual growth for leaders.', '2026-06-08', '09:00:00', '16:00:00', 'Conference Room', 'Salem Dominion Ministries HQ', 'Apostle Faty Musasizi', NULL, 100, NULL, 0, 'completed', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -327,8 +335,10 @@ CREATE TABLE `gallery` (
   `title` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `file_url` text NOT NULL,
+  `file_path` text DEFAULT NULL,
   `file_type` enum('image','video','audio') NOT NULL,
   `album_id` int(11) DEFAULT NULL,
+  `album` varchar(255) DEFAULT NULL,
   `category` varchar(100) DEFAULT NULL,
   `file_size` bigint(20) DEFAULT NULL,
   `dimensions` varchar(50) DEFAULT NULL,
@@ -342,10 +352,10 @@ CREATE TABLE `gallery` (
 -- Dumping data for table `gallery`
 --
 
-INSERT INTO `gallery` (`id`, `title`, `description`, `file_url`, `file_type`, `album_id`, `category`, `file_size`, `dimensions`, `status`, `uploaded_by`, `created_at`, `updated_at`) VALUES
-(1, 'Powerful Worship Session', 'An amazing time of worship as we lift our voices in praise to God.', 'uploads/gallery/worship_1.jpg', 'image', 1, 'worship', 2048000, NULL, 'published', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(2, 'Youth Conference 2025 Opening', 'The opening ceremony of our Youth Conference filled with praise and expectation.', 'uploads/gallery/youth_conference_2025.jpg', 'image', 2, 'events', 3145728, NULL, 'published', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(3, 'Life-Changing Testimony', 'A powerful testimony of God\'s faithfulness and transformation shared during service.', 'uploads/gallery/testimony_1.mp4', 'video', NULL, 'testimonies', 15728640, NULL, 'published', 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
+INSERT INTO `gallery` (`id`, `title`, `description`, `file_url`, `file_path`, `file_type`, `album_id`, `album`, `category`, `file_size`, `dimensions`, `status`, `uploaded_by`, `created_at`, `updated_at`) VALUES
+(1, 'Powerful Worship Session', 'An amazing time of worship as we lift our voices in praise to God.', 'uploads/gallery/worship_1.jpg', 'uploads/gallery/worship_1.jpg', 'image', 1, 'Sunday Services', 'worship', 2048000, NULL, 'published', 1, '2026-07-23 05:07:34', '2026-07-23 06:11:19'),
+(2, 'Youth Conference 2025 Opening', 'The opening ceremony of our Youth Conference filled with praise and expectation.', 'uploads/gallery/youth_conference_2025.jpg', 'uploads/gallery/youth_conference_2025.jpg', 'image', 2, 'Youth Conference 2025', 'events', 3145728, NULL, 'published', 1, '2026-07-23 05:07:34', '2026-07-23 06:11:19'),
+(3, 'Life-Changing Testimony', 'A powerful testimony of God\'s faithfulness and transformation shared during service.', 'uploads/gallery/testimony_1.mp4', 'uploads/gallery/testimony_1.mp4', 'video', NULL, NULL, 'testimonies', 15728640, NULL, 'published', 1, '2026-07-23 05:07:34', '2026-07-23 06:11:19');
 
 -- --------------------------------------------------------
 
@@ -465,6 +475,7 @@ INSERT INTO `menus` (`id`, `label`, `url`, `icon`, `parent_id`, `sort_order`, `i
 CREATE TABLE `ministries` (
   `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
+  `slug` varchar(255) DEFAULT NULL,
   `description` text DEFAULT NULL,
   `leader_name` varchar(255) DEFAULT NULL,
   `leader_email` varchar(255) DEFAULT NULL,
@@ -485,12 +496,12 @@ CREATE TABLE `ministries` (
 -- Dumping data for table `ministries`
 --
 
-INSERT INTO `ministries` (`id`, `name`, `description`, `leader_name`, `leader_email`, `leader_phone`, `meeting_day`, `meeting_time`, `meeting_location`, `category`, `image_url`, `is_active`, `sort_order`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'Children Ministry', 'Nurturing the next generation in the knowledge and love of God through age-appropriate teaching, worship, and activities.', 'Sarah Johnson', 'children@salem-dominion-ministries.com', '+256751234567', 'Sunday', '09:00:00', 'Children\'s Hall', 'children', NULL, 1, 1, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(2, 'Youth Ministry', 'Empowering young people to discover their purpose and develop a strong foundation in faith through dynamic programs.', 'Michael Williams', 'youth@salem-dominion-ministries.com', '+256702345678', 'Friday', '18:00:00', 'Youth Center', 'youth', NULL, 1, 2, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(3, 'Women Ministry', 'Supporting and encouraging women in their spiritual journey through fellowship, discipleship, and mentorship.', 'Grace Brown', 'women@salem-dominion-ministries.com', '+256753456789', 'Tuesday', '10:00:00', 'Main Hall', 'women', NULL, 1, 3, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(4, 'Men Ministry', 'Building strong men of faith who lead their families and communities with biblical principles and integrity.', 'David Davis', 'men@salem-dominion-ministries.com', '+256704567890', 'Saturday', '07:00:00', 'Prayer Room', 'men', NULL, 1, 4, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(5, 'Worship Team', 'Leading the congregation in powerful worship that creates an atmosphere for God\'s presence to dwell.', 'Apostle Faty Musasizi', 'worship@salem-dominion-ministries.com', '+256753244480', 'Thursday', '19:00:00', 'Main Sanctuary', 'worship', NULL, 1, 5, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
+INSERT INTO `ministries` (`id`, `name`, `slug`, `description`, `leader_name`, `leader_email`, `leader_phone`, `meeting_day`, `meeting_time`, `meeting_location`, `category`, `image_url`, `is_active`, `sort_order`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'Children Ministry', NULL, 'Nurturing the next generation in the knowledge and love of God through age-appropriate teaching, worship, and activities.', 'Sarah Johnson', 'children@salem-dominion-ministries.com', '+256751234567', 'Sunday', '09:00:00', 'Children\'s Hall', 'children', NULL, 1, 1, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(2, 'Youth Ministry', NULL, 'Empowering young people to discover their purpose and develop a strong foundation in faith through dynamic programs.', 'Michael Williams', 'youth@salem-dominion-ministries.com', '+256702345678', 'Friday', '18:00:00', 'Youth Center', 'youth', NULL, 1, 2, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(3, 'Women Ministry', NULL, 'Supporting and encouraging women in their spiritual journey through fellowship, discipleship, and mentorship.', 'Grace Brown', 'women@salem-dominion-ministries.com', '+256753456789', 'Tuesday', '10:00:00', 'Main Hall', 'women', NULL, 1, 3, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(4, 'Men Ministry', NULL, 'Building strong men of faith who lead their families and communities with biblical principles and integrity.', 'David Davis', 'men@salem-dominion-ministries.com', '+256704567890', 'Saturday', '07:00:00', 'Prayer Room', 'men', NULL, 1, 4, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(5, 'Worship Team', NULL, 'Leading the congregation in powerful worship that creates an atmosphere for God\'s presence to dwell.', 'Apostle Faty Musasizi', 'worship@salem-dominion-ministries.com', '+256753244480', 'Thursday', '19:00:00', 'Main Sanctuary', 'worship', NULL, 1, 5, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -536,19 +547,22 @@ CREATE TABLE `newsletter_subscribers` (
   `id` int(11) NOT NULL,
   `email` varchar(255) NOT NULL,
   `name` varchar(255) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `status` enum('active','unsubscribed','bounced') NOT NULL DEFAULT 'active',
   `subscribed_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `unsubscribed_at` datetime DEFAULT NULL
+  `unsubscribed_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `newsletter_subscribers`
 --
 
-INSERT INTO `newsletter_subscribers` (`id`, `email`, `name`, `is_active`, `subscribed_at`, `unsubscribed_at`) VALUES
-(1, 'subscriber1@example.com', 'Mary W.', 1, '2026-07-23 05:07:34', NULL),
-(2, 'subscriber2@example.com', 'Joseph K.', 1, '2026-07-23 05:07:34', NULL),
-(3, 'subscriber3@example.com', 'Ruth N.', 1, '2026-07-23 05:07:34', NULL);
+INSERT INTO `newsletter_subscribers` (`id`, `email`, `name`, `phone`, `is_active`, `status`, `subscribed_at`, `unsubscribed_at`, `created_at`) VALUES
+(1, 'subscriber1@example.com', 'Mary W.', NULL, 1, 'active', '2026-07-23 05:07:34', NULL, '2026-07-23 05:07:34'),
+(2, 'subscriber2@example.com', 'Joseph K.', NULL, 1, 'active', '2026-07-23 05:07:34', NULL, '2026-07-23 05:07:34'),
+(3, 'subscriber3@example.com', 'Ruth N.', NULL, 1, 'active', '2026-07-23 05:07:34', NULL, '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -678,7 +692,7 @@ CREATE TABLE `prayer_requests` (
   `request_text` text NOT NULL,
   `is_urgent` tinyint(1) NOT NULL DEFAULT 0,
   `is_anonymous` tinyint(1) NOT NULL DEFAULT 0,
-  `status` enum('pending','answered','archived') NOT NULL DEFAULT 'pending',
+  `status` enum('pending','answered','archived','praying') NOT NULL DEFAULT 'pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -758,16 +772,17 @@ CREATE TABLE `sermons` (
   `sermon_date` date NOT NULL,
   `category` varchar(100) DEFAULT NULL,
   `series` varchar(255) DEFAULT NULL,
-  `media_type` enum('video','audio') NOT NULL DEFAULT 'video',
+  `media_type` enum('video','audio','youtube','podcast') NOT NULL DEFAULT 'video',
   `media_url` text DEFAULT NULL,
   `audio_url` text DEFAULT NULL,
   `pdf_url` text DEFAULT NULL,
   `scripture` varchar(255) DEFAULT NULL,
-  `duration` int(11) DEFAULT NULL,
+  `duration` varchar(20) DEFAULT NULL,
   `thumbnail` text DEFAULT NULL,
   `status` enum('published','draft','archived') NOT NULL DEFAULT 'published',
   `is_featured` tinyint(1) NOT NULL DEFAULT 0,
   `views` int(11) NOT NULL DEFAULT 0,
+  `uploaded_by` int(11) DEFAULT NULL,
   `created_by` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -777,12 +792,12 @@ CREATE TABLE `sermons` (
 -- Dumping data for table `sermons`
 --
 
-INSERT INTO `sermons` (`id`, `title`, `description`, `preacher`, `sermon_date`, `category`, `series`, `media_type`, `media_url`, `audio_url`, `pdf_url`, `scripture`, `duration`, `thumbnail`, `status`, `is_featured`, `views`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'The Power of Faith', 'A powerful message about the importance of faith in our daily lives and how it can transform our relationship with God. Learn to activate your faith for miracles.', 'Apostle Faty Musasizi', '2026-07-16', 'Faith', 'Walking in Power', 'video', 'https://www.youtube.com/watch?v=example1', NULL, NULL, 'Hebrews 11:1', 2840, NULL, 'published', 1, 1250, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(2, 'Walking in Divine Purpose', 'Discovering and fulfilling God\'s divine purpose for your life through biblical principles and practical application. Every believer has a purpose - find yours!', 'Apostle Faty Musasizi', '2026-07-09', 'Purpose', 'Walking in Power', 'video', 'https://www.youtube.com/watch?v=example2', NULL, NULL, 'Jeremiah 29:11', 3120, NULL, 'published', 1, 980, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(3, 'The Blessing of Obedience', 'Understanding how obedience to God\'s word brings blessings and breakthroughs in every area of life. Obedience is better than sacrifice.', 'Pastor Faty Musasizi', '2026-07-02', 'Obedience', NULL, 'audio', 'https://audio.salem-dominion-ministries.com/sermon3.mp3', NULL, NULL, 'Deuteronomy 28:1-2', 2640, NULL, 'published', 0, 756, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(4, 'Spiritual Warfare: Winning the Battle', 'An in-depth teaching on spiritual warfare and the armor of God. Learn how to stand firm against the enemy\'s tactics and claim your victory in Christ.', 'Apostle Faty Musasizi', '2026-06-25', 'Spiritual Warfare', 'Battle Ready', 'video', 'https://www.youtube.com/watch?v=example4', NULL, NULL, 'Ephesians 6:10-18', 3600, NULL, 'published', 0, 1420, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
-(5, 'The Heart of Worship', 'What does it truly mean to worship God in spirit and truth? This sermon explores the essence of genuine worship and how it transforms our relationship with God.', 'Apostle Faty Musasizi', '2026-06-18', 'Worship', NULL, 'video', 'https://www.youtube.com/watch?v=example5', NULL, NULL, 'John 4:23-24', 2400, NULL, 'published', 0, 890, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
+INSERT INTO `sermons` (`id`, `title`, `description`, `preacher`, `sermon_date`, `category`, `series`, `media_type`, `media_url`, `audio_url`, `pdf_url`, `scripture`, `duration`, `thumbnail`, `status`, `is_featured`, `views`, `uploaded_by`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'The Power of Faith', 'A powerful message about the importance of faith in our daily lives and how it can transform our relationship with God. Learn to activate your faith for miracles.', 'Apostle Faty Musasizi', '2026-07-16', 'Faith', 'Walking in Power', 'video', 'https://www.youtube.com/watch?v=example1', NULL, NULL, 'Hebrews 11:1', '2840', NULL, 'published', 1, 1250, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(2, 'Walking in Divine Purpose', 'Discovering and fulfilling God\'s divine purpose for your life through biblical principles and practical application. Every believer has a purpose - find yours!', 'Apostle Faty Musasizi', '2026-07-09', 'Purpose', 'Walking in Power', 'video', 'https://www.youtube.com/watch?v=example2', NULL, NULL, 'Jeremiah 29:11', '3120', NULL, 'published', 1, 980, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(3, 'The Blessing of Obedience', 'Understanding how obedience to God\'s word brings blessings and breakthroughs in every area of life. Obedience is better than sacrifice.', 'Pastor Faty Musasizi', '2026-07-02', 'Obedience', NULL, 'audio', 'https://audio.salem-dominion-ministries.com/sermon3.mp3', NULL, NULL, 'Deuteronomy 28:1-2', '2640', NULL, 'published', 0, 756, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(4, 'Spiritual Warfare: Winning the Battle', 'An in-depth teaching on spiritual warfare and the armor of God. Learn how to stand firm against the enemy\'s tactics and claim your victory in Christ.', 'Apostle Faty Musasizi', '2026-06-25', 'Spiritual Warfare', 'Battle Ready', 'video', 'https://www.youtube.com/watch?v=example4', NULL, NULL, 'Ephesians 6:10-18', '3600', NULL, 'published', 0, 1420, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34'),
+(5, 'The Heart of Worship', 'What does it truly mean to worship God in spirit and truth? This sermon explores the essence of genuine worship and how it transforms our relationship with God.', 'Apostle Faty Musasizi', '2026-06-18', 'Worship', NULL, 'video', 'https://www.youtube.com/watch?v=example5', NULL, NULL, 'John 4:23-24', '2400', NULL, 'published', 0, 890, NULL, 1, '2026-07-23 05:07:34', '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 
@@ -859,17 +874,18 @@ CREATE TABLE `testimonials` (
   `status` enum('pending','approved','rejected','archived') NOT NULL DEFAULT 'pending',
   `submitted_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `approved_at` datetime DEFAULT NULL,
-  `approved_by` int(11) DEFAULT NULL
+  `approved_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `testimonials`
 --
 
-INSERT INTO `testimonials` (`id`, `name`, `email`, `occupation`, `testimonial`, `rating`, `is_approved`, `is_featured`, `status`, `submitted_at`, `approved_at`, `approved_by`) VALUES
-(1, 'John Doe', 'john.doe@example.com', 'Business Owner', 'Salem Dominion Ministries has truly transformed my life. The teachings are powerful, the worship is heavenly, and the community is amazing. I came as a visitor and found my spiritual home. God bless Apostle Faty and the entire leadership.', 5, 1, 1, 'approved', '2026-07-23 05:07:34', NULL, 1),
-(2, 'Jane Smith', 'jane.smith@example.com', 'Teacher', 'I found my spiritual home here. The worship is uplifting and the messages are life-changing. Since joining Salem Dominion, my faith has grown immensely and I have experienced God\'s faithfulness in my career and family.', 5, 1, 1, 'approved', '2026-07-23 05:07:34', NULL, 1),
-(3, 'Michael Johnson', 'michael.j@example.com', 'Student', 'The youth ministry helped me discover my purpose in God. Through the mentorship and programs, I have grown from a confused young man to a confident servant of God. I am forever grateful to Salem Dominion Ministries.', 4, 1, 0, 'approved', '2026-07-23 05:07:34', NULL, 1);
+INSERT INTO `testimonials` (`id`, `name`, `email`, `occupation`, `testimonial`, `rating`, `is_approved`, `is_featured`, `status`, `submitted_at`, `approved_at`, `approved_by`, `created_at`) VALUES
+(1, 'John Doe', 'john.doe@example.com', 'Business Owner', 'Salem Dominion Ministries has truly transformed my life. The teachings are powerful, the worship is heavenly, and the community is amazing. I came as a visitor and found my spiritual home. God bless Apostle Faty and the entire leadership.', 5, 1, 1, 'approved', '2026-07-23 05:07:34', NULL, 1, '2026-07-23 05:07:34'),
+(2, 'Jane Smith', 'jane.smith@example.com', 'Teacher', 'I found my spiritual home here. The worship is uplifting and the messages are life-changing. Since joining Salem Dominion, my faith has grown immensely and I have experienced God\'s faithfulness in my career and family.', 5, 1, 1, 'approved', '2026-07-23 05:07:34', NULL, 1, '2026-07-23 05:07:34'),
+(3, 'Michael Johnson', 'michael.j@example.com', 'Student', 'The youth ministry helped me discover my purpose in God. Through the mentorship and programs, I have grown from a confused young man to a confident servant of God. I am forever grateful to Salem Dominion Ministries.', 4, 1, 0, 'approved', '2026-07-23 05:07:34', NULL, 1, '2026-07-23 05:07:34');
 
 -- --------------------------------------------------------
 

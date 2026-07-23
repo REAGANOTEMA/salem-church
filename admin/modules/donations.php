@@ -147,9 +147,11 @@ displayFlash();
                     <option value="">All Types</option>
                     <option value="tithe" <?= $filterType === 'tithe' ? 'selected' : '' ?>>Tithe</option>
                     <option value="offering" <?= $filterType === 'offering' ? 'selected' : '' ?>>Offering</option>
-                    <option value="donation" <?= $filterType === 'donation' ? 'selected' : '' ?>>Donation</option>
+                    <option value="general" <?= $filterType === 'general' ? 'selected' : '' ?>>General</option>
                     <option value="building_fund" <?= $filterType === 'building_fund' ? 'selected' : '' ?>>Building Fund</option>
                     <option value="missions" <?= $filterType === 'missions' ? 'selected' : '' ?>>Missions</option>
+                    <option value="children_ministry" <?= $filterType === 'children_ministry' ? 'selected' : '' ?>>Children Ministry</option>
+                    <option value="special" <?= $filterType === 'special' ? 'selected' : '' ?>>Special</option>
                     <option value="benevolence" <?= $filterType === 'benevolence' ? 'selected' : '' ?>>Benevolence</option>
                     <option value="other" <?= $filterType === 'other' ? 'selected' : '' ?>>Other</option>
                 </select>
