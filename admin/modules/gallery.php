@@ -39,14 +39,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->insert('gallery', [
                         'title' => $title,
                         'description' => $description,
-                        'file_path' => $uploadedPath,
+                        'file_url' => $uploadedPath,
                         'file_type' => 'image',
                         'album' => $album,
                         'category' => $category,
                         'uploaded_by' => $_SESSION['admin_id'],
                         'status' => 'published',
                         'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
                     ]);
                     $uploaded++;
                 }
@@ -88,8 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'delete':
             $id = (int)($_POST['id'] ?? 0);
             if ($id) {
-                $old = $db->fetch("SELECT file_path FROM gallery WHERE id = ?", [$id]);
-                if ($old && $old['file_path']) deleteFile($old['file_path']);
+                $old = $db->fetch("SELECT file_url FROM gallery WHERE id = ?", [$id]);
+                if ($old && $old['file_url']) deleteFile($old['file_url']);
                 $db->delete('gallery', 'id = ?', [$id]);
                 logActivity($db, 'deleted', 'gallery', $_SESSION['admin_id'], "Deleted gallery item ID: {$id}");
             }
@@ -104,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $item = $db->fetch("SELECT status FROM gallery WHERE id = ?", [$id]);
                 if ($item) {
                     $newStatus = $item['status'] === 'published' ? 'archived' : 'published';
-                    $db->update('gallery', ['status' => $newStatus, 'updated_at' => date('Y-m-d H:i:s')], 'id = ?', [$id]);
+                    $db->update('gallery', ['status' => $newStatus], 'id = ?', [$id]);
                 }
             }
             if ($isAjax) jsonSuccess([], 'Status updated');
@@ -200,8 +199,8 @@ displayFlash();
                     </div>
                 </div>
                 <div class="col-md-4 text-center">
-                    <?php if ($editItem['file_path']): ?>
-                        <img src="<?= BASE_URL . '/' . $editItem['file_path'] ?>" class="img-fluid rounded mb-3" style="max-height:200px">
+                    <?php if ($editItem['file_url']): ?>
+                        <img src="<?= BASE_URL . '/' . $editItem['file_url'] ?>" class="img-fluid rounded mb-3" style="max-height:200px">
                     <?php endif; ?>
                 </div>
             </div>
@@ -227,8 +226,8 @@ displayFlash();
                 <div class="col-lg-2 col-md-3 col-sm-4 col-6">
                     <div class="card h-100 gallery-card">
                         <div class="position-relative">
-                            <?php if ($item['file_path']): ?>
-                                <img src="<?= BASE_URL . '/' . $item['file_path'] ?>" class="card-img-top" style="height:150px; object-fit:cover;" alt="<?= sanitize($item['title']) ?>">
+                            <?php if ($item['file_url']): ?>
+                                <img src="<?= BASE_URL . '/' . $item['file_url'] ?>" class="card-img-top" style="height:150px; object-fit:cover;" alt="<?= sanitize($item['title']) ?>">
                             <?php else: ?>
                                 <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height:150px;">
                                     <i class="fas fa-image fa-2x text-muted"></i>

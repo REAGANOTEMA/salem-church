@@ -12,12 +12,12 @@ try {
     $pdo = Database::getInstance()->getPdo();
     if ($pdo) {
         try {
-            $stmt = $pdo->query("SELECT DISTINCT position FROM leadership WHERE is_active = 1 ORDER BY position");
+            $stmt = $pdo->query("SELECT DISTINCT title AS position FROM leadership WHERE is_active = 1 ORDER BY title");
             $positions = $stmt->fetchAll(PDO::FETCH_COLUMN);
         } catch (Exception $e) {}
 
         try {
-            $stmt = $pdo->query("SELECT * FROM leadership WHERE is_active = 1 ORDER BY position ASC, name ASC");
+            $stmt = $pdo->query("SELECT *, title AS position, image_url AS photo FROM leadership WHERE is_active = 1 ORDER BY order_position ASC, name ASC");
             $leaders = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {}
     }
@@ -25,14 +25,7 @@ try {
     error_log("Leadership page DB error: " . $e->getMessage());
 }
 
-$defaultLeaders = [
-    ['name' => 'Apostle Faty Musasizi', 'position' => 'Senior Pastor & Founder', 'photo' => 'assets/apostle-faty-preaching.jpeg', 'email' => 'info@salem-dominion-ministries.com', 'phone' => '+256 753 244 480', 'bio' => 'Apostle Faty Musasizi is the founder and Senior Pastor of Salem Dominion Ministries. Called by God with a powerful apostolic and prophetic mantle, she has led the ministry from its inception with just 5 members to over 500 members across multiple branches. Her ministry is marked by healing miracles, prophetic accuracy, and a deep passion for souls.'],
-    ['name' => 'Pastor Jonathan Ngobi', 'position' => 'Associate Pastor', 'photo' => 'assets/pastor-jonathan-Ngobi-B-Ezegv1.jpeg', 'email' => '', 'phone' => '', 'bio' => 'Pastor Jonathan Ngobi serves faithfully as an Associate Pastor at Salem Dominion Ministries, supporting the vision of the house with dedication and spiritual leadership. He is known for his strong prayer life and commitment to discipleship.'],
-    ['name' => 'Pastor Jotham Bright Mulinde', 'position' => 'Worship & Music Director', 'photo' => 'assets/pastor-jotham-Bright-Mulinde-Ca8YLs3V.jpeg', 'email' => '', 'phone' => '', 'bio' => 'Pastor Jotham Bright Mulinde leads the worship and music ministry at Salem Dominion Ministries. His anointed worship leads the congregation into powerful encounters with God. He is passionate about creating an atmosphere of worship that draws people closer to God.'],
-    ['name' => 'Pastor Joyce Nabulya', 'position' => "Women's Ministry Leader", 'photo' => 'assets/PASTOR-NABULYA-JOYCE-BdB4SkbM.jpeg', 'email' => '', 'phone' => '', 'bio' => "Pastor Joyce Nabulya leads the Women's Ministry, nurturing and empowering women to walk in their God-given identity and purpose. She provides mentorship, counseling, and spiritual guidance to women of all ages."],
-    ['name' => 'Apostle Irene Mirembe', 'position' => 'Prophetic Ministry Leader', 'photo' => 'assets/APOSTLE-IRENE-MIREMBE-CwWfzcRx.jpeg', 'email' => '', 'phone' => '', 'bio' => 'Apostle Irene Mirembe oversees the Prophetic School and prophetic ministry at Salem Dominion Ministries. With a strong prophetic gifting, she trains and equips believers to hear and operate in the gifts of the Spirit.'],
-    ['name' => 'General Pastor', 'position' => 'General Pastor', 'photo' => 'assets/general-pastor.jpeg', 'email' => '', 'phone' => '', 'bio' => 'The General Pastor provides pastoral oversight and spiritual covering for the ministry. With years of experience in ministry, they provide wisdom, counsel, and apostolic guidance to the leadership team and congregation.'],
-];
+$defaultLeaders = [];
 
 $displayLeaders = !empty($leaders) ? $leaders : $defaultLeaders;
 

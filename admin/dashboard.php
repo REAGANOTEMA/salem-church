@@ -80,7 +80,11 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $sectionTitle ?> - Admin - <?= CHURCH_NAME ?></title>
-    <link rel="icon" href="<?= LOGO_URL ?>" type="image/jpeg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../public/images/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../public/images/favicon-16x16.png">
+    <link rel="icon" type="image/svg+xml" href="../public/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../public/apple-touch-icon.png">
+    <meta name="msapplication-TileImage" content="../public/icons/icon-144x144.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">

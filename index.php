@@ -57,7 +57,7 @@ try {
     } catch (Exception $e) { }
 
     try {
-        $stmt = $pdo->query("SELECT * FROM ministries WHERE status = 'active' ORDER BY sort_order ASC LIMIT 6");
+        $stmt = $pdo->query("SELECT * FROM ministries WHERE is_active = 1 ORDER BY sort_order ASC LIMIT 6");
         $ministries = $stmt->fetchAll();
     } catch (Exception $e) { }
 
@@ -72,7 +72,7 @@ try {
     } catch (Exception $e) { }
 
     try {
-        $stmt = $pdo->query("SELECT verse_text, reference FROM bible_verses WHERE is_active = 1 ORDER BY RAND() LIMIT 1");
+        $stmt = $pdo->query("SELECT verse_text, reference FROM bible_verses ORDER BY RAND() LIMIT 1");
         $v = $stmt->fetch();
         if ($v) {
             $verse_text = $v['verse_text'];
@@ -81,7 +81,12 @@ try {
     } catch (Exception $e) { }
 
     try {
-        $stmt = $pdo->query("SELECT COUNT(*) as cnt FROM members WHERE status = 'active'");
+        $membersDsn = 'mysql:host=' . MEMBERS_DB_HOST . ';port=' . DB_PORT . ';dbname=' . MEMBERS_DB_NAME . ';charset=' . DB_CHARSET;
+        $membersPdo = new PDO($membersDsn, MEMBERS_DB_USER, MEMBERS_DB_PASS, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ]);
+        $stmt = $membersPdo->query("SELECT COUNT(*) as cnt FROM users WHERE is_active = 1");
         $r = $stmt->fetch();
         if ($r && $r['cnt'] > 0) $stats['members'] = (int)$r['cnt'];
     } catch (Exception $e) { }
@@ -641,7 +646,7 @@ include __DIR__ . '/components/header.php';
             $gallery_sizes = ['sdm-gallery-item-wide', '', '', 'sdm-gallery-item-wide', '', '', '', 'sdm-gallery-item-tall'];
 
             foreach ($gallery_items as $idx => $img):
-                $src = !empty($img['image_path']) ? htmlspecialchars($img['image_path']) : htmlspecialchars($gallery_defaults[$idx % count($gallery_defaults)]['src']);
+                $src = !empty($img['file_url']) ? htmlspecialchars($img['file_url']) : htmlspecialchars($gallery_defaults[$idx % count($gallery_defaults)]['src']);
                 $alt = !empty($img['title']) ? htmlspecialchars($img['title']) : htmlspecialchars($gallery_defaults[$idx % count($gallery_defaults)]['alt']);
                 $size_class = $gallery_sizes[$idx % count($gallery_sizes)];
             ?>
@@ -809,17 +814,21 @@ function sdmCtaSubscribe(e) {
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
-            toastText.textContent = 'Successfully subscribed! Thank you for joining our family.';
+            try {
+                var res = JSON.parse(xhr.responseText);
+                toastText.textContent = res.message || 'Successfully subscribed!';
+            } catch(ex) {
+                toastText.textContent = 'Successfully subscribed! Thank you.';
+            }
             var toast = new bootstrap.Toast(toastEl, { delay: 4000 });
             toast.show();
             input.value = '';
         }
     };
     xhr.onerror = function() {
-        toastText.textContent = 'Successfully subscribed! Thank you.';
+        toastText.textContent = 'Subscription failed. Please try again.';
         var toast = new bootstrap.Toast(toastEl, { delay: 4000 });
         toast.show();
-        input.value = '';
     };
     xhr.send('email=' + encodeURIComponent(val));
     return false;

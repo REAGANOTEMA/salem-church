@@ -17,7 +17,7 @@ try {
         } catch (Exception $e) {}
 
         try {
-            $stmt = $pdo->query("SELECT m.*, l.name as leader_name FROM ministries m LEFT JOIN leadership l ON m.leader_id = l.id WHERE m.is_active = 1 ORDER BY m.category ASC, m.name ASC");
+            $stmt = $pdo->query("SELECT m.* FROM ministries m WHERE m.is_active = 1 ORDER BY m.category ASC, m.name ASC");
             $ministries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {}
     }

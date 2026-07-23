@@ -104,7 +104,8 @@ include 'components/header.php';
         <div class="row g-5">
             <div class="col-lg-7" data-aos="fade-right" data-aos-delay="200">
                 <div class="donate-form-card">
-                    <form method="POST" action="donate.php">
+                    <form id="donateForm" onsubmit="return submitDonation(event)">
+                        <?= csrfField() ?>
                         <div class="row g-4">
                             <div class="col-md-6">
                                 <label class="form-label">Full Name <span class="text-danger">*</span></label>
@@ -147,19 +148,19 @@ include 'components/header.php';
                                 <label class="form-label">Payment Method <span class="text-danger">*</span></label>
                                 <select name="payment_method" class="form-select" required>
                                     <option value="">Select payment method</option>
-                                    <option value="mtn_momo">MTN Mobile Money</option>
-                                    <option value="airtel_money">Airtel Money</option>
+                                    <option value="mobile_money">Mobile Money (MTN / Airtel)</option>
                                     <option value="bank_transfer">Bank Transfer</option>
-                                    <option value="paypal">PayPal</option>
                                     <option value="card">Credit/Debit Card</option>
+                                    <option value="cash">Cash</option>
                                 </select>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Note (Optional)</label>
                                 <textarea name="note" class="form-control" rows="3" placeholder="Add a note or dedication..."></textarea>
                             </div>
+                            <div id="donateAlert" class="col-12" style="display:none;"></div>
                             <div class="col-12 text-center mt-3">
-                                <button type="submit" class="btn-donate"><i class="fas fa-heart me-2"></i>Donate Now</button>
+                                <button type="submit" id="donateBtn" class="btn-donate"><i class="fas fa-heart me-2"></i>Donate Now</button>
                             </div>
                         </div>
                     </form>
@@ -308,5 +309,49 @@ function setAmount(amount, btn) {
     document.getElementById('donationAmount').value = amount;
     document.querySelectorAll('.amount-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
+}
+function submitDonation(e) {
+    e.preventDefault();
+    var form = e.target;
+    var btn = document.getElementById('donateBtn');
+    var alertDiv = document.getElementById('donateAlert');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    alertDiv.style.display = 'none';
+
+    var data = {};
+    var fd = new FormData(form);
+    fd.forEach(function(val, key) { data[key] = val; });
+    data.note = data.notes || data.note || '';
+
+    fetch('api.php?action=donation_submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-heart me-2"></i>Donate Now';
+        if (res.success) {
+            alertDiv.className = 'col-12';
+            alertDiv.style.display = 'block';
+            alertDiv.innerHTML = '<div class="alert-success-custom"><i class="fas fa-check-circle me-2"></i>' + res.message + '</div>';
+            form.reset();
+            document.querySelectorAll('.amount-btn').forEach(function(b) { b.classList.remove('active'); });
+        } else {
+            alertDiv.className = 'col-12';
+            alertDiv.style.display = 'block';
+            alertDiv.innerHTML = '<div class="alert alert-danger" style="border-radius:12px;"><i class="fas fa-exclamation-circle me-2"></i>' + res.message + '</div>';
+        }
+    })
+    .catch(function() {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-heart me-2"></i>Donate Now';
+        alertDiv.className = 'col-12';
+        alertDiv.style.display = 'block';
+        alertDiv.innerHTML = '<div class="alert alert-danger" style="border-radius:12px;"><i class="fas fa-exclamation-circle me-2"></i>An error occurred. Please try again.</div>';
+    });
+    return false;
 }
 </script>

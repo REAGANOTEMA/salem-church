@@ -6,8 +6,7 @@ $pageDescription = 'Discover upcoming events, services, and gatherings at Salem 
 require_once 'config.php';
 require_once 'db_connection.php';
 
-$conn = createDatabaseConnection();
-$csrfToken = csrfToken();
+$pdo = Database::getInstance()->getPdo();
 
 $tab = $_GET['tab'] ?? 'upcoming';
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -21,7 +20,7 @@ $total_pages = 1;
 $next_upcoming = null;
 
 try {
-    if ($conn) {
+    if ($pdo) {
         if ($tab === 'upcoming') {
             $where = "WHERE e.event_date >= CURDATE() AND e.status != 'deleted'";
             $order = "ORDER BY e.event_date ASC, e.event_time ASC";
@@ -33,31 +32,26 @@ try {
             $order = "ORDER BY e.event_date ASC";
         }
 
-        $countQuery = "SELECT COUNT(*) FROM events e {$where}";
-        $countStmt = $conn->prepare($countQuery);
+        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM events e {$where}");
         if ($countStmt) {
             $countStmt->execute();
-            $total_events = $countStmt->get_result()->fetch_row()[0];
+            $total_events = $countStmt->fetchColumn();
             $total_pages = max(1, ceil($total_events / $per_page));
             $page = min($page, $total_pages);
-            $countStmt->close();
         }
 
         $query = "SELECT e.*, CONCAT(u.first_name, ' ', u.last_name) as organizer_name FROM events e LEFT JOIN users u ON e.created_by = u.id {$where} {$order} LIMIT ? OFFSET ?";
-        $stmt = $conn->prepare($query);
+        $stmt = $pdo->prepare($query);
         if ($stmt) {
-            $stmt->bind_param('ii', $per_page, $offset);
-            $stmt->execute();
-            $events = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-            $stmt->close();
+            $stmt->execute([$per_page, $offset]);
+            $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         if ($tab === 'upcoming' && $page === 1) {
-            $featStmt = $conn->prepare("SELECT e.*, CONCAT(u.first_name, ' ', u.last_name) as organizer_name FROM events e LEFT JOIN users u ON e.created_by = u.id WHERE e.event_date >= CURDATE() AND e.status != 'deleted' ORDER BY e.event_date ASC LIMIT 1");
+            $featStmt = $pdo->prepare("SELECT e.*, CONCAT(u.first_name, ' ', u.last_name) as organizer_name FROM events e LEFT JOIN users u ON e.created_by = u.id WHERE e.event_date >= CURDATE() AND e.status != 'deleted' ORDER BY e.event_date ASC LIMIT 1");
             if ($featStmt) {
                 $featStmt->execute();
-                $featured_event = $featStmt->get_result()->fetch_assoc();
-                $featStmt->close();
+                $featured_event = $featStmt->fetch(PDO::FETCH_ASSOC) ?: null;
             }
             if (!$featured_event && !empty($events)) {
                 $featured_event = $events[0];
@@ -65,11 +59,10 @@ try {
             }
         }
 
-        $nextStmt = $conn->prepare("SELECT e.event_date, e.event_time, e.title FROM events e WHERE e.event_date >= CURDATE() AND e.status != 'deleted' ORDER BY e.event_date ASC LIMIT 1");
+        $nextStmt = $pdo->prepare("SELECT e.event_date, e.event_time, e.title FROM events e WHERE e.event_date >= CURDATE() AND e.status != 'deleted' ORDER BY e.event_date ASC LIMIT 1");
         if ($nextStmt) {
             $nextStmt->execute();
-            $next_upcoming = $nextStmt->get_result()->fetch_assoc();
-            $nextStmt->close();
+            $next_upcoming = $nextStmt->fetch(PDO::FETCH_ASSOC) ?: null;
         }
     }
 } catch (Exception $e) {
@@ -315,7 +308,7 @@ include 'components/header.php';
                                     'speaker' => $featured_event['speaker'] ?? '',
                                     'description' => $featured_event['description'] ?? '',
                                     'registration_url' => $featured_event['registration_url'] ?? '',
-                                    'capacity' => $featured_event['capacity'] ?? '',
+                                    'max_attendees' => $featured_event['max_attendees'] ?? '',
                                 ])) ?>"><i class="fas fa-info-circle me-2"></i>More Details</button>
                             </div>
                         </div>
@@ -373,7 +366,7 @@ include 'components/header.php';
                                     'speaker' => $event['speaker'] ?? '',
                                     'description' => $event['description'] ?? '',
                                     'registration_url' => $event['registration_url'] ?? '',
-                                    'capacity' => $event['capacity'] ?? '',
+                                    'max_attendees' => $event['max_attendees'] ?? '',
                                 ])) ?>'><i class="fas fa-info-circle me-1"></i>Details</button>
                             </div>
                         </div>

@@ -32,15 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirect(BASE_URL . '/admin/modules/sermons.php?action=create');
             }
 
-            $thumbnail = '';
-            if (!empty($_FILES['thumbnail']['name'])) {
-                $uploaded = uploadFile($_FILES['thumbnail'], 'sermons/thumbnails', ALLOWED_IMAGE_TYPES);
-                if ($uploaded) $thumbnail = $uploaded;
-            }
-
             $id = $db->insert('sermons', [
                 'title' => $title,
-                'slug' => slugify($title),
                 'description' => $description,
                 'preacher' => $preacher,
                 'sermon_date' => $sermon_date,
@@ -52,7 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'pdf_url' => $pdf_url,
                 'scripture' => $scripture,
                 'duration' => $duration,
-                'thumbnail' => $thumbnail,
                 'status' => $status,
                 'is_featured' => $is_featured,
                 'created_by' => $_SESSION['admin_id'],
@@ -60,6 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);
+
+            if (!empty($_FILES['thumbnail']['name'])) {
+                $thumb = uploadFile($_FILES['thumbnail'], 'sermons/thumbnails', ALLOWED_IMAGE_TYPES);
+                if ($thumb) $db->update('sermons', ['thumbnail' => $thumb], 'id = ?', [$id]);
+            }
 
             logActivity($db, 'created', 'sermons', $_SESSION['admin_id'], "Created sermon: {$title}");
             if ($isAjax) jsonSuccess(['id' => $id], 'Sermon created successfully');
@@ -92,7 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $updateData = [
                 'title' => $title,
-                'slug' => slugify($title),
                 'description' => $description,
                 'preacher' => $preacher,
                 'sermon_date' => $sermon_date,
@@ -109,13 +105,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
 
+            if (!empty($_FILES['media_file']['name'])) {
+                $media = uploadFile($_FILES['media_file'], 'sermons/' . $media_type, ALLOWED_IMAGE_TYPES);
+                if ($media) $updateData['media_url'] = $media;
+            }
+
             if (!empty($_FILES['thumbnail']['name'])) {
-                $uploaded = uploadFile($_FILES['thumbnail'], 'sermons/thumbnails', ALLOWED_IMAGE_TYPES);
-                if ($uploaded) {
-                    $old = $db->fetch("SELECT thumbnail FROM sermons WHERE id = ?", [$id]);
-                    if ($old && $old['thumbnail']) deleteFile($old['thumbnail']);
-                    $updateData['thumbnail'] = $uploaded;
-                }
+                $thumb = uploadFile($_FILES['thumbnail'], 'sermons/thumbnails', ALLOWED_IMAGE_TYPES);
+                if ($thumb) $updateData['thumbnail'] = $thumb;
             }
 
             $db->update('sermons', $updateData, 'id = ?', [$id]);
@@ -128,8 +125,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'delete':
             $id = (int)($_POST['id'] ?? 0);
             if ($id) {
-                $old = $db->fetch("SELECT thumbnail FROM sermons WHERE id = ?", [$id]);
-                if ($old && $old['thumbnail']) deleteFile($old['thumbnail']);
+                $old = $db->fetch("SELECT media_url, thumbnail FROM sermons WHERE id = ?", [$id]);
+                if ($old) {
+                    if (!empty($old['media_url'])) deleteFile($old['media_url']);
+                    if (!empty($old['thumbnail'])) deleteFile($old['thumbnail']);
+                }
                 $db->delete('sermons', 'id = ?', [$id]);
                 logActivity($db, 'deleted', 'sermons', $_SESSION['admin_id'], "Deleted sermon ID: {$id}");
             }

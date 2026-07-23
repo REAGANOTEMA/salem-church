@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->update('testimonials', [
                     'status' => 'approved',
                     'approved_by' => $_SESSION['admin_id'],
-                    'updated_at' => date('Y-m-d H:i:s'),
+                    'approved_at' => date('Y-m-d H:i:s'),
                 ], 'id = ?', [$id]);
                 logActivity($db, 'approved', 'testimonials', $_SESSION['admin_id'], "Approved testimonial ID {$id}");
             }
@@ -30,7 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($id) {
                 $db->update('testimonials', [
                     'status' => 'rejected',
-                    'updated_at' => date('Y-m-d H:i:s'),
                 ], 'id = ?', [$id]);
                 logActivity($db, 'rejected', 'testimonials', $_SESSION['admin_id'], "Rejected testimonial ID {$id}");
             }
@@ -44,7 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($id) {
                 $db->update('testimonials', [
                     'status' => 'archived',
-                    'updated_at' => date('Y-m-d H:i:s'),
                 ], 'id = ?', [$id]);
                 logActivity($db, 'archived', 'testimonials', $_SESSION['admin_id'], "Archived testimonial ID {$id}");
             }

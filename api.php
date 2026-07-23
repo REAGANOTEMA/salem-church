@@ -13,10 +13,9 @@ require_once __DIR__ . '/includes/database.php';
 require_once __DIR__ . '/includes/helpers.php';
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token, X-Requested-With');
-header('Access-Control-Allow-Credentials: true');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -98,9 +97,8 @@ switch ($action) {
 
         $db->insert('newsletter_subscribers', [
             'email'        => $email,
-            'ip_address'   => $_SERVER['REMOTE_ADDR'] ?? '',
-            'user_agent'   => substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500),
             'is_active'    => 1,
+            'status'       => 'active',
             'subscribed_at' => date('Y-m-d H:i:s'),
             'created_at'   => date('Y-m-d H:i:s'),
         ]);
@@ -167,7 +165,6 @@ switch ($action) {
             'subject'    => $subject ?: 'Contact Form Submission',
             'message'    => $message,
             'status'     => 'unread',
-            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
@@ -210,8 +207,6 @@ switch ($action) {
             'is_urgent'    => $is_urgent ? 1 : 0,
             'is_anonymous' => $is_anonymous ? 1 : 0,
             'status'       => 'pending',
-            'is_answered'  => 0,
-            'ip_address'   => $_SERVER['REMOTE_ADDR'] ?? '',
             'created_at'   => date('Y-m-d H:i:s'),
         ]);
 
@@ -252,7 +247,6 @@ switch ($action) {
             'testimonial' => $testimonial,
             'rating'      => $rating,
             'status'      => 'pending',
-            'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '',
             'created_at'  => date('Y-m-d H:i:s'),
         ]);
 
@@ -273,7 +267,12 @@ switch ($action) {
         $amount         = floatval($data['amount'] ?? $_POST['amount'] ?? 0);
         $donation_type  = trim($data['donation_type'] ?? $_POST['donation_type'] ?? 'general');
         $payment_method = trim($data['payment_method'] ?? $_POST['payment_method'] ?? 'cash');
-        $notes          = trim($data['notes'] ?? $_POST['notes'] ?? '');
+        $notes          = trim($data['notes'] ?? $data['note'] ?? $_POST['notes'] ?? $_POST['note'] ?? '');
+
+        $valid_payment_methods = ['mobile_money', 'bank_transfer', 'cash', 'online', 'card'];
+        if (!in_array($payment_method, $valid_payment_methods)) {
+            $payment_method = 'cash';
+        }
 
         if (empty($donor_name) || $amount <= 0) {
             apiError('Donor name and a valid donation amount are required.');
@@ -292,10 +291,9 @@ switch ($action) {
             'donor_email'    => $donor_email,
             'donor_phone'    => $donor_phone,
             'amount'         => $amount,
-            'currency'       => 'UGX',
             'donation_type'  => $donation_type,
             'payment_method' => $payment_method,
-            'reference'      => $reference,
+            'transaction_id' => $reference,
             'status'         => 'pending',
             'notes'          => $notes,
             'ip_address'     => $_SERVER['REMOTE_ADDR'] ?? '',
@@ -315,23 +313,23 @@ switch ($action) {
         if ($method !== 'POST') apiError('Method not allowed', 405);
         requireCsrf();
 
-        $data         = apiInput();
-        $name         = trim($data['name'] ?? $_POST['name'] ?? '');
-        $email        = trim($data['email'] ?? $_POST['email'] ?? '');
-        $phone        = trim($data['phone'] ?? $_POST['phone'] ?? '');
-        $booking_date = $data['booking_date'] ?? $_POST['booking_date'] ?? '';
-        $start_time   = $data['start_time'] ?? $_POST['start_time'] ?? '';
-        $booking_type = trim($data['booking_type'] ?? $_POST['booking_type'] ?? 'counseling');
-        $subject      = trim($data['subject'] ?? $_POST['subject'] ?? '');
-        $description  = trim($data['description'] ?? $_POST['description'] ?? '');
+        $data           = apiInput();
+        $client_name    = trim($data['name'] ?? $data['client_name'] ?? $_POST['name'] ?? '');
+        $client_email   = trim($data['email'] ?? $data['client_email'] ?? $_POST['email'] ?? '');
+        $client_phone   = trim($data['phone'] ?? $data['client_phone'] ?? $_POST['phone'] ?? '');
+        $booking_date   = $data['booking_date'] ?? $_POST['booking_date'] ?? '';
+        $start_time     = $data['start_time'] ?? $_POST['start_time'] ?? '';
+        $booking_type   = trim($data['booking_type'] ?? $_POST['booking_type'] ?? 'counseling');
+        $subject        = trim($data['subject'] ?? $_POST['subject'] ?? '');
+        $description    = trim($data['description'] ?? $_POST['description'] ?? '');
 
-        if (empty($name) || empty($email) || empty($booking_date) || empty($start_time)) {
+        if (empty($client_name) || empty($client_email) || empty($booking_date) || empty($start_time)) {
             apiError('Name, email, booking date, and time are required.');
         }
-        if (!validateEmail($email)) {
+        if (!validateEmail($client_email)) {
             apiError('Please provide a valid email address.');
         }
-        if (!empty($phone) && !validatePhone($phone)) {
+        if (!empty($client_phone) && !validatePhone($client_phone)) {
             apiError('Please provide a valid phone number.');
         }
         if (strtotime($booking_date) === false) {
@@ -344,8 +342,13 @@ switch ($action) {
             apiError('Please provide a valid time (HH:MM).');
         }
 
-        $end_hour = intval(substr($start_time, 0, 2)) + 1;
-        $end_time = str_pad($end_hour, 2, '0', STR_PAD_LEFT) . substr($start_time, 2);
+        $pastor = $db->fetch("SELECT id FROM leadership WHERE title LIKE '%Pastor%' AND is_active = 1 LIMIT 1");
+        $pastorId = $pastor ? $pastor['id'] : 1;
+        $duration = intval($data['duration_minutes'] ?? 30);
+        $end_hour = intval(substr($start_time, 0, 2)) + intval($duration / 60);
+        $end_min  = intval(substr($start_time, 3, 2)) + ($duration % 60);
+        if ($end_min >= 60) { $end_hour++; $end_min -= 60; }
+        $end_time = str_pad($end_hour, 2, '0', STR_PAD_LEFT) . ':' . str_pad($end_min, 2, '0', STR_PAD_LEFT);
 
         $conflict = $db->fetch(
             "SELECT id FROM pastor_bookings WHERE booking_date = ? AND start_time = ? AND status NOT IN ('cancelled','rejected')",
@@ -355,22 +358,27 @@ switch ($action) {
             apiError('This time slot is already booked. Please choose a different time.');
         }
 
+        $confCode = strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+
         $db->insert('pastor_bookings', [
-            'name'         => $name,
-            'email'        => $email,
-            'phone'        => $phone,
-            'booking_date' => $booking_date,
-            'start_time'   => $start_time,
-            'end_time'     => $end_time,
-            'booking_type' => $booking_type,
-            'subject'      => $subject,
-            'description'  => $description,
-            'status'       => 'pending',
-            'ip_address'   => $_SERVER['REMOTE_ADDR'] ?? '',
-            'created_at'   => date('Y-m-d H:i:s'),
+            'pastor_id'         => $pastorId,
+            'client_name'       => $client_name,
+            'client_email'      => $client_email,
+            'client_phone'      => $client_phone,
+            'booking_date'      => $booking_date,
+            'start_time'        => $start_time,
+            'end_time'          => $end_time,
+            'duration_minutes'  => $duration,
+            'booking_type'      => $booking_type,
+            'subject'           => $subject,
+            'description'       => $description,
+            'status'            => 'pending',
+            'confirmation_code' => $confCode,
+            'ip_address'        => $_SERVER['REMOTE_ADDR'] ?? '',
+            'created_at'        => date('Y-m-d H:i:s'),
         ]);
 
-        apiSuccess([], 'Your booking has been submitted successfully. You will receive a confirmation soon.');
+        apiSuccess(['confirmation_code' => $confCode], 'Your booking has been submitted successfully. Confirmation code: ' . $confCode);
         break;
 
     // ──────────────────────────────────────────
@@ -409,7 +417,6 @@ switch ($action) {
             'program'    => $program,
             'message'    => $message,
             'status'     => 'pending',
-            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
@@ -423,7 +430,7 @@ switch ($action) {
         if ($method !== 'GET') apiError('Method not allowed', 405);
 
         $live = $db->fetch(
-            "SELECT is_live, youtube_url, title FROM youtube_live WHERE is_active = 1 ORDER BY id DESC LIMIT 1"
+            "SELECT is_live, youtube_url, title FROM youtube_live WHERE is_enabled = 1 ORDER BY id DESC LIMIT 1"
         );
 
         apiSuccess([
@@ -459,7 +466,7 @@ switch ($action) {
             $params[] = $category;
         }
         if (!empty($search)) {
-            $where .= " AND (title LIKE ? OR description LIKE ? OR sermon_series LIKE ?)";
+            $where .= " AND (title LIKE ? OR description LIKE ? OR series LIKE ?)";
             $searchTerm = "%{$search}%";
             $params[] = $searchTerm;
             $params[] = $searchTerm;
@@ -472,7 +479,7 @@ switch ($action) {
         $params[] = $limit;
         $params[] = $offset;
         $sermons = $db->fetchAll(
-            "SELECT id, title, sermon_date, sermon_series, category, duration, description, media_type, media_url, views, created_at FROM sermons WHERE {$where} ORDER BY sermon_date DESC LIMIT ? OFFSET ?",
+            "SELECT id, title, sermon_date, series, category, duration, description, media_type, media_url, views, created_at FROM sermons WHERE {$where} ORDER BY sermon_date DESC LIMIT ? OFFSET ?",
             $params
         );
 
@@ -505,7 +512,7 @@ switch ($action) {
             $where .= " AND status = ?";
             $params[] = $status;
         } else {
-            $where .= " AND (status = 'published' OR status = 'upcoming')";
+            $where .= " AND (status = 'upcoming' OR status = 'ongoing')";
         }
 
         $total = $db->count('events', $where, $params);
@@ -514,7 +521,7 @@ switch ($action) {
         $params[] = $limit;
         $params[] = $offset;
         $events = $db->fetchAll(
-            "SELECT id, title, description, event_date, end_date, event_time, location, category, status, image_url, is_recurring, created_at FROM events WHERE {$where} ORDER BY event_date ASC LIMIT ? OFFSET ?",
+            "SELECT id, title, description, event_date, end_date, event_time, location, category, status, banner_image, is_recurring, created_at FROM events WHERE {$where} ORDER BY event_date ASC LIMIT ? OFFSET ?",
             $params
         );
 
@@ -562,7 +569,7 @@ switch ($action) {
         $params[] = $limit;
         $params[] = $offset;
         $articles = $db->fetchAll(
-            "SELECT id, title, category, excerpt, content, image_url, views, created_at FROM news WHERE {$where} ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            "SELECT id, title, category, excerpt, content, featured_image, views, created_at FROM news WHERE {$where} ORDER BY created_at DESC LIMIT ? OFFSET ?",
             $params
         );
 
@@ -641,7 +648,7 @@ switch ($action) {
         );
 
         $events = $db->fetchAll(
-            "SELECT id, title, event_date, category, 'event' AS type FROM events WHERE (status = 'published' OR status = 'upcoming') AND (title LIKE ? OR description LIKE ?) ORDER BY event_date ASC LIMIT 10",
+            "SELECT id, title, event_date, category, 'event' AS type FROM events WHERE (status = 'upcoming' OR status = 'ongoing') AND (title LIKE ? OR description LIKE ?) ORDER BY event_date ASC LIMIT 10",
             [$term, $term]
         );
 
@@ -695,13 +702,12 @@ switch ($action) {
     case 'get_bible_verse':
         if ($method !== 'GET') apiError('Method not allowed', 405);
 
-        $verse = $db->fetch("SELECT id, verse_text, reference, category FROM bible_verses ORDER BY RAND() LIMIT 1");
+        $verse = $db->fetch("SELECT id, verse_text, reference FROM bible_verses ORDER BY RAND() LIMIT 1");
 
         if (!$verse) {
             $verse = [
                 'verse_text' => 'For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.',
                 'reference'  => 'Jeremiah 29:11',
-                'category'   => 'promise',
             ];
         }
 
@@ -727,7 +733,7 @@ switch ($action) {
         }
 
         $user = $dbMembers->fetch(
-            "SELECT id, first_name, last_name, email, phone, role, password_hash, is_active FROM users WHERE email = ?",
+            "SELECT id, first_name, last_name, email, phone, role, password, is_active FROM users WHERE email = ?",
             [$email]
         );
 
@@ -737,7 +743,7 @@ switch ($action) {
         if (!$user['is_active']) {
             apiError('Your account has been deactivated. Please contact the administrator.');
         }
-        if (!password_verify($password, $user['password_hash'])) {
+        if (!password_verify($password, $user['password'])) {
             apiError('Invalid email or password.');
         }
 
@@ -751,7 +757,7 @@ switch ($action) {
         $_SESSION['user_role']      = $user['role'];
         $_SESSION['user_login_time'] = time();
 
-        unset($user['password_hash']);
+        unset($user['password']);
 
         apiSuccess(['user' => $user], 'Login successful. Welcome back!');
         break;
@@ -797,7 +803,7 @@ switch ($action) {
             'last_name'     => $last_name,
             'email'         => $email,
             'phone'         => $phone,
-            'password_hash' => password_hash($password, HASH_ALGO, ['cost' => HASH_COST]),
+            'password'      => password_hash($password, HASH_ALGO, ['cost' => HASH_COST]),
             'role'          => 'member',
             'is_active'     => 1,
             'created_at'    => date('Y-m-d H:i:s'),

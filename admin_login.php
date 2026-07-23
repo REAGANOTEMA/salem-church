@@ -37,26 +37,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please enter both username and password';
     } else {
         try {
-            // First check database connection
-            if (!$conn) {
+            $pdo = Database::getInstance()->getPdo();
+            if (!$pdo) {
                 $error = 'Database connection failed. Please try again later.';
                 error_log("Admin login: No database connection on " . ($_SERVER['HTTP_HOST'] ?? 'unknown'));
             } else {
-                // Check admin users in database
-                $admin_stmt = $conn->prepare("SELECT * FROM admin_users WHERE username = ? AND is_active = 1");
+                $admin_stmt = $pdo->prepare("SELECT * FROM admin_users WHERE username = ? AND is_active = 1");
                 if ($admin_stmt) {
-                    $admin_stmt->bind_param("s", $username);
-                    $admin_stmt->execute();
-                    $admin_result = $admin_stmt->get_result();
+                    $admin_stmt->execute([$username]);
+                    $admin = $admin_stmt->fetch(PDO::FETCH_ASSOC);
                     
-                    if ($admin_result->num_rows > 0) {
-                        $admin = $admin_result->fetch_assoc();
-                        
-                        // Debug: Log password verification attempt
+                    if ($admin) {
                         error_log("Login attempt for username: " . $username . " from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
                         
-                        if (password_verify($password, $admin['password_hash'])) {
-                            // Set secure session variables
+                        if (password_verify($password, $admin['password'])) {
                             $_SESSION['admin_logged_in'] = true;
                             $_SESSION['admin_user_id'] = $admin['id'];
                             $_SESSION['admin_username'] = $admin['username'];
@@ -65,18 +59,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $_SESSION['login_time'] = time();
                             $_SESSION['session_id'] = session_id();
                             
-                            // Update last login
-                            $update_stmt = $conn->prepare("UPDATE admin_users SET last_login = NOW() WHERE id = ?");
+                            $update_stmt = $pdo->prepare("UPDATE admin_users SET last_login = NOW() WHERE id = ?");
                             if ($update_stmt) {
-                                $update_stmt->bind_param("i", $admin['id']);
-                                $update_stmt->execute();
-                                $update_stmt->close();
+                                $update_stmt->execute([$admin['id']]);
                             }
                             
-                            // Log successful login
                             error_log("Admin login successful for: " . $username . " from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
                             
-                            // Clear any output buffers
                             if (ob_get_level()) {
                                 ob_end_clean();
                             }
@@ -84,14 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             header('Location: admin_dashboard.php');
                             exit;
                         } else {
-                            // Log failed password verification
                             error_log("Admin login failed: Invalid password for username: " . $username . " from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
                             $error = 'Invalid credentials. Please try again.';
                         }
-                        
-                        $admin_stmt->close();
                     } else {
-                        // Log user not found
                         error_log("Admin login failed: User not found - username: " . $username . " from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
                         $error = 'Invalid credentials. Please try again.';
                     }

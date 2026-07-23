@@ -22,21 +22,7 @@ $active_section = $_GET['section'] ?? 'dashboard';
 $conn = createDatabaseConnection();
 $db_connected = ($conn !== null);
 
-// Debug: Check what we actually got
-if ($conn === null) {
-    error_log("Database connection failed - returned null");
-} elseif (is_array($conn)) {
-    error_log("Database connection failed - returned array instead of connection object");
-    $conn = null; // Force to null to prevent the error
-    $db_connected = false;
-}
-
-// Enhanced database connection check
-if (!$conn) {
-    $db_error = handleDatabaseError('Connection failed');
-    $db_connected = false;
-} else {
-    // Test actual database access
+if ($conn) {
     try {
         $test_query = $conn->query("SELECT 1");
         $db_connected = true;
@@ -46,7 +32,6 @@ if (!$conn) {
     }
 }
 
-// Make connection available globally to all included sections
 $GLOBALS['admin_db_connection'] = $conn;
 
 // Get upload configuration for universal compatibility
@@ -141,12 +126,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stats = [];
 if ($conn) {
     try {
-        $stats['users'] = $conn->query("SELECT COUNT(*) as count FROM users")->fetch_assoc()['count'];
-        $stats['sermons'] = $conn->query("SELECT COUNT(*) as count FROM sermons")->fetch_assoc()['count'];
-        $stats['events'] = $conn->query("SELECT COUNT(*) as count FROM events")->fetch_assoc()['count'];
-        $stats['news'] = $conn->query("SELECT COUNT(*) as count FROM news")->fetch_assoc()['count'];
-        $stats['gallery'] = $conn->query("SELECT COUNT(*) as count FROM gallery")->fetch_assoc()['count'];
-        $stats['testimonials'] = $conn->query("SELECT COUNT(*) as count FROM testimonials")->fetch_assoc()['count'];
+        $stmt = $conn->query("SELECT COUNT(*) as count FROM users");
+        $stats['users'] = $stmt->fetchColumn();
+        $stmt = $conn->query("SELECT COUNT(*) as count FROM sermons");
+        $stats['sermons'] = $stmt->fetchColumn();
+        $stmt = $conn->query("SELECT COUNT(*) as count FROM events");
+        $stats['events'] = $stmt->fetchColumn();
+        $stmt = $conn->query("SELECT COUNT(*) as count FROM news");
+        $stats['news'] = $stmt->fetchColumn();
+        $stmt = $conn->query("SELECT COUNT(*) as count FROM gallery");
+        $stats['gallery'] = $stmt->fetchColumn();
+        $stmt = $conn->query("SELECT COUNT(*) as count FROM testimonials");
+        $stats['testimonials'] = $stmt->fetchColumn();
     } catch (Exception $e) {
         $stats = ['users' => 0, 'sermons' => 0, 'events' => 0, 'news' => 0, 'gallery' => 0, 'testimonials' => 0];
     }

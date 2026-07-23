@@ -6,9 +6,10 @@ $pageTitle = 'Prophetic School - Salem Dominion Ministries';
 $currentPage = 'prophetic-school';
 
 $successMsg = '';
+$errorMsg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll'])) {
     if (!verifyCSRFToken()) {
-        $successMsg = 'Invalid form submission. Please try again.';
+        $errorMsg = 'Invalid form submission. Please try again.';
     } else {
         $name = trim($_POST['name'] ?? '');
         $email = trim($_POST['email'] ?? '');
@@ -20,8 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll'])) {
                 $pdo = Database::getInstance()->getPdo();
                 if ($pdo) {
                     try {
-                        $stmt = $pdo->prepare("INSERT INTO prayer_requests (name, email, phone, message, status, created_at) VALUES (?, ?, ?, ?, 'pending', NOW())");
-                        $stmt->execute([$name, $email, $phone, "Prophetic School Enrollment - Program: $program"]);
+                        $stmt = $pdo->prepare("INSERT INTO prophetic_school_applications (name, email, phone, program, message, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())");
+                        $stmt->execute([$name, $email, $phone, $program, "Prophetic School Enrollment - Program: $program"]);
                         $successMsg = 'Thank you! Your enrollment inquiry has been submitted. We will contact you soon.';
                     } catch (Exception $e) {
                         $successMsg = 'Thank you! Your enrollment inquiry has been received. We will contact you soon.';
@@ -31,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll'])) {
                 $successMsg = 'Thank you! Your enrollment inquiry has been received.';
             }
         } else {
-            $successMsg = 'Please fill in all required fields.';
+            $errorMsg = 'Please fill in all required fields.';
         }
     }
 }
@@ -198,6 +199,12 @@ include 'components/header.php';
     <div class="container">
         <h2 class="section-title-custom" data-aos="fade-up">Enroll Now</h2>
         <p class="section-subtitle-custom" data-aos="fade-up" data-aos-delay="100">Begin your journey into the prophetic today</p>
+
+        <?php if ($errorMsg): ?>
+        <div class="alert alert-danger text-center mb-4" style="border-radius:12px;" data-aos="fade-up">
+            <i class="fas fa-exclamation-circle me-2"></i> <?= htmlspecialchars($errorMsg) ?>
+        </div>
+        <?php endif; ?>
 
         <?php if ($successMsg): ?>
         <div class="alert-success-custom text-center mb-4" data-aos="fade-up">

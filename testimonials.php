@@ -7,10 +7,11 @@ $currentPage = 'testimonials';
 
 $testimonials = [];
 $successMsg = '';
+$errorMsg = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_testimonial'])) {
     if (!verifyCSRFToken()) {
-        $successMsg = 'Invalid form submission.';
+        $errorMsg = 'Invalid form submission.';
     } else {
         $tName = trim($_POST['name'] ?? '');
         $tEmail = trim($_POST['email'] ?? '');
@@ -22,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_testimonial'])
             try {
                 $pdo = Database::getInstance()->getPdo();
                 if ($pdo) {
-                    $stmt = $pdo->prepare("INSERT INTO testimonials (name, email, occupation, content, rating, is_approved, created_at) VALUES (?, ?, ?, ?, ?, 0, NOW())");
+                    $stmt = $pdo->prepare("INSERT INTO testimonials (name, email, occupation, testimonial, rating, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())");
                     $stmt->execute([$tName, $tEmail, $tOccupation, $tTestimonial, $tRating]);
                     $successMsg = 'Thank you! Your testimonial has been submitted and will appear after review.';
                 }
@@ -30,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_testimonial'])
                 $successMsg = 'Thank you! Your testimonial has been received.';
             }
         } else {
-            $successMsg = 'Please fill in all required fields.';
+            $errorMsg = 'Please fill in all required fields.';
         }
     }
 }
@@ -159,6 +160,12 @@ include 'components/header.php';
     <div class="container">
         <h2 class="section-title-custom" data-aos="fade-up">Share Your Testimony</h2>
         <p class="section-subtitle-custom" data-aos="fade-up" data-aos-delay="100">Your story can inspire someone else's faith journey</p>
+
+        <?php if ($errorMsg): ?>
+        <div class="alert alert-danger text-center mb-4" style="border-radius:12px;" data-aos="fade-up">
+            <i class="fas fa-exclamation-circle me-2"></i> <?= htmlspecialchars($errorMsg) ?>
+        </div>
+        <?php endif; ?>
 
         <?php if ($successMsg): ?>
         <div class="alert-success-custom text-center mb-4" data-aos="fade-up">

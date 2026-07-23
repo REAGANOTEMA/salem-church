@@ -230,10 +230,11 @@ function sdmSubscribe(e) {
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                toastText.textContent = 'Successfully subscribed! Thank you for joining our family.';
-                msg.innerHTML = '<small style="color:#22c55e;"><i class="fas fa-check-circle"></i> Thank you!</small>';
-            } else {
+            try {
+                var res = JSON.parse(xhr.responseText);
+                toastText.textContent = res.message || 'Successfully subscribed!';
+                msg.innerHTML = '<small style="color:#22c55e;"><i class="fas fa-check-circle"></i> ' + (res.message || 'Thank you!') + '</small>';
+            } catch(ex) {
                 toastText.textContent = 'Successfully subscribed! Thank you.';
                 msg.innerHTML = '<small style="color:#22c55e;"><i class="fas fa-check-circle"></i> Thank you!</small>';
             }
@@ -243,10 +244,10 @@ function sdmSubscribe(e) {
         }
     };
     xhr.onerror = function() {
-        toastText.textContent = 'Successfully subscribed! Thank you.';
+        toastText.textContent = 'Subscription failed. Please try again.';
+        msg.innerHTML = '<small style="color:#ef4444;"><i class="fas fa-exclamation-circle"></i> Failed. Try again.</small>';
         var toast = new bootstrap.Toast(toastEl, { delay: 4000 });
         toast.show();
-        form.reset();
     };
     xhr.send('email=' + encodeURIComponent(email));
     return false;

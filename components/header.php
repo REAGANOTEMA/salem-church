@@ -44,10 +44,14 @@ $admin_name = $_SESSION['admin_name'] ?? 'Admin';
     <meta name="twitter:description" content="<?php echo htmlspecialchars($pageDescription); ?>">
     <meta name="twitter:image" content="<?php echo LOGO_URL; ?>">
 
-    <link rel="icon" type="image/jpeg" href="public/logo-icon.jpeg">
-    <link rel="shortcut icon" type="image/jpeg" href="public/logo-icon.jpeg">
-    <link rel="apple-touch-icon" sizes="180x180" href="public/logo-icon.jpeg">
+    <link rel="icon" type="image/png" sizes="32x32" href="public/images/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="public/images/favicon-16x16.png">
+    <link rel="icon" type="image/svg+xml" href="public/favicon.svg">
+    <link rel="shortcut icon" href="public/images/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="public/apple-touch-icon.png">
     <link rel="manifest" href="public/site.webmanifest">
+    <meta name="msapplication-TileImage" content="public/icons/icon-144x144.png">
+    <meta name="msapplication-TileColor" content="#0f172a">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

@@ -32,7 +32,7 @@ try {
         } catch (Exception $e) {}
 
         try {
-            $stmt = $pdo->query("SELECT * FROM leadership WHERE position LIKE '%Senior Pastor%' OR position LIKE '%Apostle%' ORDER BY id ASC LIMIT 1");
+            $stmt = $pdo->query("SELECT *, title AS position, image_url AS photo FROM leadership WHERE title LIKE '%Senior Pastor%' OR title LIKE '%Apostle%' ORDER BY id ASC LIMIT 1");
             $leaders = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {}
 

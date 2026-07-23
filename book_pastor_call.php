@@ -6,6 +6,7 @@ $pageTitle = 'Book a Pastor Call - Salem Dominion Ministries';
 $currentPage = 'book_pastor_call';
 
 $successMsg = '';
+$errorMsg = '';
 $availableSlots = [];
 
 try {
@@ -18,7 +19,7 @@ try {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_call'])) {
             if (!verifyCSRFToken()) {
-                $successMsg = 'Invalid form submission. Please try again.';
+                $errorMsg = 'Invalid form submission. Please try again.';
             } else {
                 $name = trim($_POST['name'] ?? '');
                 $email = trim($_POST['email'] ?? '');
@@ -31,14 +32,19 @@ try {
 
                 if ($name && $email && $phone && $date && $time && $type) {
                     try {
-                        $stmt = $pdo->prepare("INSERT INTO pastor_bookings (name, email, phone, booking_date, booking_time, booking_type, subject, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
-                        $stmt->execute([$name, $email, $phone, $date, $time, $type, $subject, $description]);
-                        $successMsg = 'Your appointment has been booked successfully! You will receive a confirmation via email or phone.';
+                        $pastor = $pdo->query("SELECT id FROM leadership WHERE title LIKE '%Pastor%' AND is_active = 1 LIMIT 1")->fetch();
+                        $pastorId = $pastor ? $pastor['id'] : 1;
+                        $endHour = intval(substr($time, 0, 2)) + 1;
+                        $endTime = str_pad($endHour, 2, '0', STR_PAD_LEFT) . substr($time, 2);
+                        $confirmCode = 'PASTOR-' . strtoupper(bin2hex(random_bytes(5))) . '-' . date('ymd');
+                        $stmt = $pdo->prepare("INSERT INTO pastor_bookings (pastor_id, client_name, client_email, client_phone, booking_date, start_time, end_time, booking_type, subject, description, status, confirmation_code, ip_address, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, NOW())");
+                        $stmt->execute([$pastorId, $name, $email, $phone, $date, $time, $endTime, $type, $subject, $description, $confirmCode, $_SERVER['REMOTE_ADDR'] ?? '']);
+                        $successMsg = 'Your appointment has been booked successfully! Confirmation code: ' . $confirmCode;
                     } catch (Exception $e) {
                         $successMsg = 'Your booking has been received. We will contact you to confirm your appointment.';
                     }
                 } else {
-                    $successMsg = 'Please fill in all required fields.';
+                    $errorMsg = 'Please fill in all required fields.';
                 }
             }
         }
@@ -171,6 +177,12 @@ include 'components/header.php';
     <div class="container">
         <h2 class="section-title-custom" data-aos="fade-up">Book Your Appointment</h2>
         <p class="section-subtitle-custom" data-aos="fade-up" data-aos-delay="100">Fill out the form below and we will confirm your appointment</p>
+
+        <?php if ($errorMsg): ?>
+        <div class="alert alert-danger text-center mb-4" style="border-radius:12px;" data-aos="fade-up">
+            <i class="fas fa-exclamation-circle me-2"></i> <?= htmlspecialchars($errorMsg) ?>
+        </div>
+        <?php endif; ?>
 
         <?php if ($successMsg): ?>
         <div class="confirmation-section mb-5" data-aos="fade-up">

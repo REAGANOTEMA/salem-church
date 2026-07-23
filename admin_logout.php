@@ -1,5 +1,6 @@
 <?php
-require_once 'config.php';\n// ADMIN LOGOUT - Salem Dominion Ministries
+require_once 'config.php';
+// ADMIN LOGOUT - Salem Dominion Ministries
 // Secure logout for admin session
 session_start();
 

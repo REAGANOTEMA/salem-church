@@ -6,8 +6,7 @@ $pageDescription = 'Stay updated with the latest news, announcements, and happen
 require_once 'config.php';
 require_once 'db_connection.php';
 
-$conn = createDatabaseConnection();
-$csrfToken = csrfToken();
+$pdo = Database::getInstance()->getPdo();
 
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = 9;
@@ -23,15 +22,13 @@ $categories = [];
 $recent_news = [];
 
 try {
-    if ($conn) {
+    if ($pdo) {
         $where = "WHERE n.status = 'published'";
         $params = [];
-        $types = '';
 
         if ($category_filter) {
             $where .= " AND n.category = ?";
             $params[] = $category_filter;
-            $types .= 's';
         }
         if ($search) {
             $where .= " AND (n.title LIKE ? OR n.content LIKE ? OR n.excerpt LIKE ?)";
@@ -39,36 +36,29 @@ try {
             $params[] = $sp;
             $params[] = $sp;
             $params[] = $sp;
-            $types .= 'sss';
         }
 
-        $countStmt = $conn->prepare("SELECT COUNT(*) FROM news n {$where}");
+        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM news n {$where}");
         if ($countStmt) {
-            if (!empty($params)) $countStmt->bind_param($types, ...$params);
-            $countStmt->execute();
-            $total_news = $countStmt->get_result()->fetch_row()[0];
+            $countStmt->execute($params);
+            $total_news = $countStmt->fetchColumn();
             $total_pages = max(1, ceil($total_news / $per_page));
             $page = min($page, $total_pages);
-            $countStmt->close();
         }
 
         $query = "SELECT n.*, CONCAT(u.first_name, ' ', u.last_name) as author_name FROM news n LEFT JOIN users u ON n.author_id = u.id {$where} ORDER BY n.created_at DESC LIMIT ? OFFSET ?";
-        $stmt = $conn->prepare($query);
+        $stmt = $pdo->prepare($query);
         if ($stmt) {
             $fp = array_merge($params, [$per_page, $offset]);
-            $ft = $types . 'ii';
-            $stmt->bind_param($ft, ...$fp);
-            $stmt->execute();
-            $news_items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-            $stmt->close();
+            $stmt->execute($fp);
+            $news_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         if ($page === 1 && empty($search) && empty($category_filter)) {
-            $featStmt = $conn->prepare("SELECT n.*, CONCAT(u.first_name, ' ', u.last_name) as author_name FROM news n LEFT JOIN users u ON n.author_id = u.id WHERE n.status = 'published' AND n.is_featured = 1 ORDER BY n.created_at DESC LIMIT 1");
+            $featStmt = $pdo->prepare("SELECT n.*, CONCAT(u.first_name, ' ', u.last_name) as author_name FROM news n LEFT JOIN users u ON n.author_id = u.id WHERE n.status = 'published' AND n.is_featured = 1 ORDER BY n.created_at DESC LIMIT 1");
             if ($featStmt) {
                 $featStmt->execute();
-                $featured_news = $featStmt->get_result()->fetch_assoc();
-                $featStmt->close();
+                $featured_news = $featStmt->fetch(PDO::FETCH_ASSOC) ?: null;
             }
             if (!$featured_news && !empty($news_items)) {
                 $featured_news = $news_items[0];
@@ -76,18 +66,16 @@ try {
             }
         }
 
-        $catStmt = $conn->prepare("SELECT DISTINCT category, COUNT(*) as count FROM news WHERE status = 'published' AND category IS NOT NULL AND category != '' GROUP BY category ORDER BY count DESC");
+        $catStmt = $pdo->prepare("SELECT DISTINCT category, COUNT(*) as count FROM news WHERE status = 'published' AND category IS NOT NULL AND category != '' GROUP BY category ORDER BY count DESC");
         if ($catStmt) {
             $catStmt->execute();
-            $categories = $catStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-            $catStmt->close();
+            $categories = $catStmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
-        $recStmt = $conn->prepare("SELECT n.id, n.title, n.created_at, n.category, n.featured_image FROM news n WHERE n.status = 'published' ORDER BY n.created_at DESC LIMIT 5");
+        $recStmt = $pdo->prepare("SELECT n.id, n.title, n.created_at, n.category, n.featured_image FROM news n WHERE n.status = 'published' ORDER BY n.created_at DESC LIMIT 5");
         if ($recStmt) {
             $recStmt->execute();
-            $recent_news = $recStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-            $recStmt->close();
+            $recent_news = $recStmt->fetchAll(PDO::FETCH_ASSOC);
         }
     }
 } catch (Exception $e) {
@@ -298,13 +286,13 @@ include 'components/header.php';
                             'date' => formatDate($featured_news['created_at'], 'F j, Y'),
                             'author' => !empty($featured_news['author_name']) ? $featured_news['author_name'] : 'Admin',
                             'category' => $featured_news['category'] ?? '',
-                            'views' => $featured_news['views_count'] ?? 0,
+                            'views' => $featured_news['views'] ?? 0,
                         ])) ?>);return false;" style="text-decoration:none;color:inherit;"><?= htmlspecialchars($featured_news['title']) ?></a></h3>
                         <p><?= htmlspecialchars(truncate($featured_news['content'] ?? $featured_news['excerpt'] ?? '', 400)) ?></p>
                         <div class="d-flex align-items-center gap-3 mt-3" style="color:#94a3b8;font-family:'Montserrat',sans-serif;font-size:0.85rem;">
                             <span><i class="fas fa-user me-1 text-primary"></i> <?= htmlspecialchars(!empty($featured_news['author_name']) ? $featured_news['author_name'] : 'Admin') ?></span>
                             <span><i class="fas fa-calendar me-1 text-primary"></i> <?= formatDate($featured_news['created_at']) ?></span>
-                            <span><i class="fas fa-eye me-1 text-primary"></i> <?= $featured_news['views_count'] ?? 0 ?> views</span>
+                            <span><i class="fas fa-eye me-1 text-primary"></i> <?= $featured_news['views'] ?? 0 ?> views</span>
                         </div>
                         <div class="mt-3">
                             <a href="#" class="btn btn-gold btn-sm" onclick="showNewsDetail(<?= htmlspecialchars(json_encode([
@@ -314,7 +302,7 @@ include 'components/header.php';
                                 'date' => formatDate($featured_news['created_at'], 'F j, Y'),
                                 'author' => !empty($featured_news['author_name']) ? $featured_news['author_name'] : 'Admin',
                                 'category' => $featured_news['category'] ?? '',
-                                'views' => $featured_news['views_count'] ?? 0,
+                                'views' => $featured_news['views'] ?? 0,
                             ])) ?>);return false;"><i class="fas fa-book-open me-2"></i>Read More</a>
                         </div>
                     </div>
@@ -344,13 +332,13 @@ include 'components/header.php';
                                     'date' => formatDate($news['created_at'], 'F j, Y'),
                                     'author' => !empty($news['author_name']) ? $news['author_name'] : 'Admin',
                                     'category' => $news['category'] ?? '',
-                                    'views' => $news['views_count'] ?? 0,
+                                    'views' => $news['views'] ?? 0,
                                 ])) ?>);return false;" style="text-decoration:none;color:inherit;"><?= htmlspecialchars($news['title']) ?></a></h5>
                                 <p class="excerpt"><?= htmlspecialchars(truncate($news['content'] ?? $news['excerpt'] ?? '', 150)) ?></p>
                                 <div class="news-meta">
                                     <span><i class="fas fa-user"></i> <?= htmlspecialchars(!empty($news['author_name']) ? $news['author_name'] : 'Admin') ?></span>
                                     <span><i class="fas fa-calendar"></i> <?= formatDate($news['created_at']) ?></span>
-                                    <span><i class="fas fa-eye"></i> <?= $news['views_count'] ?? 0 ?></span>
+                                    <span><i class="fas fa-eye"></i> <?= $news['views'] ?? 0 ?></span>
                                 </div>
                             </div>
                         </div>
@@ -641,8 +629,28 @@ function showNewsDetail(data) {
 }
 function subscribe(e) {
     e.preventDefault();
-    alert('Thank you for subscribing! You will receive updates from Salem Dominion Ministries.');
-    e.target.reset();
+    var input = e.target.querySelector('input[type="email"], input');
+    if (!input) return false;
+    var email = input.value;
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'ajax/newsletter_subscribe.php', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            try {
+                var res = JSON.parse(xhr.responseText);
+                alert(res.message || 'Successfully subscribed!');
+            } catch(ex) {
+                alert('Successfully subscribed!');
+            }
+            e.target.reset();
+        }
+    };
+    xhr.onerror = function() {
+        alert('Subscription failed. Please try again.');
+    };
+    xhr.send('email=' + encodeURIComponent(email));
+    return false;
 }
 </script>
 

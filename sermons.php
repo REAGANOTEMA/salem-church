@@ -6,7 +6,7 @@ $pageDescription = 'Watch and listen to powerful sermons from Apostle Faty Musas
 require_once 'config.php';
 require_once 'db_connection.php';
 
-$conn = createDatabaseConnection();
+$pdo = Database::getInstance()->getPdo();
 
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = 9;
@@ -24,15 +24,13 @@ $categories = [];
 $series_list = [];
 
 try {
-    if ($conn) {
+    if ($pdo) {
         $where = "WHERE status = 'published'";
         $params = [];
-        $types = '';
 
         if ($category_filter) {
             $where .= " AND category = ?";
             $params[] = $category_filter;
-            $types .= 's';
         }
         if ($search) {
             $where .= " AND (title LIKE ? OR preacher LIKE ? OR description LIKE ?)";
@@ -40,41 +38,33 @@ try {
             $params[] = $searchParam;
             $params[] = $searchParam;
             $params[] = $searchParam;
-            $types .= 'sss';
         }
         if ($series_filter) {
-            $where .= " AND series_name = ?";
+            $where .= " AND series = ?";
             $params[] = $series_filter;
-            $types .= 's';
         }
 
-        $countStmt = $conn->prepare("SELECT COUNT(*) FROM sermons {$where}");
+        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM sermons {$where}");
         if ($countStmt) {
-            if (!empty($params)) $countStmt->bind_param($types, ...$params);
-            $countStmt->execute();
-            $total_sermons = $countStmt->get_result()->fetch_row()[0];
+            $countStmt->execute($params);
+            $total_sermons = $countStmt->fetchColumn();
             $total_pages = max(1, ceil($total_sermons / $per_page));
             $page = min($page, $total_pages);
-            $countStmt->close();
         }
 
         $query = "SELECT * FROM sermons {$where} ORDER BY sermon_date DESC, created_at DESC LIMIT ? OFFSET ?";
-        $stmt = $conn->prepare($query);
+        $stmt = $pdo->prepare($query);
         if ($stmt) {
             $finalParams = array_merge($params, [$per_page, $offset]);
-            $finalTypes = $types . 'ii';
-            $stmt->bind_param($finalTypes, ...$finalParams);
-            $stmt->execute();
-            $sermons = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-            $stmt->close();
+            $stmt->execute($finalParams);
+            $sermons = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         if ($page === 1 && empty($search) && empty($category_filter) && empty($series_filter)) {
-            $featStmt = $conn->prepare("SELECT * FROM sermons WHERE status = 'published' AND is_featured = 1 ORDER BY sermon_date DESC LIMIT 1");
+            $featStmt = $pdo->prepare("SELECT * FROM sermons WHERE status = 'published' AND is_featured = 1 ORDER BY sermon_date DESC LIMIT 1");
             if ($featStmt) {
                 $featStmt->execute();
-                $featured_sermon = $featStmt->get_result()->fetch_assoc();
-                $featStmt->close();
+                $featured_sermon = $featStmt->fetch(PDO::FETCH_ASSOC) ?: null;
             }
             if (!$featured_sermon && !empty($sermons)) {
                 $featured_sermon = $sermons[0];
@@ -82,18 +72,16 @@ try {
             }
         }
 
-        $catStmt = $conn->prepare("SELECT DISTINCT category FROM sermons WHERE status = 'published' AND category IS NOT NULL AND category != '' ORDER BY category");
+        $catStmt = $pdo->prepare("SELECT DISTINCT category FROM sermons WHERE status = 'published' AND category IS NOT NULL AND category != '' ORDER BY category");
         if ($catStmt) {
             $catStmt->execute();
-            $categories = $catStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-            $catStmt->close();
+            $categories = $catStmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
-        $serStmt = $conn->prepare("SELECT DISTINCT series_name FROM sermons WHERE status = 'published' AND series_name IS NOT NULL AND series_name != '' ORDER BY series_name");
+        $serStmt = $pdo->prepare("SELECT DISTINCT series FROM sermons WHERE status = 'published' AND series IS NOT NULL AND series != '' ORDER BY series");
         if ($serStmt) {
             $serStmt->execute();
-            $series_list = $serStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-            $serStmt->close();
+            $series_list = $serStmt->fetchAll(PDO::FETCH_ASSOC);
         }
     }
 } catch (Exception $e) {
@@ -295,13 +283,17 @@ include 'components/header.php';
                 <div class="col-lg-7">
                     <div class="video-wrap">
                         <?php
-                        $ytId = extractYouTubeId($featured_sermon['video_url'] ?? '');
+                        $ytId = ($featured_sermon['media_type'] ?? '') === 'youtube' ? extractYouTubeId($featured_sermon['media_url'] ?? '') : null;
                         if ($ytId): ?>
                             <iframe src="https://www.youtube.com/embed/<?= htmlspecialchars($ytId) ?>" frameborder="0" allowfullscreen loading="lazy"></iframe>
-                        <?php elseif (!empty($featured_sermon['video_url'])): ?>
-                            <video controls poster="<?= htmlspecialchars(getYouTubeThumbnail($featured_sermon['video_url'] ?? '')) ?>">
-                                <source src="<?= htmlspecialchars($featured_sermon['video_url']) ?>" type="video/mp4">
+                        <?php elseif (!empty($featured_sermon['media_url']) && ($featured_sermon['media_type'] ?? '') === 'video'): ?>
+                            <video controls poster="<?= htmlspecialchars(getYouTubeThumbnail($featured_sermon['media_url'] ?? '')) ?>">
+                                <source src="<?= htmlspecialchars($featured_sermon['media_url']) ?>" type="video/mp4">
                             </video>
+                        <?php elseif (!empty($featured_sermon['media_url']) && ($featured_sermon['media_type'] ?? '') === 'audio'): ?>
+                            <audio controls style="width:100%;">
+                                <source src="<?= htmlspecialchars($featured_sermon['media_url']) ?>" type="audio/mpeg">
+                            </audio>
                         <?php else: ?>
                             <div style="display:flex;align-items:center;justify-content:center;height:100%;background:linear-gradient(135deg,#0ea5e9,#0f172a);">
                                 <i class="fas fa-play-circle" style="font-size:4rem;color:#fbbf24;opacity:0.6;"></i>
@@ -343,9 +335,9 @@ include 'components/header.php';
         <?php if (!empty($sermons)): ?>
         <div class="row g-4 mt-2">
             <?php foreach ($sermons as $idx => $sermon):
-                $thumb = !empty($sermon['thumbnail']) ? htmlspecialchars($sermon['thumbnail']) : ((!empty($sermon['video_url']) && extractYouTubeId($sermon['video_url'])) ? 'https://img.youtube.com/vi/' . extractYouTubeId($sermon['video_url']) . '/mqdefault.jpg' : 'assets/church-choir-worship.jpeg');
-                $sYtId = extractYouTubeId($sermon['video_url'] ?? '');
-                $hasVideo = $sYtId || !empty($sermon['video_url']);
+                $thumb = !empty($sermon['thumbnail']) ? htmlspecialchars($sermon['thumbnail']) : ((!empty($sermon['media_url']) && $sermon['media_type'] === 'youtube' && extractYouTubeId($sermon['media_url'])) ? 'https://img.youtube.com/vi/' . extractYouTubeId($sermon['media_url']) . '/mqdefault.jpg' : 'assets/church-choir-worship.jpeg');
+                $sYtId = ($sermon['media_type'] ?? '') === 'youtube' ? extractYouTubeId($sermon['media_url'] ?? '') : null;
+                $hasVideo = $sYtId || (!empty($sermon['media_url']) && in_array($sermon['media_type'] ?? '', ['video', 'youtube']));
                 $hasAudio = !empty($sermon['audio_url']);
             ?>
             <div class="col-lg-4 col-md-6" data-aos="fade-up" data-delay="<?= ($idx % 3) * 100 ?>">
@@ -356,10 +348,10 @@ include 'components/header.php';
                         'preacher' => $sermon['preacher'] ?? 'Apostle Faty Musasizi',
                         'date' => formatDate($sermon['sermon_date'] ?? $sermon['created_at'], 'F j, Y'),
                         'description' => $sermon['description'] ?? '',
-                        'video_url' => $sermon['video_url'] ?? '',
+                        'video_url' => $sermon['media_url'] ?? '',
                         'audio_url' => $sermon['audio_url'] ?? '',
                         'category' => $sermon['category'] ?? '',
-                        'series' => $sermon['series_name'] ?? '',
+                        'series' => $sermon['series'] ?? '',
                         'duration' => $sermon['duration'] ?? '',
                         'yt_id' => $sYtId,
                     ])) ?>)">

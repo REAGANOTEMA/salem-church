@@ -25388,3 +25388,7 @@ Stack trace:
 #3 C:\xampp\htdocs\salem-church\admin\dashboard.php(1124): require('C:\\xampp\\htdocs...')
 #4 {main}
   thrown in C:\xampp\htdocs\salem-church\includes\database.php on line 82
+[23-Jul-2026 10:20:45 Africa/Kampala] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::get_result() in C:\xampp\htdocs\salem-church\events.php:40
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\salem-church\events.php on line 40

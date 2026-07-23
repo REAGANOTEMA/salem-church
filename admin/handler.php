@@ -70,7 +70,7 @@ switch ($action) {
         ];
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $img = uploadFile($_FILES['image'], 'news', ALLOWED_IMAGE_TYPES);
-            if ($img) $newsData['image_url'] = $img;
+            if ($img) $newsData['featured_image'] = $img;
         }
         if ($action === 'edit_news') {
             $newsId = intval($data['id'] ?? 0);
@@ -91,8 +91,8 @@ switch ($action) {
     case 'delete_news':
         $newsId = intval($_POST['id'] ?? 0);
         if (!$newsId) adminError('Invalid news ID.');
-        $news = $db->fetch("SELECT image_url FROM news WHERE id = ?", [$newsId]);
-        if ($news && !empty($news['image_url'])) deleteFile($news['image_url']);
+        $news = $db->fetch("SELECT featured_image FROM news WHERE id = ?", [$newsId]);
+        if ($news && !empty($news['featured_image'])) deleteFile($news['featured_image']);
         $db->delete('news', 'id = ?', [$newsId]);
         logActivity($db, 'deleted_news', 'news', $admin['id'], "Deleted news #{$newsId}");
         adminSuccess([], 'News article deleted successfully.');
@@ -111,13 +111,13 @@ switch ($action) {
             'event_time'   => trim($data['event_time'] ?? ''),
             'location'     => trim($data['location'] ?? ''),
             'category'     => trim($data['category'] ?? 'general'),
-            'status'       => trim($data['status'] ?? 'draft'),
+            'status'       => trim($data['status'] ?? 'upcoming'),
             'is_recurring' => intval($data['is_recurring'] ?? 0),
             'updated_at'   => date('Y-m-d H:i:s'),
         ];
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $img = uploadFile($_FILES['image'], 'events', ALLOWED_IMAGE_TYPES);
-            if ($img) $eventData['image_url'] = $img;
+            if ($img) $eventData['banner_image'] = $img;
         }
         if ($action === 'edit_event') {
             $eventId = intval($data['id'] ?? 0);
@@ -126,7 +126,7 @@ switch ($action) {
             logActivity($db, 'updated_event', 'events', $admin['id'], "Updated event #{$eventId}");
             adminSuccess([], 'Event updated successfully.');
         } else {
-            $eventData['author_id']  = $admin['id'];
+            $eventData['created_by']  = $admin['id'];
             $eventData['created_at'] = date('Y-m-d H:i:s');
             $id = $db->insert('events', $eventData);
             logActivity($db, 'added_event', 'events', $admin['id'], "Added event #{$id}");
@@ -137,8 +137,8 @@ switch ($action) {
     case 'delete_event':
         $eventId = intval($_POST['id'] ?? 0);
         if (!$eventId) adminError('Invalid event ID.');
-        $event = $db->fetch("SELECT image_url FROM events WHERE id = ?", [$eventId]);
-        if ($event && !empty($event['image_url'])) deleteFile($event['image_url']);
+        $event = $db->fetch("SELECT banner_image FROM events WHERE id = ?", [$eventId]);
+        if ($event && !empty($event['banner_image'])) deleteFile($event['banner_image']);
         $db->delete('events', 'id = ?', [$eventId]);
         logActivity($db, 'deleted_event', 'events', $admin['id'], "Deleted event #{$eventId}");
         adminSuccess([], 'Event deleted successfully.');
@@ -152,12 +152,14 @@ switch ($action) {
         $sermonData = [
             'title'         => trim($data['title']),
             'sermon_date'   => $data['sermon_date'],
-            'sermon_series' => trim($data['sermon_series'] ?? ''),
+            'series'        => trim($data['series'] ?? $data['sermon_series'] ?? ''),
             'category'      => trim($data['category'] ?? 'general'),
-            'duration'      => intval($data['duration'] ?? 0),
+            'duration'      => trim($data['duration'] ?? ''),
             'description'   => trim($data['description'] ?? ''),
-            'sermon_text'   => trim($data['sermon_text'] ?? ''),
-            'media_type'    => trim($data['media_type'] ?? 'none'),
+            'scripture'     => trim($data['scripture'] ?? $data['sermon_text'] ?? ''),
+            'preacher'      => trim($data['preacher'] ?? ''),
+            'media_type'    => trim($data['media_type'] ?: 'video'),
+            'media_url'     => trim($data['media_url'] ?? ''),
             'status'        => trim($data['status'] ?? 'draft'),
             'updated_at'    => date('Y-m-d H:i:s'),
         ];
@@ -249,11 +251,11 @@ switch ($action) {
         $data = adminInput();
         $youtubeUrl = trim($data['youtube_url'] ?? '');
         $title      = trim($data['title'] ?? '');
-        $existing = $db->fetch("SELECT id FROM youtube_live WHERE is_active = 1 ORDER BY id DESC LIMIT 1");
+        $existing = $db->fetch("SELECT id FROM youtube_live WHERE is_enabled = 1 ORDER BY id DESC LIMIT 1");
         if ($existing) {
             $db->update('youtube_live', ['youtube_url' => $youtubeUrl, 'title' => $title, 'updated_at' => date('Y-m-d H:i:s')], 'id = ?', [$existing['id']]);
         } else {
-            $db->insert('youtube_live', ['youtube_url' => $youtubeUrl, 'title' => $title, 'is_live' => 0, 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
+            $db->insert('youtube_live', ['youtube_url' => $youtubeUrl, 'title' => $title, 'is_live' => 0, 'is_enabled' => 1, 'created_by' => $admin['id'], 'updated_at' => date('Y-m-d H:i:s')]);
         }
         logActivity($db, 'updated_live', 'live', $admin['id'], 'Updated YouTube Live settings');
         adminSuccess([], 'Live settings saved successfully.');
@@ -262,7 +264,7 @@ switch ($action) {
     case 'toggle_live':
         $data = adminInput();
         $isLive = intval($data['is_live'] ?? 0);
-        $existing = $db->fetch("SELECT id FROM youtube_live WHERE is_active = 1 ORDER BY id DESC LIMIT 1");
+        $existing = $db->fetch("SELECT id FROM youtube_live WHERE is_enabled = 1 ORDER BY id DESC LIMIT 1");
         if ($existing) {
             $db->update('youtube_live', ['is_live' => $isLive, 'updated_at' => date('Y-m-d H:i:s')], 'id = ?', [$existing['id']]);
         }
@@ -296,30 +298,30 @@ switch ($action) {
     case 'add_leader':
     case 'edit_leader':
         $data = adminInput();
-        requiredFields($data, ['name', 'position']);
+        requiredFields($data, ['name', 'title']);
         $leaderData = [
-            'name'        => trim($data['name']),
-            'position'    => trim($data['position']),
-            'description' => trim($data['description'] ?? ''),
-            'email'       => trim($data['email'] ?? ''),
-            'phone'       => trim($data['phone'] ?? ''),
-            'sort_order'  => intval($data['sort_order'] ?? 0),
-            'is_active'   => intval($data['is_active'] ?? 1),
-            'updated_at'  => date('Y-m-d H:i:s'),
+            'name'           => trim($data['name']),
+            'title'          => trim($data['title']),
+            'bio'            => trim($data['bio'] ?? $data['description'] ?? ''),
+            'email'          => trim($data['email'] ?? ''),
+            'phone'          => trim($data['phone'] ?? ''),
+            'order_position' => intval($data['order_position'] ?? $data['sort_order'] ?? 0),
+            'is_active'      => intval($data['is_active'] ?? 1),
+            'updated_at'     => date('Y-m-d H:i:s'),
         ];
         if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
             $photo = uploadFile($_FILES['photo'], 'avatars', ALLOWED_IMAGE_TYPES);
-            if ($photo) $leaderData['photo_url'] = $photo;
+            if ($photo) $leaderData['image_url'] = $photo;
         }
         if ($action === 'edit_leader') {
             $leaderId = intval($data['id'] ?? 0);
             if (!$leaderId) adminError('Invalid leader ID.');
-            $db->update('leaders', $leaderData, 'id = ?', [$leaderId]);
+            $db->update('leadership', $leaderData, 'id = ?', [$leaderId]);
             logActivity($db, 'updated_leader', 'leadership', $admin['id'], "Updated leader #{$leaderId}");
             adminSuccess([], 'Leader updated successfully.');
         } else {
             $leaderData['created_at'] = date('Y-m-d H:i:s');
-            $id = $db->insert('leaders', $leaderData);
+            $id = $db->insert('leadership', $leaderData);
             logActivity($db, 'added_leader', 'leadership', $admin['id'], "Added leader #{$id}");
             adminSuccess(['id' => $id], 'Leader added successfully.');
         }
@@ -328,9 +330,9 @@ switch ($action) {
     case 'delete_leader':
         $leaderId = intval($_POST['id'] ?? 0);
         if (!$leaderId) adminError('Invalid leader ID.');
-        $leader = $db->fetch("SELECT photo_url FROM leaders WHERE id = ?", [$leaderId]);
-        if ($leader && !empty($leader['photo_url'])) deleteFile($leader['photo_url']);
-        $db->delete('leaders', 'id = ?', [$leaderId]);
+        $leader = $db->fetch("SELECT image_url FROM leadership WHERE id = ?", [$leaderId]);
+        if ($leader && !empty($leader['image_url'])) deleteFile($leader['image_url']);
+        $db->delete('leadership', 'id = ?', [$leaderId]);
         logActivity($db, 'deleted_leader', 'leadership', $admin['id'], "Deleted leader #{$leaderId}");
         adminSuccess([], 'Leader removed successfully.');
         break;
@@ -341,16 +343,19 @@ switch ($action) {
         $data = adminInput();
         requiredFields($data, ['name']);
         $ministryData = [
-            'name'         => trim($data['name']),
-            'category'     => trim($data['category'] ?? 'general'),
-            'description'  => trim($data['description'] ?? ''),
-            'leader_name'  => trim($data['leader_name'] ?? ''),
-            'leader_email' => trim($data['leader_email'] ?? ''),
-            'leader_phone' => trim($data['leader_phone'] ?? ''),
-            'meeting_time' => trim($data['meeting_time'] ?? ''),
-            'sort_order'   => intval($data['sort_order'] ?? 0),
-            'is_active'    => intval($data['is_active'] ?? 1),
-            'updated_at'   => date('Y-m-d H:i:s'),
+            'name'             => trim($data['name']),
+            'slug'             => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $data['name'] ?? ''), '-')),
+            'category'         => trim($data['category'] ?? 'general'),
+            'description'      => trim($data['description'] ?? ''),
+            'leader_name'      => trim($data['leader_name'] ?? ''),
+            'leader_email'     => trim($data['leader_email'] ?? ''),
+            'leader_phone'     => trim($data['leader_phone'] ?? ''),
+            'meeting_day'      => trim($data['meeting_day'] ?? ''),
+            'meeting_time'     => trim($data['meeting_time'] ?? ''),
+            'meeting_location' => trim($data['meeting_location'] ?? ''),
+            'sort_order'       => intval($data['sort_order'] ?? 0),
+            'is_active'        => intval($data['is_active'] ?? 1),
+            'updated_at'       => date('Y-m-d H:i:s'),
         ];
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $img = uploadFile($_FILES['image'], 'ministries', ALLOWED_IMAGE_TYPES);
@@ -384,7 +389,7 @@ switch ($action) {
     case 'approve_testimonial':
         $testId = intval($_POST['id'] ?? 0);
         if (!$testId) adminError('Invalid testimonial ID.');
-        $db->update('testimonials', ['status' => 'approved', 'approved_by' => $admin['id'], 'updated_at' => date('Y-m-d H:i:s')], 'id = ?', [$testId]);
+        $db->update('testimonials', ['status' => 'approved', 'approved_by' => $admin['id'], 'approved_at' => date('Y-m-d H:i:s')], 'id = ?', [$testId]);
         logActivity($db, 'approved_testimonial', 'testimonials', $admin['id'], "Approved testimonial #{$testId}");
         adminSuccess([], 'Testimonial approved and published.');
         break;
@@ -392,7 +397,7 @@ switch ($action) {
     case 'reject_testimonial':
         $testId = intval($_POST['id'] ?? 0);
         if (!$testId) adminError('Invalid testimonial ID.');
-        $db->update('testimonials', ['status' => 'rejected', 'updated_at' => date('Y-m-d H:i:s')], 'id = ?', [$testId]);
+        $db->update('testimonials', ['status' => 'rejected'], 'id = ?', [$testId]);
         logActivity($db, 'rejected_testimonial', 'testimonials', $admin['id'], "Rejected testimonial #{$testId}");
         adminSuccess([], 'Testimonial rejected.');
         break;
@@ -422,7 +427,7 @@ switch ($action) {
         if (!validateEmail($userData['email'])) adminError('Please provide a valid email address.');
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
             $avatar = uploadFile($_FILES['avatar'], 'avatars', ALLOWED_IMAGE_TYPES);
-            if ($avatar) $userData['avatar_url'] = $avatar;
+            if ($avatar) $userData['avatar'] = $avatar;
         }
         if ($action === 'edit_user') {
             $userId = intval($data['id'] ?? 0);
@@ -430,7 +435,7 @@ switch ($action) {
             $existing = $dbMembers->fetch("SELECT id FROM users WHERE email = ? AND id != ?", [$userData['email'], $userId]);
             if ($existing) adminError('A user with this email already exists.');
             if (!empty($data['password']) && strlen($data['password']) >= 8) {
-                $userData['password_hash'] = password_hash($data['password'], HASH_ALGO, ['cost' => HASH_COST]);
+                $userData['password'] = password_hash($data['password'], HASH_ALGO, ['cost' => HASH_COST]);
             }
             $dbMembers->update('users', $userData, 'id = ?', [$userId]);
             logActivity($db, 'updated_user', 'users', $admin['id'], "Updated user #{$userId}");
@@ -439,7 +444,7 @@ switch ($action) {
             $existing = $dbMembers->fetch("SELECT id FROM users WHERE email = ?", [$userData['email']]);
             if ($existing) adminError('A user with this email already exists.');
             if (empty($data['password']) || strlen($data['password']) < 8) adminError('Password must be at least 8 characters.');
-            $userData['password_hash'] = password_hash($data['password'], HASH_ALGO, ['cost' => HASH_COST]);
+            $userData['password'] = password_hash($data['password'], HASH_ALGO, ['cost' => HASH_COST]);
             $userData['created_at']    = date('Y-m-d H:i:s');
             $id = $dbMembers->insert('users', $userData);
             logActivity($db, 'added_user', 'users', $admin['id'], "Added user #{$id}");
@@ -451,8 +456,8 @@ switch ($action) {
         $userId = intval($_POST['id'] ?? 0);
         if (!$userId) adminError('Invalid user ID.');
         if ($userId === $admin['id']) adminError('You cannot delete your own account.');
-        $user = $dbMembers->fetch("SELECT avatar_url FROM users WHERE id = ?", [$userId]);
-        if ($user && !empty($user['avatar_url'])) deleteFile($user['avatar_url']);
+        $user = $dbMembers->fetch("SELECT avatar FROM users WHERE id = ?", [$userId]);
+        if ($user && !empty($user['avatar'])) deleteFile($user['avatar']);
         $dbMembers->delete('users', 'id = ?', [$userId]);
         logActivity($db, 'deleted_user', 'users', $admin['id'], "Deleted user #{$userId}");
         adminSuccess([], 'User deleted successfully.');
@@ -465,7 +470,7 @@ switch ($action) {
         $donation = $db->fetch("SELECT status FROM donations WHERE id = ?", [$donationId]);
         if (!$donation) adminError('Donation not found.');
         if ($donation['status'] === 'completed') adminError('Donation already confirmed.');
-        $db->update('donations', ['status' => 'completed', 'processed_by' => $admin['id'], 'processed_at' => date('Y-m-d H:i:s')], 'id = ?', [$donationId]);
+        $db->update('donations', ['status' => 'completed', 'confirmed_by' => $admin['id'], 'confirmed_at' => date('Y-m-d H:i:s')], 'id = ?', [$donationId]);
         logActivity($db, 'confirmed_donation', 'donations', $admin['id'], "Confirmed donation #{$donationId}");
         adminSuccess([], 'Donation confirmed successfully.');
         break;
@@ -473,7 +478,7 @@ switch ($action) {
     case 'reject_donation':
         $donationId = intval($_POST['id'] ?? 0);
         if (!$donationId) adminError('Invalid donation ID.');
-        $db->update('donations', ['status' => 'rejected', 'processed_by' => $admin['id'], 'processed_at' => date('Y-m-d H:i:s')], 'id = ?', [$donationId]);
+        $db->update('donations', ['status' => 'rejected', 'confirmed_by' => $admin['id'], 'confirmed_at' => date('Y-m-d H:i:s')], 'id = ?', [$donationId]);
         logActivity($db, 'rejected_donation', 'donations', $admin['id'], "Rejected donation #{$donationId}");
         adminSuccess([], 'Donation rejected.');
         break;
@@ -482,7 +487,7 @@ switch ($action) {
     case 'mark_prayer_answered':
         $prayerId = intval($_POST['id'] ?? 0);
         if (!$prayerId) adminError('Invalid prayer request ID.');
-        $db->update('prayer_requests', ['is_answered' => 1, 'answered_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')], 'id = ?', [$prayerId]);
+        $db->update('prayer_requests', ['status' => 'answered', 'updated_at' => date('Y-m-d H:i:s')], 'id = ?', [$prayerId]);
         logActivity($db, 'marked_prayer_answered', 'prayer_requests', $admin['id'], "Marked prayer #{$prayerId} as answered");
         adminSuccess([], 'Prayer request marked as answered.');
         break;
@@ -533,7 +538,7 @@ switch ($action) {
             }
             adminError('This email is already subscribed.');
         }
-        $db->insert('newsletter_subscribers', ['email' => $email, 'is_active' => 1, 'subscribed_at' => date('Y-m-d H:i:s'), 'created_at' => date('Y-m-d H:i:s')]);
+        $db->insert('newsletter_subscribers', ['email' => $email, 'is_active' => 1, 'status' => 'active', 'subscribed_at' => date('Y-m-d H:i:s'), 'created_at' => date('Y-m-d H:i:s')]);
         logActivity($db, 'added_subscriber', 'subscribers', $admin['id'], "Added subscriber: {$email}");
         adminSuccess([], 'Subscriber added successfully.');
         break;
@@ -557,7 +562,8 @@ switch ($action) {
             'priority'   => trim($data['priority'] ?? 'normal'),
             'start_date' => $data['start_date'] ?? date('Y-m-d'),
             'end_date'   => $data['end_date'] ?? null,
-            'is_active'  => intval($data['is_active'] ?? 1),
+            'is_pinned'  => intval($data['is_pinned'] ?? 0),
+            'status'     => trim($data['status'] ?? 'active'),
             'updated_at' => date('Y-m-d H:i:s'),
         ];
         if ($action === 'edit_announcement') {
@@ -639,7 +645,7 @@ switch ($action) {
         if (!validateEmail($profileData['email'])) adminError('Please provide a valid email address.');
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
             $avatar = uploadFile($_FILES['avatar'], 'avatars', ALLOWED_IMAGE_TYPES);
-            if ($avatar) $profileData['avatar_url'] = $avatar;
+            if ($avatar) $profileData['avatar'] = $avatar;
         }
         $dbAdmin->update('admin_users', $profileData, 'id = ?', [$admin['id']]);
         $_SESSION['admin_name']  = $profileData['full_name'];

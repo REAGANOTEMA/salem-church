@@ -32,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $id = $db->insert('news', [
                 'title' => $title,
-                'slug' => slugify($title),
                 'content' => $content,
                 'excerpt' => $excerpt,
                 'category' => $category,
@@ -67,7 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $updateData = [
                 'title' => $title,
-                'slug' => slugify($title),
                 'content' => $content,
                 'excerpt' => $excerpt,
                 'category' => $category,

@@ -6,7 +6,7 @@ $pageDescription = 'Browse photos and videos from worship services, events, and 
 require_once 'config.php';
 require_once 'db_connection.php';
 
-$conn = createDatabaseConnection();
+$pdo = Database::getInstance()->getPdo();
 
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = 12;
@@ -32,58 +32,48 @@ $default_gallery = [
 ];
 
 try {
-    if ($conn) {
-        $tableCheck = $conn->query("SHOW TABLES LIKE 'gallery'");
-        if ($tableCheck && $tableCheck->num_rows > 0) {
+    if ($pdo) {
+        $tableCheck = $pdo->query("SHOW TABLES LIKE 'gallery'");
+        if ($tableCheck && $tableCheck->rowCount() > 0) {
             $show_db = true;
 
-            $catStmt = $conn->prepare("SELECT DISTINCT category, COUNT(*) as count FROM gallery WHERE status = 'published' AND category IS NOT NULL AND category != '' GROUP BY category ORDER BY category");
+            $catStmt = $pdo->prepare("SELECT DISTINCT category, COUNT(*) as count FROM gallery WHERE status = 'published' AND category IS NOT NULL AND category != '' GROUP BY category ORDER BY category");
             if ($catStmt) {
                 $catStmt->execute();
-                $categories = $catStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-                $catStmt->close();
+                $categories = $catStmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
-            $albStmt = $conn->prepare("SELECT DISTINCT album_name, COUNT(*) as count FROM gallery WHERE status = 'published' AND album_name IS NOT NULL AND album_name != '' GROUP BY album_name ORDER BY album_name");
+            $albStmt = $pdo->prepare("SELECT DISTINCT album, COUNT(*) as count FROM gallery WHERE status = 'published' AND album IS NOT NULL AND album != '' GROUP BY album ORDER BY album");
             if ($albStmt) {
                 $albStmt->execute();
-                $albums = $albStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-                $albStmt->close();
+                $albums = $albStmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
             $where = "WHERE g.status = 'published'";
             $params = [];
-            $types = '';
             if ($category_filter) {
                 $where .= " AND g.category = ?";
                 $params[] = $category_filter;
-                $types .= 's';
             }
             if ($album_filter) {
-                $where .= " AND g.album_name = ?";
+                $where .= " AND g.album = ?";
                 $params[] = $album_filter;
-                $types .= 's';
             }
 
-            $countStmt = $conn->prepare("SELECT COUNT(*) FROM gallery g {$where}");
+            $countStmt = $pdo->prepare("SELECT COUNT(*) FROM gallery g {$where}");
             if ($countStmt) {
-                if (!empty($params)) $countStmt->bind_param($types, ...$params);
-                $countStmt->execute();
-                $total_items = $countStmt->get_result()->fetch_row()[0];
+                $countStmt->execute($params);
+                $total_items = $countStmt->fetchColumn();
                 $total_pages = max(1, ceil($total_items / $per_page));
                 $page = min($page, $total_pages);
-                $countStmt->close();
             }
 
             $query = "SELECT g.*, CONCAT(u.first_name, ' ', u.last_name) as uploader_name FROM gallery g LEFT JOIN users u ON g.uploaded_by = u.id {$where} ORDER BY g.created_at DESC LIMIT ? OFFSET ?";
-            $stmt = $conn->prepare($query);
+            $stmt = $pdo->prepare($query);
             if ($stmt) {
                 $fp = array_merge($params, [$per_page, $offset]);
-                $ft = $types . 'ii';
-                $stmt->bind_param($ft, ...$fp);
-                $stmt->execute();
-                $gallery_items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-                $stmt->close();
+                $stmt->execute($fp);
+                $gallery_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
         }
     }
@@ -178,14 +168,14 @@ include 'components/header.php';
         <?php if ($show_db && !empty($gallery_items)): ?>
         <div class="masonry-grid" data-aos="fade-up">
             <?php foreach ($gallery_items as $idx => $item):
-                $isVideo = in_array(strtolower(pathinfo($item['file_path'] ?? '', PATHINFO_EXTENSION)), ['mp4', 'webm', 'ogg']);
+                $isVideo = in_array(strtolower(pathinfo($item['file_url'] ?? '', PATHINFO_EXTENSION)), ['mp4', 'webm', 'ogg']);
             ?>
-            <div class="masonry-item" onclick="openLightbox(<?= $idx ?>)" data-title="<?= htmlspecialchars($item['title'] ?? '') ?>" data-src="<?= htmlspecialchars($item['file_path'] ?? '') ?>">
+            <div class="masonry-item" onclick="openLightbox(<?= $idx ?>)" data-title="<?= htmlspecialchars($item['title'] ?? '') ?>" data-src="<?= htmlspecialchars($item['file_url'] ?? '') ?>">
                 <?php if ($isVideo): ?>
-                    <video src="<?= htmlspecialchars($item['file_path']) ?>" preload="metadata" style="width:100%;display:block;" muted></video>
+                    <video src="<?= htmlspecialchars($item['file_url']) ?>" preload="metadata" style="width:100%;display:block;" muted></video>
                     <div class="video-overlay"><i class="fas fa-play"></i></div>
                 <?php else: ?>
-                    <img src="<?= htmlspecialchars($item['file_path'] ?? '') ?>" alt="<?= htmlspecialchars($item['title'] ?? 'Gallery image') ?>" loading="lazy">
+                    <img src="<?= htmlspecialchars($item['file_url'] ?? '') ?>" alt="<?= htmlspecialchars($item['title'] ?? 'Gallery image') ?>" loading="lazy">
                 <?php endif; ?>
                 <div class="view-btn"><i class="fas fa-expand"></i></div>
                 <?php if ($item['type'] ?? '' === 'video'): ?>

@@ -1,27 +1,42 @@
 <?php
-require_once 'session_helper.php';
-secure_session_start();
-require_once 'db.php';
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/database.php';
+require_once __DIR__ . '/../includes/helpers.php';
 
 $success = $error = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = $_POST['donor_name'];
-    $amount = $_POST['amount'];
-    $type = $_POST['donation_type'];
-    $phone = $_POST['donor_phone'];
-    $method = $_POST['payment_method'];
-    
-    $sql = "INSERT INTO donations (donor_name, donor_email, donor_phone, amount, donation_type, payment_method, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')";
-    $params = [$name, $_POST['donor_email'], $phone, $amount, $type, $method];
-    
-    if ($db->insert($sql, $params)) {
-        // Construct WhatsApp Message
-        $msg = urlencode("Praise God Pastor! I want to give a donation.\n\nName: $name\nAmount: UGX $amount\nType: $type\nMethod: $method\nPhone: $phone");
-        header("Location: https://wa.me/256753244480?text=$msg");
-        exit;
+    if (!verifyCSRFToken()) {
+        $error = 'Invalid form submission. Please try again.';
     } else {
-        $error = "Something went wrong. Please try again.";
+        $name = trim($_POST['donor_name'] ?? '');
+        $email = trim($_POST['donor_email'] ?? '');
+        $amount = floatval($_POST['amount'] ?? 0);
+        $type = trim($_POST['donation_type'] ?? 'general');
+        $phone = trim($_POST['donor_phone'] ?? '');
+        $method = trim($_POST['payment_method'] ?? 'cash');
+
+        if (empty($name) || $amount <= 0) {
+            $error = 'Name and a valid amount are required.';
+        } else {
+            $db = Database::getInstance();
+            $reference = 'DON-' . strtoupper(bin2hex(random_bytes(6))) . '-' . date('ymd');
+            $db->insert('donations', [
+                'donor_name'     => $name,
+                'donor_email'    => $email,
+                'donor_phone'    => $phone,
+                'amount'         => $amount,
+                'donation_type'  => $type,
+                'payment_method' => $method,
+                'transaction_id' => $reference,
+                'status'         => 'pending',
+                'ip_address'     => $_SERVER['REMOTE_ADDR'] ?? '',
+                'created_at'     => date('Y-m-d H:i:s'),
+            ]);
+            $msg = urlencode("Praise God Pastor! I want to give a donation.\n\nName: $name\nAmount: UGX $amount\nType: $type\nMethod: $method\nPhone: $phone");
+            header("Location: https://wa.me/256753244480?text=$msg");
+            exit;
+        }
     }
 }
 ?>
@@ -56,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="col-lg-6">
                 <div class="card donate-card p-4">
                     <form method="POST">
+                        <?= csrfField() ?>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Full Name</label>
                             <input type="text" name="donor_name" class="form-control" required placeholder="Enter your name">

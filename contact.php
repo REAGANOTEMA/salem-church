@@ -6,7 +6,7 @@ $pageDescription = 'Get in touch with Salem Dominion Ministries. Send us a messa
 require_once 'config.php';
 require_once 'db_connection.php';
 
-$conn = createDatabaseConnection();
+$pdo = Database::getInstance()->getPdo();
 
 $errors = [];
 $success = '';
@@ -28,12 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($errors)) {
                 try {
-                    if ($conn) {
-                        $stmt = $conn->prepare("INSERT INTO prayer_requests (name, email, phone, request, status, created_at) VALUES (?, ?, ?, ?, 'pending', NOW())");
+                    if ($pdo) {
+                        $stmt = $pdo->prepare("INSERT INTO prayer_requests (name, email, phone, request_text, status, created_at) VALUES (?, ?, ?, ?, 'pending', NOW())");
                         if ($stmt) {
-                            $stmt->bind_param('ssss', $p_name, $p_email, $p_phone, $p_request);
-                            $stmt->execute();
-                            $stmt->close();
+                            $stmt->execute([$p_name, $p_email, $p_phone, $p_request]);
                             $prayer_success = 'Your prayer request has been received. Our team will be praying for you.';
                         }
                     }
@@ -56,27 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($errors)) {
                 try {
-                    if ($conn) {
-                        $tableCheck = $conn->query("SHOW TABLES LIKE 'contact_messages'");
-                        if ($tableCheck && $tableCheck->num_rows > 0) {
-                            $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, phone, subject, message, status, created_at) VALUES (?, ?, ?, ?, ?, 'unread', NOW())");
-                            if ($stmt) {
-                                $stmt->bind_param('sssss', $name, $email, $phone, $subject, $message);
-                                $stmt->execute();
-                                $stmt->close();
-                                $success = 'Thank you for contacting us! We will get back to you soon.';
-                            }
-                        } else {
-                            $stmt = $conn->prepare("INSERT INTO messages (sender_id, recipient_id, subject, message, message_type, status, priority, created_at) VALUES (?, ?, ?, ?, 'user_to_admin', 'unread', 'normal', NOW())");
-                            if ($stmt) {
-                                $full_message = "Name: $name\nEmail: $email\nPhone: $phone\n\nMessage:\n$message";
-                                $sender_id = 0;
-                                $recipient_id = null;
-                                $stmt->bind_param('iiss', $sender_id, $recipient_id, $subject, $full_message);
-                                $stmt->execute();
-                                $stmt->close();
-                                $success = 'Thank you for contacting us! We will get back to you soon.';
-                            }
+                    if ($pdo) {
+                        $stmt = $pdo->prepare("INSERT INTO contact_messages (name, email, phone, subject, message, status, created_at) VALUES (?, ?, ?, ?, ?, 'unread', NOW())");
+                        if ($stmt) {
+                            $stmt->execute([$name, $email, $phone, $subject, $message]);
+                            $success = 'Thank you for contacting us! We will get back to you soon.';
                         }
                     }
                 } catch (Exception $e) {
