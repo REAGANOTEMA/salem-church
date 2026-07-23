@@ -11,22 +11,18 @@ if (isAdminLoggedIn()) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!verifyCSRFToken()) {
-        $error = 'Invalid security token. Please try again.';
-    } else {
-        $username = trim($_POST['username'] ?? '');
-        $password = $_POST['password'] ?? '';
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-        if (empty($username) || empty($password)) {
-            $error = 'Please enter both username and password.';
+    if (empty($username) || empty($password)) {
+        $error = 'Please enter both username and password.';
+    } else {
+        $result = auth()->adminLogin($username, $password);
+        if ($result['success']) {
+            header('Location: dashboard.php');
+            exit;
         } else {
-            $result = auth()->adminLogin($username, $password);
-            if ($result['success']) {
-                header('Location: dashboard.php');
-                exit;
-            } else {
-                $error = $result['message'];
-            }
+            $error = $result['message'];
         }
     }
 }
