@@ -59,7 +59,7 @@ function requireAuth(): array {
     if (empty($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true) {
         apiError('Please log in to continue.', 401);
     }
-    $user = Database::getInstance()->fetch(
+    $user = Database::getNamed('members')->fetch(
         "SELECT id, first_name, last_name, email, phone, role FROM users WHERE id = ? AND is_active = 1",
         [$_SESSION['user_id']]
     );
@@ -70,7 +70,8 @@ function requireAuth(): array {
     return $user;
 }
 
-$db = Database::getInstance();
+$db = Database::getInstance();        // Website DB (content tables)
+$dbMembers = Database::getNamed('members'); // Members DB (users)
 
 switch ($action) {
 
@@ -725,7 +726,7 @@ switch ($action) {
             apiError('Please provide a valid email address.');
         }
 
-        $user = $db->fetch(
+        $user = $dbMembers->fetch(
             "SELECT id, first_name, last_name, email, phone, role, password_hash, is_active FROM users WHERE email = ?",
             [$email]
         );
@@ -740,7 +741,7 @@ switch ($action) {
             apiError('Invalid email or password.');
         }
 
-        $db->update('users', ['last_login' => date('Y-m-d H:i:s')], 'id = ?', [$user['id']]);
+        $dbMembers->update('users', ['last_login' => date('Y-m-d H:i:s')], 'id = ?', [$user['id']]);
 
         session_regenerate_id(true);
         $_SESSION['user_logged_in'] = true;
@@ -786,12 +787,12 @@ switch ($action) {
             apiError('Please provide a valid phone number.');
         }
 
-        $existing = $db->fetch("SELECT id FROM users WHERE email = ?", [$email]);
+        $existing = $dbMembers->fetch("SELECT id FROM users WHERE email = ?", [$email]);
         if ($existing) {
             apiError('An account with this email already exists.');
         }
 
-        $userId = $db->insert('users', [
+        $userId = $dbMembers->insert('users', [
             'first_name'    => $first_name,
             'last_name'     => $last_name,
             'email'         => $email,
@@ -866,7 +867,7 @@ switch ($action) {
             apiError('First name and last name are required.');
         }
 
-        $db->update('users', [
+        $dbMembers->update('users', [
             'first_name' => $first_name,
             'last_name'  => $last_name,
             'phone'      => $phone,

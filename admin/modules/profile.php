@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../includes/auth.php';
 requireAdminAuth();
 
-$db = Database::getInstance();
+$db = Database::getNamed('admin');
 $admin = currentAdmin();
 $adminData = $db->fetch("SELECT * FROM admin_users WHERE id = ?", [$admin['id']]);
 

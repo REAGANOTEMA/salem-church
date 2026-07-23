@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 requireAdminAuth();
 
 $db = Database::getInstance();
+$dbAdmin = Database::getNamed('admin');
 $admin = currentAdmin();
 $section = $_GET['section'] ?? 'dashboard';
 $sectionTitle = ucwords(str_replace('-', ' ', $section));
@@ -932,7 +933,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
                             <ul class="activity-list">
                                 <?php
                                 try {
-                                    $recentLogs = $db->fetchAll(
+                                    $recentLogs = $dbAdmin->fetchAll(
                                         "SELECT al.*, au.full_name FROM activity_logs al LEFT JOIN admin_users au ON al.user_id = au.id ORDER BY al.created_at DESC LIMIT 6"
                                     );
                                     if (empty($recentLogs)) {

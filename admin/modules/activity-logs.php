@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../includes/auth.php';
 requireAdminAuth();
 
-$db = Database::getInstance();
+$db = Database::getNamed('admin');
 
 $filterAction = $_GET['action_type'] ?? '';
 $filterModule = $_GET['module'] ?? '';

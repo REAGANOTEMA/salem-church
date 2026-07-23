@@ -214,13 +214,8 @@ function timeAgo(string $datetime): string {
 // Activity Logging
 function logActivity($db, string $action, string $module = '', int $userId = 0, string $details = ''): void {
     try {
-        if ($db instanceof Database) {
-            $pdo = $db->getPdo();
-        } elseif ($db instanceof PDO) {
-            $pdo = $db;
-        } else {
-            return;
-        }
+        // Activity logs are in the admin database
+        $pdo = Database::getNamed('admin')->getPdo();
 
         $stmt = $pdo->prepare("INSERT INTO activity_logs (user_id, action, module, details, ip_address, user_agent, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
         $stmt->execute([

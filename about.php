@@ -19,7 +19,8 @@ try {
         } catch (Exception $e) {}
 
         try {
-            $stmt = $pdo->query("SELECT COUNT(*) as c FROM users WHERE is_active = 1");
+            $membersPdo = Database::getNamed('members')->getPdo();
+            $stmt = $membersPdo->query("SELECT COUNT(*) as c FROM users WHERE is_active = 1");
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $stats['members'] = $row['c'] ?? 500;
         } catch (Exception $e) {}

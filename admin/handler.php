@@ -27,9 +27,11 @@ if (!verifyCSRFToken()) {
     jsonResponse(['success' => false, 'message' => 'Invalid security token. Please refresh the page.'], 403);
 }
 
-$admin  = currentAdmin();
-$db     = Database::getInstance();
-$action = $_POST['action'] ?? $_GET['action'] ?? '';
+$admin    = currentAdmin();
+$db       = Database::getInstance();         // Website DB (content tables)
+$dbAdmin  = Database::getNamed('admin');     // Admin DB (admin_users, activity_logs, etc.)
+$dbMembers = Database::getNamed('members');  // Members DB (users)
+$action   = $_POST['action'] ?? $_GET['action'] ?? '';
 
 function adminSuccess(array $data = [], string $message = 'Success'): void {
     jsonResponse(array_merge(['success' => true, 'message' => $message], $data));
@@ -425,21 +427,21 @@ switch ($action) {
         if ($action === 'edit_user') {
             $userId = intval($data['id'] ?? 0);
             if (!$userId) adminError('Invalid user ID.');
-            $existing = $db->fetch("SELECT id FROM users WHERE email = ? AND id != ?", [$userData['email'], $userId]);
+            $existing = $dbMembers->fetch("SELECT id FROM users WHERE email = ? AND id != ?", [$userData['email'], $userId]);
             if ($existing) adminError('A user with this email already exists.');
             if (!empty($data['password']) && strlen($data['password']) >= 8) {
                 $userData['password_hash'] = password_hash($data['password'], HASH_ALGO, ['cost' => HASH_COST]);
             }
-            $db->update('users', $userData, 'id = ?', [$userId]);
+            $dbMembers->update('users', $userData, 'id = ?', [$userId]);
             logActivity($db, 'updated_user', 'users', $admin['id'], "Updated user #{$userId}");
             adminSuccess([], 'User updated successfully.');
         } else {
-            $existing = $db->fetch("SELECT id FROM users WHERE email = ?", [$userData['email']]);
+            $existing = $dbMembers->fetch("SELECT id FROM users WHERE email = ?", [$userData['email']]);
             if ($existing) adminError('A user with this email already exists.');
             if (empty($data['password']) || strlen($data['password']) < 8) adminError('Password must be at least 8 characters.');
             $userData['password_hash'] = password_hash($data['password'], HASH_ALGO, ['cost' => HASH_COST]);
             $userData['created_at']    = date('Y-m-d H:i:s');
-            $id = $db->insert('users', $userData);
+            $id = $dbMembers->insert('users', $userData);
             logActivity($db, 'added_user', 'users', $admin['id'], "Added user #{$id}");
             adminSuccess(['id' => $id], 'User created successfully.');
         }
@@ -449,9 +451,9 @@ switch ($action) {
         $userId = intval($_POST['id'] ?? 0);
         if (!$userId) adminError('Invalid user ID.');
         if ($userId === $admin['id']) adminError('You cannot delete your own account.');
-        $user = $db->fetch("SELECT avatar_url FROM users WHERE id = ?", [$userId]);
+        $user = $dbMembers->fetch("SELECT avatar_url FROM users WHERE id = ?", [$userId]);
         if ($user && !empty($user['avatar_url'])) deleteFile($user['avatar_url']);
-        $db->delete('users', 'id = ?', [$userId]);
+        $dbMembers->delete('users', 'id = ?', [$userId]);
         logActivity($db, 'deleted_user', 'users', $admin['id'], "Deleted user #{$userId}");
         adminSuccess([], 'User deleted successfully.');
         break;
@@ -639,7 +641,7 @@ switch ($action) {
             $avatar = uploadFile($_FILES['avatar'], 'avatars', ALLOWED_IMAGE_TYPES);
             if ($avatar) $profileData['avatar_url'] = $avatar;
         }
-        $db->update('admin_users', $profileData, 'id = ?', [$admin['id']]);
+        $dbAdmin->update('admin_users', $profileData, 'id = ?', [$admin['id']]);
         $_SESSION['admin_name']  = $profileData['full_name'];
         $_SESSION['admin_email'] = $profileData['email'];
         logActivity($db, 'updated_profile', 'profile', $admin['id'], 'Updated admin profile');

@@ -11,7 +11,7 @@ class Auth {
     private Database $db;
 
     public function __construct() {
-        $this->db = Database::getInstance();
+        $this->db = Database::getNamed('admin');
     }
 
     public function adminLogin(string $username, string $password): array {

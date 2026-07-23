@@ -54,13 +54,31 @@ define('UPLOADS_PATH', ROOT_PATH . '/uploads');
 define('ASSETS_PATH', ROOT_PATH . '/assets');
 define('PUBLIC_PATH', ROOT_PATH . '/public');
 
-// Database Constants from .env
+// ============================================================
+// Database Constants - Website Database
+// ============================================================
 define('DB_HOST', _sdm_env('DB_HOST', 'localhost'));
 define('DB_USER', _sdm_env('DB_USER', 'root'));
 define('DB_PASS', _sdm_env('DB_PASSWORD', _sdm_env('DB_PASS', '')));
-define('DB_NAME', _sdm_env('DB_NAME', 'salem_dominion_ministries'));
+define('DB_NAME', _sdm_env('DB_NAME', 'salemdominionmin_website'));
 define('DB_PORT', _sdm_env('DB_PORT', '3306'));
 define('DB_CHARSET', _sdm_env('DB_CHARSET', 'utf8mb4'));
+
+// ============================================================
+// Database Constants - Admin Database
+// ============================================================
+define('ADMIN_DB_HOST', _sdm_env('ADMIN_DB_HOST', DB_HOST));
+define('ADMIN_DB_USER', _sdm_env('ADMIN_DB_USER', DB_USER));
+define('ADMIN_DB_PASS', _sdm_env('ADMIN_DB_PASSWORD', DB_PASS));
+define('ADMIN_DB_NAME', _sdm_env('ADMIN_DB_NAME', 'salemdominionmin_admin'));
+
+// ============================================================
+// Database Constants - Members Database
+// ============================================================
+define('MEMBERS_DB_HOST', _sdm_env('MEMBERS_DB_HOST', DB_HOST));
+define('MEMBERS_DB_USER', _sdm_env('MEMBERS_DB_USER', DB_USER));
+define('MEMBERS_DB_PASS', _sdm_env('MEMBERS_DB_PASSWORD', DB_PASS));
+define('MEMBERS_DB_NAME', _sdm_env('MEMBERS_DB_NAME', 'salemdominionmin_members'));
 
 // Church Info
 define('CHURCH_NAME', 'Salem Dominion Ministries');

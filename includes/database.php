@@ -1,45 +1,19 @@
 <?php
 /**
  * Salem Dominion Ministries - PDO Database Connection
- * Secure, production-ready database layer with PDO
+ * Multi-database support: website, admin, members
  */
 
 require_once dirname(__DIR__) . '/config.php';
 
 class Database {
     private static ?Database $instance = null;
+    private static array $namedInstances = [];
     private ?PDO $pdo = null;
+    private string $dbName;
 
-    private function __construct() {
-        $this->connect();
-    }
-
-    public static function getInstance(): self {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
-
-    public static function reset(): void {
-        self::$instance = null;
-    }
-
-    public function getPdo(): PDO {
-        if ($this->pdo === null) {
-            $this->connect();
-        }
-        return $this->pdo;
-    }
-
-    private function connect(): void {
-        $host = DB_HOST;
-        $user = DB_USER;
-        $pass = DB_PASS;
-        $name = DB_NAME;
-        $port = DB_PORT;
-        $charset = DB_CHARSET;
-
+    private function __construct(string $host, string $user, string $pass, string $name, string $port = '3306', string $charset = 'utf8mb4') {
+        $this->dbName = $name;
         $dsn = "mysql:host={$host};port={$port};dbname={$name};charset={$charset}";
 
         try {
@@ -51,10 +25,57 @@ class Database {
                 PDO::MYSQL_ATTR_FOUND_ROWS   => true,
             ]);
         } catch (PDOException $e) {
-            error_log("Database connection failed: " . $e->getMessage());
+            error_log("Database connection failed ({$name}): " . $e->getMessage());
             $this->pdo = null;
             throw $e;
         }
+    }
+
+    // Default instance (website database) for backward compatibility
+    public static function getInstance(): self {
+        if (self::$instance === null) {
+            self::$instance = new self(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT, DB_CHARSET);
+        }
+        return self::$instance;
+    }
+
+    // Named instance: 'website', 'admin', 'members'
+    public static function getNamed(string $name): self {
+        if (!isset(self::$namedInstances[$name])) {
+            switch ($name) {
+                case 'admin':
+                    self::$namedInstances[$name] = new self(
+                        ADMIN_DB_HOST, ADMIN_DB_USER, ADMIN_DB_PASS, ADMIN_DB_NAME, DB_PORT, DB_CHARSET
+                    );
+                    break;
+                case 'members':
+                    self::$namedInstances[$name] = new self(
+                        MEMBERS_DB_HOST, MEMBERS_DB_USER, MEMBERS_DB_PASS, MEMBERS_DB_NAME, DB_PORT, DB_CHARSET
+                    );
+                    break;
+                case 'website':
+                default:
+                    self::$namedInstances[$name] = self::getInstance();
+                    break;
+            }
+        }
+        return self::$namedInstances[$name];
+    }
+
+    public static function reset(): void {
+        self::$instance = null;
+        self::$namedInstances = [];
+    }
+
+    public function getPdo(): PDO {
+        if ($this->pdo === null) {
+            throw new \PDOException("No database connection for {$this->dbName}");
+        }
+        return $this->pdo;
+    }
+
+    public function getDbName(): string {
+        return $this->dbName;
     }
 
     public function query(string $sql, array $params = []): PDOStatement {
@@ -131,11 +152,28 @@ class Database {
     }
 }
 
-// Global database function for backward compatibility
+// ============================================================
+// Global helper functions
+// ============================================================
+
+// Default = website database (backward compatible)
 function db(): Database {
     return Database::getInstance();
 }
 
 function dbConn(): ?PDO {
     return Database::getInstance()->getPdo();
+}
+
+// Named database shortcuts
+function dbWebsite(): Database {
+    return Database::getNamed('website');
+}
+
+function dbAdmin(): Database {
+    return Database::getNamed('admin');
+}
+
+function dbMembers(): Database {
+    return Database::getNamed('members');
 }

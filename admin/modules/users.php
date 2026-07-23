@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../includes/auth.php';
 requireAdminAuth();
 
-$db = Database::getInstance();
+$db = Database::getNamed('admin');
 $action = $_GET['action'] ?? $_POST['action'] ?? 'list';
 $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
 
