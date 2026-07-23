@@ -885,61 +885,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const usernameInput = document.getElementById('username');
             const passwordInput = document.getElementById('password');
             
-            // Mobile-friendly form submission
+            // Simple form submission - let PHP handle redirect
             if (form) {
                 form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    // Disable button to prevent double submission
-                    if (loginBtn) {
-                        loginBtn.disabled = true;
-                        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i><span class="btn-text">Signing In...</span>';
-                    }
-                    
-                    // Basic validation
                     const username = usernameInput.value.trim();
                     const password = passwordInput.value.trim();
                     
                     if (!username || !password) {
-                        if (loginBtn) {
-                            loginBtn.disabled = false;
-                            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i><span class="btn-text">Sign In to Admin Panel</span>';
-                        }
+                        e.preventDefault();
                         return;
                     }
                     
-                    // Submit form
-                    const formData = new FormData(form);
-                    fetch('', {
-                        method: 'POST',
-                        body: formData,
-                        credentials: 'same-origin'
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        // Parse response and redirect or show error
-                        if (html.includes('admin_dashboard.php')) {
-                            window.location.href = 'admin_dashboard.php';
-                        } else {
-                            // Show error message
-                            const errorDiv = document.createElement('div');
-                            errorDiv.className = 'alert alert-error';
-                            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Invalid credentials. Please try again.';
-                            form.parentNode.insertBefore(errorDiv, form);
-                            
-                            if (loginBtn) {
-                                loginBtn.disabled = false;
-                                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i><span class="btn-text">Sign In to Admin Panel</span>';
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Login error:', error);
-                        if (loginBtn) {
-                            loginBtn.disabled = false;
-                            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i><span class="btn-text">Sign In to Admin Panel</span>';
-                        }
-                    });
+                    if (loginBtn) {
+                        loginBtn.disabled = true;
+                        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i><span class="btn-text">Signing In...</span>';
+                    }
                 });
             }
             
