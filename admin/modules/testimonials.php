@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($id) {
                 $db->update('testimonials', [
                     'status' => 'approved',
+                    'is_approved' => 1,
                     'approved_by' => $_SESSION['admin_id'],
                     'approved_at' => date('Y-m-d H:i:s'),
                 ], 'id = ?', [$id]);
@@ -30,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($id) {
                 $db->update('testimonials', [
                     'status' => 'rejected',
+                    'is_approved' => 0,
                 ], 'id = ?', [$id]);
                 logActivity($db, 'rejected', 'testimonials', $_SESSION['admin_id'], "Rejected testimonial ID {$id}");
             }

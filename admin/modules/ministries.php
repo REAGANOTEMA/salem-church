@@ -35,6 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($uploaded) $image = $uploaded;
             }
 
+            $validCategories = ['children','youth','men','women','outreach','worship','prayer','other'];
+            $category = in_array($category, $validCategories) ? $category : 'other';
+
             $id = $db->insert('ministries', [
                 'name' => $name,
                 'slug' => slugify($name),
@@ -49,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'image_url' => $image,
                 'is_active' => $is_active,
                 'sort_order' => $sort_order,
+                'created_by' => $_SESSION['admin_id'],
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);
@@ -78,6 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setFlash('error', 'Ministry name is required');
                 redirect(BASE_URL . '/admin/modules/ministries.php');
             }
+
+            $validCategories = ['children','youth','men','women','outreach','worship','prayer','other'];
+            $category = in_array($category, $validCategories) ? $category : 'other';
 
             $updateData = [
                 'name' => $name,
@@ -235,7 +242,11 @@ displayFlash();
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Category</label>
-                        <input type="text" name="category" class="form-control" value="<?= sanitize($editMinistry['category']) ?>">
+                        <select name="category" class="form-select">
+                            <?php foreach (['children'=>'Children','youth'=>'Youth','men'=>'Men','women'=>'Women','outreach'=>'Outreach','worship'=>'Worship','prayer'=>'Prayer','other'=>'Other'] as $val => $lbl): ?>
+                            <option value="<?= $val ?>" <?= ($editMinistry['category'] ?? '') === $val ? 'selected' : '' ?>><?= $lbl ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Sort Order</label>
@@ -401,7 +412,11 @@ displayFlash();
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Category</label>
-                            <input type="text" name="category" class="form-control">
+                            <select name="category" class="form-select">
+                                <?php foreach (['children'=>'Children','youth'=>'Youth','men'=>'Men','women'=>'Women','outreach'=>'Outreach','worship'=>'Worship','prayer'=>'Prayer','other'=>'Other'] as $val => $lbl): ?>
+                                <option value="<?= $val ?>"><?= $lbl ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Sort Order</label>

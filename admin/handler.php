@@ -107,7 +107,7 @@ switch ($action) {
             'title'        => trim($data['title']),
             'description'  => trim($data['description'] ?? ''),
             'event_date'   => $data['event_date'],
-            'end_date'     => $data['end_date'] ?? null,
+            'end_time'     => $data['end_time'] ?? null,
             'event_time'   => trim($data['event_time'] ?? ''),
             'location'     => trim($data['location'] ?? ''),
             'category'     => trim($data['category'] ?? 'general'),
@@ -345,7 +345,7 @@ switch ($action) {
         $ministryData = [
             'name'             => trim($data['name']),
             'slug'             => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $data['name'] ?? ''), '-')),
-            'category'         => trim($data['category'] ?? 'general'),
+            'category'         => trim($data['category'] ?? 'other'),
             'description'      => trim($data['description'] ?? ''),
             'leader_name'      => trim($data['leader_name'] ?? ''),
             'leader_email'     => trim($data['leader_email'] ?? ''),
@@ -389,7 +389,7 @@ switch ($action) {
     case 'approve_testimonial':
         $testId = intval($_POST['id'] ?? 0);
         if (!$testId) adminError('Invalid testimonial ID.');
-        $db->update('testimonials', ['status' => 'approved', 'approved_by' => $admin['id'], 'approved_at' => date('Y-m-d H:i:s')], 'id = ?', [$testId]);
+        $db->update('testimonials', ['status' => 'approved', 'is_approved' => 1, 'approved_by' => $admin['id'], 'approved_at' => date('Y-m-d H:i:s')], 'id = ?', [$testId]);
         logActivity($db, 'approved_testimonial', 'testimonials', $admin['id'], "Approved testimonial #{$testId}");
         adminSuccess([], 'Testimonial approved and published.');
         break;
@@ -397,7 +397,7 @@ switch ($action) {
     case 'reject_testimonial':
         $testId = intval($_POST['id'] ?? 0);
         if (!$testId) adminError('Invalid testimonial ID.');
-        $db->update('testimonials', ['status' => 'rejected'], 'id = ?', [$testId]);
+        $db->update('testimonials', ['status' => 'rejected', 'is_approved' => 0], 'id = ?', [$testId]);
         logActivity($db, 'rejected_testimonial', 'testimonials', $admin['id'], "Rejected testimonial #{$testId}");
         adminSuccess([], 'Testimonial rejected.');
         break;

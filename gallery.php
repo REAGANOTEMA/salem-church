@@ -68,7 +68,7 @@ try {
                 $page = min($page, $total_pages);
             }
 
-            $query = "SELECT g.*, CONCAT(u.first_name, ' ', u.last_name) as uploader_name FROM gallery g LEFT JOIN users u ON g.uploaded_by = u.id {$where} ORDER BY g.created_at DESC LIMIT ? OFFSET ?";
+            $query = "SELECT g.*, CONCAT(u.first_name, ' ', u.last_name) as uploader_name FROM gallery g LEFT JOIN salemdominionmin_members.users u ON g.uploaded_by = u.id {$where} ORDER BY g.created_at DESC LIMIT ? OFFSET ?";
             $stmt = $pdo->prepare($query);
             if ($stmt) {
                 $fp = array_merge($params, [$per_page, $offset]);

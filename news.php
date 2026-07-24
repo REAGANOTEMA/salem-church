@@ -46,7 +46,7 @@ try {
             $page = min($page, $total_pages);
         }
 
-        $query = "SELECT n.*, CONCAT(u.first_name, ' ', u.last_name) as author_name FROM news n LEFT JOIN users u ON n.author_id = u.id {$where} ORDER BY n.created_at DESC LIMIT ? OFFSET ?";
+        $query = "SELECT n.*, CONCAT(u.first_name, ' ', u.last_name) as author_name FROM news n LEFT JOIN salemdominionmin_members.users u ON n.author_id = u.id {$where} ORDER BY n.created_at DESC LIMIT ? OFFSET ?";
         $stmt = $pdo->prepare($query);
         if ($stmt) {
             $fp = array_merge($params, [$per_page, $offset]);
@@ -55,7 +55,7 @@ try {
         }
 
         if ($page === 1 && empty($search) && empty($category_filter)) {
-            $featStmt = $pdo->prepare("SELECT n.*, CONCAT(u.first_name, ' ', u.last_name) as author_name FROM news n LEFT JOIN users u ON n.author_id = u.id WHERE n.status = 'published' AND n.is_featured = 1 ORDER BY n.created_at DESC LIMIT 1");
+            $featStmt = $pdo->prepare("SELECT n.*, CONCAT(u.first_name, ' ', u.last_name) as author_name FROM news n LEFT JOIN salemdominionmin_members.users u ON n.author_id = u.id WHERE n.status = 'published' AND n.is_featured = 1 ORDER BY n.created_at DESC LIMIT 1");
             if ($featStmt) {
                 $featStmt->execute();
                 $featured_news = $featStmt->fetch(PDO::FETCH_ASSOC) ?: null;

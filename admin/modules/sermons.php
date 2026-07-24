@@ -106,7 +106,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
 
             if (!empty($_FILES['media_file']['name'])) {
-                $media = uploadFile($_FILES['media_file'], 'sermons/' . $media_type, ALLOWED_IMAGE_TYPES);
+                if ($media_type === 'video') {
+                    $media = uploadFile($_FILES['media_file'], 'sermons/video', ALLOWED_VIDEO_TYPES);
+                } elseif ($media_type === 'audio') {
+                    $media = uploadFile($_FILES['media_file'], 'sermons/audio', ALLOWED_AUDIO_TYPES);
+                } else {
+                    $media = uploadFile($_FILES['media_file'], 'sermons/video', array_merge(ALLOWED_VIDEO_TYPES, ALLOWED_AUDIO_TYPES));
+                }
                 if ($media) $updateData['media_url'] = $media;
             }
 

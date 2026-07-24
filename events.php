@@ -40,7 +40,7 @@ try {
             $page = min($page, $total_pages);
         }
 
-        $query = "SELECT e.*, CONCAT(u.first_name, ' ', u.last_name) as organizer_name FROM events e LEFT JOIN users u ON e.created_by = u.id {$where} {$order} LIMIT ? OFFSET ?";
+        $query = "SELECT e.*, CONCAT(u.first_name, ' ', u.last_name) as organizer_name FROM events e LEFT JOIN salemdominionmin_members.users u ON e.created_by = u.id {$where} {$order} LIMIT ? OFFSET ?";
         $stmt = $pdo->prepare($query);
         if ($stmt) {
             $stmt->execute([$per_page, $offset]);
@@ -48,7 +48,7 @@ try {
         }
 
         if ($tab === 'upcoming' && $page === 1) {
-            $featStmt = $pdo->prepare("SELECT e.*, CONCAT(u.first_name, ' ', u.last_name) as organizer_name FROM events e LEFT JOIN users u ON e.created_by = u.id WHERE e.event_date >= CURDATE() AND e.status != 'deleted' ORDER BY e.event_date ASC LIMIT 1");
+            $featStmt = $pdo->prepare("SELECT e.*, CONCAT(u.first_name, ' ', u.last_name) as organizer_name FROM events e LEFT JOIN salemdominionmin_members.users u ON e.created_by = u.id WHERE e.event_date >= CURDATE() AND e.status != 'deleted' ORDER BY e.event_date ASC LIMIT 1");
             if ($featStmt) {
                 $featStmt->execute();
                 $featured_event = $featStmt->fetch(PDO::FETCH_ASSOC) ?: null;

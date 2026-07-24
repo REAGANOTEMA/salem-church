@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'church_phone' => trim($_POST['church_phone'] ?? ''),
                 'church_email' => trim($_POST['church_email'] ?? ''),
                 'church_website' => trim($_POST['church_website'] ?? ''),
-                'church_pasteur' => trim($_POST['church_pastor'] ?? ''),
+                'church_pastor' => trim($_POST['church_pastor'] ?? ''),
             ];
             foreach ($settings as $key => $value) {
                 setSetting($key, $value);
