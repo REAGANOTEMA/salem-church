@@ -389,7 +389,7 @@ function handleRegister(e) {
                 if (res.success) {
                     showAuthAlert('success', res.message || 'Account created!');
                     setTimeout(function() {
-                        window.location.href = 'index.php';
+                        window.location.href = '<?php echo BASE_URL; ?>/index.php';
                     }, 1200);
                 } else {
                     showAuthAlert('error', res.message || 'Registration failed. Please try again.');

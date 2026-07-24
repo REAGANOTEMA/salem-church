@@ -21,7 +21,20 @@ function csrfToken(): string {
 }
 
 function verifyCSRFToken(): bool {
-    $token = $_POST[CSRF_TOKEN_NAME] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    $token = $_POST[CSRF_TOKEN_NAME]
+        ?? $_SERVER['HTTP_X_CSRF_TOKEN']
+        ?? '';
+
+    if (empty($token) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $rawInput = file_get_contents('php://input');
+        if (!empty($rawInput)) {
+            $jsonData = json_decode($rawInput, true);
+            if (is_array($jsonData) && isset($jsonData[CSRF_TOKEN_NAME])) {
+                $token = $jsonData[CSRF_TOKEN_NAME];
+            }
+        }
+    }
+
     if (empty($token) || empty($_SESSION[CSRF_TOKEN_NAME])) {
         return false;
     }

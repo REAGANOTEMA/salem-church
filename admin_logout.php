@@ -1,14 +1,19 @@
 <?php
-require_once 'config.php';
-// ADMIN LOGOUT - Salem Dominion Ministries
-// Secure logout for admin session
-session_start();
+require_once __DIR__ . '/config.php';
 
-// Destroy session
-session_unset();
-session_destroy();
+$userId = $_SESSION['admin_id'] ?? 0;
+if ($userId) {
+    try {
+        require_once __DIR__ . '/includes/database.php';
+        require_once __DIR__ . '/includes/helpers.php';
+        logActivity(Database::getNamed('admin')->getPdo(), 'logout', 'admin', $userId);
+    } catch (Exception $e) {
+        error_log("Admin logout activity log failed: " . $e->getMessage());
+    }
+}
 
-// Clear session cookie
+$_SESSION = [];
+
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(session_name(), '', time() - 42000,
@@ -17,7 +22,7 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-// Redirect to login page
-header('Location: admin_login.php');
+session_destroy();
+header('Location: admin/login.php');
 exit;
 ?>

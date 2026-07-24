@@ -351,7 +351,7 @@ function handleLogin(e) {
                 if (res.success) {
                     showAuthAlert('success', res.message || 'Login successful!');
                     setTimeout(function() {
-                        window.location.href = 'index.php';
+                        window.location.href = '<?php echo BASE_URL; ?>/index.php';
                     }, 800);
                 } else {
                     showAuthAlert('error', res.message || 'Login failed. Please try again.');
