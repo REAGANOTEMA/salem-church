@@ -131,7 +131,7 @@ displayFlash();
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Pastor</label>
-                        <input type="text" name="church_pastor" class="form-control" value="<?= sanitize(getSetting('church_pasteur', CHURCH_PASTOR)) ?>">
+                        <input type="text" name="church_pastor" class="form-control" value="<?= sanitize(getSetting('church_pastor', CHURCH_PASTOR)) ?>">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Address</label>

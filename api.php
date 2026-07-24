@@ -1030,7 +1030,7 @@ switch ($action) {
                 'content_type' => $content_type,
                 'content_id'   => $content_id,
                 'user_id'      => $user_id,
-                'visitor_hash' => $user_id ? null : ($visitor_hash ? hash('sha256', $visitor_hash) : null),
+                'visitor_hash' => $user_id ? null : $visitor_hash,
             ]);
             $liked = true;
         }

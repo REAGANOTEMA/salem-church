@@ -277,10 +277,16 @@ switch ($action) {
         $data = adminInput();
         $settingsModule = $data['settings_module'] ?? 'general';
         $allowedKeys = [
-            'church_name', 'church_phone', 'church_email', 'church_address',
-            'church_website', 'youtube_url', 'facebook_url', 'tiktok_url',
-            'whatsapp_url', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass',
-            'smtp_from_email', 'smtp_from_name', 'site_title', 'site_description',
+            'church_name', 'church_pastor', 'church_phone', 'church_email', 'church_address',
+            'church_website', 'church_city', 'church_country',
+            'youtube_url', 'facebook_url', 'tiktok_url', 'whatsapp_url', 'instagram_url', 'twitter_url',
+            'service_times', 'service_sunday_time', 'service_wednesday_time', 'service_friday_time',
+            'primary_color', 'secondary_color', 'accent_color',
+            'meta_title', 'meta_description', 'meta_keywords',
+            'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass',
+            'smtp_from_email', 'smtp_from_name',
+            'site_title', 'site_description', 'currency', 'mobile_money_number',
+            'bank_name', 'bank_account_name', 'bank_account_number',
             'maintenance_mode', 'registration_enabled', 'items_per_page',
         ];
         $saved = 0;
@@ -368,6 +374,7 @@ switch ($action) {
             logActivity($db, 'updated_ministry', 'ministries', $admin['id'], "Updated ministry #{$ministryId}");
             adminSuccess([], 'Ministry updated successfully.');
         } else {
+            $ministryData['created_by'] = $admin['id'];
             $ministryData['created_at'] = date('Y-m-d H:i:s');
             $id = $db->insert('ministries', $ministryData);
             logActivity($db, 'added_ministry', 'ministries', $admin['id'], "Added ministry #{$id}");
@@ -701,7 +708,7 @@ switch ($action) {
 
     case 'download_backup':
         $filename = trim($_POST['filename'] ?? '');
-        if (empty($filename) || strpos($filename, '..') !== false || strpos($filename, '/') !== false) adminError('Invalid backup filename.');
+        if (empty($filename) || strpos($filename, '..') !== false || strpos($filename, '/') !== false || strpos($filename, '\\') !== false) adminError('Invalid backup filename.');
         $filepath = UPLOADS_PATH . '/backups/' . $filename;
         if (!file_exists($filepath)) adminError('Backup file not found.');
         header('Content-Type: application/octet-stream');

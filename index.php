@@ -3,6 +3,8 @@
  * Salem Dominion Ministries - Homepage
  */
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/database.php';
+require_once __DIR__ . '/includes/helpers.php';
 
 $currentPage = 'home';
 $pageTitle = 'Salem Dominion Ministries - Divine Worship Experience';
@@ -32,68 +34,23 @@ $stats = ['members' => 500, 'years' => 10, 'sermons' => 200, 'events' => 50];
 $is_live = false;
 $youtube_channel = YOUTUBE_URL;
 
-$pdo = null;
+$db = Database::getInstance();
+$membersDb = Database::getNamed('members');
+
+try { $sermons = $db->fetchAll("SELECT * FROM sermons WHERE status = 'published' ORDER BY created_at DESC LIMIT 3"); } catch (Exception $e) { }
+try { $events = $db->fetchAll("SELECT * FROM events WHERE status = 'upcoming' ORDER BY event_date ASC LIMIT 3"); } catch (Exception $e) { }
+try { $news = $db->fetchAll("SELECT * FROM news WHERE status = 'published' ORDER BY created_at DESC LIMIT 3"); } catch (Exception $e) { }
+try { $ministries = $db->fetchAll("SELECT * FROM ministries WHERE is_active = 1 ORDER BY sort_order ASC LIMIT 6"); } catch (Exception $e) { }
+try { $gallery_images = $db->fetchAll("SELECT * FROM gallery WHERE status = 'published' ORDER BY created_at DESC LIMIT 8"); } catch (Exception $e) { }
+try { $testimonials = $db->fetchAll("SELECT * FROM testimonials WHERE status = 'approved' ORDER BY created_at DESC LIMIT 5"); } catch (Exception $e) { }
 try {
-    $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
-    $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ]);
-
-    try {
-        $stmt = $pdo->query("SELECT * FROM sermons WHERE status = 'published' ORDER BY created_at DESC LIMIT 3");
-        $sermons = $stmt->fetchAll();
-    } catch (Exception $e) { }
-
-    try {
-        $stmt = $pdo->query("SELECT * FROM events WHERE status = 'upcoming' ORDER BY event_date ASC LIMIT 3");
-        $events = $stmt->fetchAll();
-    } catch (Exception $e) { }
-
-    try {
-        $stmt = $pdo->query("SELECT * FROM news WHERE status = 'published' ORDER BY created_at DESC LIMIT 3");
-        $news = $stmt->fetchAll();
-    } catch (Exception $e) { }
-
-    try {
-        $stmt = $pdo->query("SELECT * FROM ministries WHERE is_active = 1 ORDER BY sort_order ASC LIMIT 6");
-        $ministries = $stmt->fetchAll();
-    } catch (Exception $e) { }
-
-    try {
-        $stmt = $pdo->query("SELECT * FROM gallery WHERE status = 'published' ORDER BY created_at DESC LIMIT 8");
-        $gallery_images = $stmt->fetchAll();
-    } catch (Exception $e) { }
-
-    try {
-        $stmt = $pdo->query("SELECT * FROM testimonials WHERE status = 'approved' ORDER BY created_at DESC LIMIT 5");
-        $testimonials = $stmt->fetchAll();
-    } catch (Exception $e) { }
-
-    try {
-        $stmt = $pdo->query("SELECT verse_text, reference FROM bible_verses ORDER BY RAND() LIMIT 1");
-        $v = $stmt->fetch();
-        if ($v) {
-            $verse_text = $v['verse_text'];
-            $verse_ref = $v['reference'];
-        }
-    } catch (Exception $e) { }
-
-    try {
-        $membersDsn = 'mysql:host=' . MEMBERS_DB_HOST . ';port=' . DB_PORT . ';dbname=' . MEMBERS_DB_NAME . ';charset=' . DB_CHARSET;
-        $membersPdo = new PDO($membersDsn, MEMBERS_DB_USER, MEMBERS_DB_PASS, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-        $stmt = $membersPdo->query("SELECT COUNT(*) as cnt FROM users WHERE is_active = 1");
-        $r = $stmt->fetch();
-        if ($r && $r['cnt'] > 0) $stats['members'] = (int)$r['cnt'];
-    } catch (Exception $e) { }
-
-} catch (Exception $e) {
-    $pdo = null;
-}
+    $v = $db->fetch("SELECT verse_text, reference FROM bible_verses ORDER BY RAND() LIMIT 1");
+    if ($v) { $verse_text = $v['verse_text']; $verse_ref = $v['reference']; }
+} catch (Exception $e) { }
+try {
+    $r = $membersDb->fetch("SELECT COUNT(*) as cnt FROM users WHERE is_active = 1");
+    if ($r && $r['cnt'] > 0) $stats['members'] = (int)$r['cnt'];
+} catch (Exception $e) { }
 
 include __DIR__ . '/components/header.php';
 ?>

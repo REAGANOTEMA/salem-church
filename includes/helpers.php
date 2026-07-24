@@ -102,7 +102,7 @@ function displayFlash(): void {
     if ($flash) {
         $type = $flash['type'] === 'error' ? 'danger' : $flash['type'];
         echo '<div class="alert alert-' . $type . ' alert-dismissible fade show" role="alert">';
-        echo $flash['message'];
+        echo sanitize($flash['message']);
         echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
         echo '</div>';
     }
@@ -180,6 +180,13 @@ function paginate(string $table, $db, int $perPage = ITEMS_PER_PAGE, int $curren
         $pdo = $db;
     } else {
         $pdo = Database::getInstance()->getPdo();
+    }
+
+    if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+        return ['items' => [], 'total' => 0, 'page' => 1, 'per_page' => $perPage, 'total_pages' => 1];
+    }
+    if (!preg_match('/^[a-zA-Z0-9_.,\s\(\)]+\s+(ASC|DESC)$/i', trim($orderBy))) {
+        $orderBy = 'id DESC';
     }
 
     $countQuery = "SELECT COUNT(*) FROM {$table}";
