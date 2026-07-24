@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($_FILES['images']['name'][0])) {
                 if ($isAjax) jsonError('Please select at least one image');
                 setFlash('error', 'Please select at least one image');
-                redirect(BASE_URL . '/admin/modules/gallery.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=gallery');
             }
 
             $uploaded = 0;
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'uploaded', 'gallery', $_SESSION['admin_id'], "Uploaded {$uploaded} images to album: {$album}");
             if ($isAjax) jsonSuccess(['count' => $uploaded], "{$uploaded} images uploaded successfully");
             setFlash('success', "{$uploaded} images uploaded successfully");
-            redirect(BASE_URL . '/admin/modules/gallery.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=gallery');
             break;
 
         case 'update':
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($id) || empty($title)) {
                 if ($isAjax) jsonError('Title is required');
                 setFlash('error', 'Title is required');
-                redirect(BASE_URL . '/admin/modules/gallery.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=gallery');
             }
 
             $db->update('gallery', [
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'updated', 'gallery', $_SESSION['admin_id'], "Updated gallery item ID: {$id}");
             if ($isAjax) jsonSuccess([], 'Gallery item updated');
             setFlash('success', 'Gallery item updated');
-            redirect(BASE_URL . '/admin/modules/gallery.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=gallery');
             break;
 
         case 'delete':
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Gallery item deleted');
             setFlash('success', 'Gallery item deleted');
-            redirect(BASE_URL . '/admin/modules/gallery.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=gallery');
             break;
 
         case 'toggle_status':
@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Status updated');
             setFlash('success', 'Status updated');
-            redirect(BASE_URL . '/admin/modules/gallery.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=gallery');
             break;
     }
 }

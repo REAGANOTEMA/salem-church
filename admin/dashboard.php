@@ -54,6 +54,15 @@ $sidebarGroups = [
     ],
 ];
 
+// Handle module POST requests BEFORE any HTML output (prevents "headers already sent" errors)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($section, $moduleMap) && $section !== 'dashboard') {
+    $moduleFile = __DIR__ . '/modules/' . $section . '.php';
+    if (file_exists($moduleFile)) {
+        require $moduleFile;
+        exit;
+    }
+}
+
 $stats = [];
 if ($section === 'dashboard') {
     try {
@@ -138,7 +147,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             display: flex;
             align-items: center;
             gap: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
             flex-shrink: 0;
         }
 
@@ -180,13 +189,13 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
         .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
         .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
-        .nav-group { margin-bottom: 8px; }
+        .nav-group { margin-bottom: 6px; }
 
         .nav-group-title {
-            padding: 12px 20px 6px;
+            padding: 14px 20px 6px;
             font-size: 10px;
             font-weight: 700;
-            color: rgba(148, 163, 184, 0.5);
+            color: rgba(148, 163, 184, 0.45);
             text-transform: uppercase;
             letter-spacing: 1.2px;
         }
@@ -208,12 +217,13 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
 
         .nav-item:hover {
             color: #e2e8f0;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.08);
         }
 
         .nav-item.active {
             color: var(--text-sidebar-active);
-            background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(56, 189, 248, 0.1));
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(56, 189, 248, 0.12));
+            font-weight: 600;
         }
 
         .nav-item.active::before {
@@ -223,9 +233,10 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             top: 50%;
             transform: translateY(-50%);
             width: 3px;
-            height: 20px;
+            height: 22px;
             background: var(--bg-accent);
             border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 8px rgba(14, 165, 233, 0.4);
         }
 
         .nav-item i {
@@ -239,8 +250,9 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
 
         .sidebar-footer {
             padding: 16px 20px;
-            border-top: 1px solid rgba(255,255,255,0.06);
+            border-top: 1px solid rgba(255,255,255,0.08);
             flex-shrink: 0;
+            background: rgba(0,0,0,0.15);
         }
 
         .sidebar-user { display: flex; align-items: center; gap: 10px; }
@@ -288,13 +300,14 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             position: sticky;
             top: 0;
             height: var(--topbar-height);
-            background: rgba(255,255,255,0.85);
+            background: rgba(255,255,255,0.88);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 28px;
+            padding: 0 32px;
             z-index: 900;
         }
 
@@ -317,7 +330,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
         .sidebar-toggle:active { background: #e2e8f0; transform: scale(0.95); }
 
         .topbar-title {
-            font-size: 18px;
+            font-size: 19px;
             font-weight: 700;
             color: #0f172a;
             letter-spacing: -0.3px;
@@ -343,6 +356,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
         }
 
         .topbar-btn:hover { background: #f1f5f9; color: #334155; }
+        .topbar-btn:active { background: #e2e8f0; transform: scale(0.95); }
 
         .notification-badge {
             position: absolute;
@@ -416,7 +430,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.04);
             opacity: 0;
             visibility: hidden;
-            transform: translateY(-8px);
+            transform: translateY(-8px) scale(0.97);
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 1001;
             overflow: hidden;
@@ -425,7 +439,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
         .profile-dropdown.open {
             opacity: 1;
             visibility: visible;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
 
         .dropdown-item {
@@ -449,15 +463,15 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
 
         /* Content Area */
         .content-area {
-            padding: 28px;
+            padding: 28px 32px;
             max-width: 1400px;
         }
 
         /* Welcome Banner */
         .welcome-banner {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
             border-radius: var(--radius);
-            padding: 28px 32px;
+            padding: 30px 34px;
             color: #fff;
             margin-bottom: 28px;
             position: relative;
@@ -538,7 +552,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
         .stat-card:hover {
             transform: translateY(-3px);
             box-shadow: var(--shadow-md);
-            border-color: transparent;
+            border-color: rgba(14, 165, 233, 0.2);
         }
 
         .stat-icon {
@@ -596,7 +610,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
         .card:hover { box-shadow: var(--shadow-md); }
 
         .card-header {
-            padding: 18px 22px;
+            padding: 18px 24px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
@@ -609,7 +623,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             color: #0f172a;
         }
 
-        .card-body { padding: 22px; }
+        .card-body { padding: 24px; }
 
         /* Quick Actions */
         .quick-actions {
@@ -637,7 +651,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
         .quick-action-btn:hover {
             border-color: var(--bg-accent);
             color: var(--bg-accent);
-            box-shadow: var(--shadow-sm);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.12);
             transform: translateY(-2px);
         }
 
@@ -666,6 +680,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             gap: 12px;
             padding: 12px 0;
             border-bottom: 1px solid #f1f5f9;
+            transition: background 0.15s;
         }
 
         .activity-item:last-child { border-bottom: none; }
@@ -753,7 +768,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             .sidebar.open { transform: translateX(0); box-shadow: 4px 0 30px rgba(0,0,0,0.3); }
             .main-content { margin-left: 0; }
             .sidebar-toggle { display: flex; }
-            .content-area { padding: 16px; }
+            .content-area { padding: 16px 18px; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .stat-card { padding: 14px; gap: 10px; flex-direction: column; align-items: center; text-align: center; }
             .stat-icon { width: 42px; height: 42px; font-size: 18px; border-radius: 10px; }
@@ -762,15 +777,15 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             .quick-actions { grid-template-columns: 1fr 1fr; gap: 8px; }
             .quick-action-btn { padding: 12px; font-size: 12px; gap: 8px; }
             .quick-action-btn i { width: 32px; height: 32px; font-size: 13px; }
-            .topbar { padding: 0 12px; height: 56px; }
+            .topbar { padding: 0 14px; height: 56px; }
             .topbar-title { font-size: 15px; }
             .admin-name-display { display: none; }
             .dropdown-arrow { display: none; }
             .welcome-banner { padding: 18px; margin-bottom: 16px; border-radius: 10px; }
             .welcome-banner h1 { font-size: 17px; }
             .welcome-banner p { font-size: 13px; }
-            .card-header { padding: 14px 16px; }
-            .card-body { padding: 16px; }
+            .card-header { padding: 14px 18px; }
+            .card-body { padding: 18px; }
             .grid-2 { gap: 12px; margin-bottom: 16px; }
         }
 
@@ -782,7 +797,9 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             .quick-action-btn { padding: 10px; font-size: 11px; }
             .welcome-banner { padding: 14px; }
             .welcome-banner h1 { font-size: 15px; }
-            .content-area { padding: 12px; }
+            .content-area { padding: 12px 14px; }
+            .card-header { padding: 12px 14px; }
+            .card-body { padding: 14px; }
         }
 
         /* Animations */
@@ -823,11 +840,17 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             border: 2px solid #e2e8f0;
             font-size: 14px;
             transition: border-color 0.2s, box-shadow 0.2s;
+            color: #1e293b;
         }
 
         .form-control:focus, .form-select:focus {
             border-color: var(--bg-accent);
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: #94a3b8;
         }
 
         .form-label {
@@ -842,6 +865,7 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             font-weight: 600;
             font-size: 13px;
             transition: all 0.2s;
+            letter-spacing: -0.1px;
         }
 
         .btn-primary {
@@ -856,11 +880,17 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
         }
 
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
+        }
+
         .badge {
             font-weight: 600;
             font-size: 11px;
             padding: 4px 10px;
             border-radius: 6px;
+            letter-spacing: 0.2px;
         }
 
         .table {
@@ -869,11 +899,21 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
 
         .table th {
             font-weight: 700;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.5px;
             color: #64748b;
             border-bottom-width: 1px;
+            padding: 12px 16px;
+        }
+
+        .table td {
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+
+        .table > tbody > tr {
+            transition: background 0.15s;
         }
 
         .pagination .page-link {
@@ -882,11 +922,20 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             font-size: 13px;
             font-weight: 600;
             border: 1px solid #e2e8f0;
+            color: #475569;
+            transition: all 0.2s;
+        }
+
+        .pagination .page-link:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #0f172a;
         }
 
         .pagination .page-item.active .page-link {
             background: var(--bg-accent);
             border-color: var(--bg-accent);
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.25);
         }
 
         @media (max-width: 768px) {
@@ -895,14 +944,14 @@ $initials = strtoupper(substr($admin['name'] ?? 'A', 0, 1));
             .table { font-size: 12px; }
             .table th { font-size: 10px; padding: 10px 8px; }
             .table td { padding: 10px 8px; vertical-align: middle; }
-            .btn-group-sm .btn { padding: 4px 8px; font-size: 11px; }
+            .btn-group-sm .btn { padding: 5px 10px; font-size: 11px; }
             .pagination { flex-wrap: wrap; justify-content: center; gap: 4px; }
             .pagination .page-link { padding: 6px 10px; font-size: 12px; }
             .form-control, .form-select { min-height: 44px; }
-            .modal-content { border-radius: 16px; }
-            .modal-header { padding: 16px 20px; }
-            .modal-body { padding: 16px 20px; }
-            .modal-footer { padding: 12px 20px; }
+            .modal-content { border-radius: 16px; border: none; box-shadow: var(--shadow-lg); }
+            .modal-header { padding: 20px 22px 16px; border-bottom: 1px solid #f1f5f9; }
+            .modal-body { padding: 20px 22px; }
+            .modal-footer { padding: 14px 22px; border-top: 1px solid #f1f5f9; }
         }
     </style>
 </head>

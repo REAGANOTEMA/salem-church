@@ -25,26 +25,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($username) || empty($password) || empty($full_name) || empty($email)) {
                 if ($isAjax) jsonError('Username, password, full name, and email are required');
                 setFlash('error', 'Username, password, full name, and email are required');
-                redirect(BASE_URL . '/admin/modules/users.php?action=create');
+                redirect(BASE_URL . '/admin/dashboard.php?section=users&action=create');
             }
 
             if (strlen($password) < 8) {
                 if ($isAjax) jsonError('Password must be at least 8 characters');
                 setFlash('error', 'Password must be at least 8 characters');
-                redirect(BASE_URL . '/admin/modules/users.php?action=create');
+                redirect(BASE_URL . '/admin/dashboard.php?section=users&action=create');
             }
 
             if (!validateEmail($email)) {
                 if ($isAjax) jsonError('Invalid email address');
                 setFlash('error', 'Invalid email address');
-                redirect(BASE_URL . '/admin/modules/users.php?action=create');
+                redirect(BASE_URL . '/admin/dashboard.php?section=users&action=create');
             }
 
             $existing = $db->fetch("SELECT id FROM admin_users WHERE username = ? OR email = ?", [$username, $email]);
             if ($existing) {
                 if ($isAjax) jsonError('Username or email already exists');
                 setFlash('error', 'Username or email already exists');
-                redirect(BASE_URL . '/admin/modules/users.php?action=create');
+                redirect(BASE_URL . '/admin/dashboard.php?section=users&action=create');
             }
 
             $id = $db->insert('admin_users', [
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'created', 'users', $_SESSION['admin_id'], "Created admin user: {$username}");
             if ($isAjax) jsonSuccess(['id' => $id], 'Admin user created');
             setFlash('success', 'Admin user created successfully');
-            redirect(BASE_URL . '/admin/modules/users.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=users');
             break;
 
         case 'update':
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($id) || empty($full_name) || empty($email)) {
                 if ($isAjax) jsonError('Full name and email are required');
                 setFlash('error', 'Full name and email are required');
-                redirect(BASE_URL . '/admin/modules/users.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=users');
             }
 
             $validRoles = ['super_admin', 'admin', 'editor', 'media_team', 'pastor', 'secretary', 'finance', 'volunteer'];
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($existing) {
                 if ($isAjax) jsonError('Username or email already exists');
                 setFlash('error', 'Username or email already exists');
-                redirect(BASE_URL . '/admin/modules/users.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=users');
             }
 
             $updateData = [
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'updated', 'users', $_SESSION['admin_id'], "Updated admin user ID {$id}");
             if ($isAjax) jsonSuccess([], 'Admin user updated');
             setFlash('success', 'Admin user updated');
-            redirect(BASE_URL . '/admin/modules/users.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=users');
             break;
 
         case 'delete':
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Admin user deleted');
             setFlash('success', 'Admin user deleted');
-            redirect(BASE_URL . '/admin/modules/users.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=users');
             break;
 
         case 'reset_password':
@@ -125,13 +125,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($id) || empty($newPassword)) {
                 if ($isAjax) jsonError('User ID and new password are required');
                 setFlash('error', 'User ID and new password are required');
-                redirect(BASE_URL . '/admin/modules/users.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=users');
             }
 
             if (strlen($newPassword) < 8) {
                 if ($isAjax) jsonError('Password must be at least 8 characters');
                 setFlash('error', 'Password must be at least 8 characters');
-                redirect(BASE_URL . '/admin/modules/users.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=users');
             }
 
             $db->update('admin_users', [
@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'updated', 'users', $_SESSION['admin_id'], "Reset password for admin user ID {$id}");
             if ($isAjax) jsonSuccess([], 'Password reset successfully');
             setFlash('success', 'Password reset successfully');
-            redirect(BASE_URL . '/admin/modules/users.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=users');
             break;
     }
 }

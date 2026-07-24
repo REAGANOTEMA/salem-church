@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($youtube_url)) {
                 if ($isAjax) jsonError('YouTube URL is required');
                 setFlash('error', 'YouTube URL is required');
-                redirect(BASE_URL . '/admin/modules/youtube-live.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=youtube-live');
             }
 
             $embed_url = extractYouTubeLiveEmbed($youtube_url);
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'updated', 'youtube_live', $_SESSION['admin_id'], "Updated YouTube Live: {$title}");
             if ($isAjax) jsonSuccess(['id' => $id], 'YouTube Live stream saved');
             setFlash('success', 'YouTube Live stream saved successfully');
-            redirect(BASE_URL . '/admin/modules/youtube-live.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=youtube-live');
             break;
 
         case 'toggle_live':
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Live status toggled');
             setFlash('success', 'Live status updated');
-            redirect(BASE_URL . '/admin/modules/youtube-live.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=youtube-live');
             break;
 
         case 'toggle_enabled':
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Enabled status toggled');
             setFlash('success', 'Enabled status updated');
-            redirect(BASE_URL . '/admin/modules/youtube-live.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=youtube-live');
             break;
 
         case 'disable':
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Stream disabled');
             setFlash('success', 'Live stream disabled');
-            redirect(BASE_URL . '/admin/modules/youtube-live.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=youtube-live');
             break;
     }
 }

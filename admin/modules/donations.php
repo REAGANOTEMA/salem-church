@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Donation confirmed');
             setFlash('success', 'Donation confirmed');
-            redirect(BASE_URL . '/admin/modules/donations.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=donations');
             break;
 
         case 'reject':
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Donation rejected');
             setFlash('success', 'Donation rejected');
-            redirect(BASE_URL . '/admin/modules/donations.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=donations');
             break;
     }
 }

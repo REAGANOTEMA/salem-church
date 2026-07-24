@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($title)) {
                 if ($isAjax) jsonError('Title is required');
                 setFlash('error', 'Title is required');
-                redirect(BASE_URL . '/admin/modules/sermons.php?action=create');
+                redirect(BASE_URL . '/admin/dashboard.php?section=sermons&action=create');
             }
 
             $id = $db->insert('sermons', [
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'created', 'sermons', $_SESSION['admin_id'], "Created sermon: {$title}");
             if ($isAjax) jsonSuccess(['id' => $id], 'Sermon created successfully');
             setFlash('success', 'Sermon created successfully');
-            redirect(BASE_URL . '/admin/modules/sermons.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=sermons');
             break;
 
         case 'update':
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($id) || empty($title)) {
                 if ($isAjax) jsonError('Title is required');
                 setFlash('error', 'Title is required');
-                redirect(BASE_URL . '/admin/modules/sermons.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=sermons');
             }
 
             $updateData = [
@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'updated', 'sermons', $_SESSION['admin_id'], "Updated sermon ID: {$id}");
             if ($isAjax) jsonSuccess([], 'Sermon updated successfully');
             setFlash('success', 'Sermon updated successfully');
-            redirect(BASE_URL . '/admin/modules/sermons.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=sermons');
             break;
 
         case 'delete':
@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Sermon deleted successfully');
             setFlash('success', 'Sermon deleted successfully');
-            redirect(BASE_URL . '/admin/modules/sermons.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=sermons');
             break;
     }
 }

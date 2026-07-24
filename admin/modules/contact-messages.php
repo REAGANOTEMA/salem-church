@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Message marked as read');
             setFlash('success', 'Message marked as read');
-            redirect(BASE_URL . '/admin/modules/contact-messages.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=contact-messages');
             break;
 
         case 'mark_unread':
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Message marked as unread');
             setFlash('success', 'Message marked as unread');
-            redirect(BASE_URL . '/admin/modules/contact-messages.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=contact-messages');
             break;
 
         case 'reply':
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($id) || empty($reply_message)) {
                 if ($isAjax) jsonError('Reply message is required');
                 setFlash('error', 'Reply message is required');
-                redirect(BASE_URL . '/admin/modules/contact-messages.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=contact-messages');
             }
 
             $msg = $db->fetch("SELECT * FROM contact_messages WHERE id = ?", [$id]);
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Reply sent successfully');
             setFlash('success', 'Reply sent successfully');
-            redirect(BASE_URL . '/admin/modules/contact-messages.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=contact-messages');
             break;
 
         case 'delete':
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Message deleted');
             setFlash('success', 'Message deleted');
-            redirect(BASE_URL . '/admin/modules/contact-messages.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=contact-messages');
             break;
     }
 }

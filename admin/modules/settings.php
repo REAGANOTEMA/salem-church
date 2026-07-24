@@ -84,10 +84,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     setFlash('success', ucfirst($section) . ' settings saved successfully');
-    redirect(BASE_URL . '/admin/modules/settings.php?section=' . $section);
+    redirect(BASE_URL . '/admin/dashboard.php?section=settings&subsection=' . $section);
 }
 
-$currentSection = $_GET['section'] ?? 'general';
+$currentSection = $_GET['subsection'] ?? 'general';
 $sections = [
     'general' => ['icon' => 'church', 'label' => 'Church Info'],
     'uploads' => ['icon' => 'upload', 'label' => 'Logo & Favicon'],
@@ -109,7 +109,7 @@ displayFlash();
         <div class="card mb-4">
             <div class="list-group list-group-flush">
                 <?php foreach ($sections as $key => $sec): ?>
-                <a href="?section=<?= $key ?>" class="list-group-item list-group-item-action <?= $currentSection === $key ? 'active' : '' ?>">
+                <a href="?section=settings&subsection=<?= $key ?>" class="list-group-item list-group-item-action <?= $currentSection === $key ? 'active' : '' ?>">
                     <i class="fas fa-<?= $sec['icon'] ?> me-2"></i> <?= $sec['label'] ?>
                 </a>
                 <?php endforeach; ?>

@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($title) || empty($event_date)) {
                 if ($isAjax) jsonError('Title and event date are required');
                 setFlash('error', 'Title and event date are required');
-                redirect(BASE_URL . '/admin/modules/events.php?action=create');
+                redirect(BASE_URL . '/admin/dashboard.php?section=events&action=create');
             }
 
             $banner_image = '';
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'created', 'events', $_SESSION['admin_id'], "Created event: {$title}");
             if ($isAjax) jsonSuccess(['id' => $id], 'Event created successfully');
             setFlash('success', 'Event created successfully');
-            redirect(BASE_URL . '/admin/modules/events.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=events');
             break;
 
         case 'update':
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($id) || empty($title) || empty($event_date)) {
                 if ($isAjax) jsonError('All required fields must be filled');
                 setFlash('error', 'All required fields must be filled');
-                redirect(BASE_URL . '/admin/modules/events.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=events');
             }
 
             $updateData = [
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'updated', 'events', $_SESSION['admin_id'], "Updated event ID: {$id}");
             if ($isAjax) jsonSuccess([], 'Event updated successfully');
             setFlash('success', 'Event updated successfully');
-            redirect(BASE_URL . '/admin/modules/events.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=events');
             break;
 
         case 'delete':
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Event deleted successfully');
             setFlash('success', 'Event deleted successfully');
-            redirect(BASE_URL . '/admin/modules/events.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=events');
             break;
     }
 }

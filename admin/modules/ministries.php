@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($name)) {
                 if ($isAjax) jsonError('Ministry name is required');
                 setFlash('error', 'Ministry name is required');
-                redirect(BASE_URL . '/admin/modules/ministries.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=ministries');
             }
 
             $image = '';
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'created', 'ministries', $_SESSION['admin_id'], "Created ministry: {$name}");
             if ($isAjax) jsonSuccess(['id' => $id], 'Ministry created');
             setFlash('success', 'Ministry created successfully');
-            redirect(BASE_URL . '/admin/modules/ministries.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=ministries');
             break;
 
         case 'update':
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($id) || empty($name)) {
                 if ($isAjax) jsonError('Ministry name is required');
                 setFlash('error', 'Ministry name is required');
-                redirect(BASE_URL . '/admin/modules/ministries.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=ministries');
             }
 
             $validCategories = ['children','youth','men','women','outreach','worship','prayer','other'];
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'updated', 'ministries', $_SESSION['admin_id'], "Updated ministry ID {$id}");
             if ($isAjax) jsonSuccess([], 'Ministry updated');
             setFlash('success', 'Ministry updated');
-            redirect(BASE_URL . '/admin/modules/ministries.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=ministries');
             break;
 
         case 'delete':
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Ministry deleted');
             setFlash('success', 'Ministry deleted');
-            redirect(BASE_URL . '/admin/modules/ministries.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=ministries');
             break;
     }
 }

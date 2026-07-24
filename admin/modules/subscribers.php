@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Subscriber deleted');
             setFlash('success', 'Subscriber deleted');
-            redirect(BASE_URL . '/admin/modules/subscribers.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=subscribers');
             break;
 
         case 'delete_multiple':
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 logActivity($db, 'deleted', 'subscribers', $_SESSION['admin_id'], "Deleted " . count($ids) . " subscribers");
             }
             setFlash('success', 'Selected subscribers deleted');
-            redirect(BASE_URL . '/admin/modules/subscribers.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=subscribers');
             break;
 
         case 'export':

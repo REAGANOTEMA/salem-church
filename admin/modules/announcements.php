@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($title) || empty($content)) {
                 if ($isAjax) jsonError('Title and content are required');
                 setFlash('error', 'Title and content are required');
-                redirect(BASE_URL . '/admin/modules/announcements.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=announcements');
             }
 
             $id = $db->insert('announcements', [
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'created', 'announcements', $_SESSION['admin_id'], "Created announcement: {$title}");
             if ($isAjax) jsonSuccess(['id' => $id], 'Announcement created');
             setFlash('success', 'Announcement created');
-            redirect(BASE_URL . '/admin/modules/announcements.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=announcements');
             break;
 
         case 'update':
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($id) || empty($title) || empty($content)) {
                 if ($isAjax) jsonError('Title and content are required');
                 setFlash('error', 'Title and content are required');
-                redirect(BASE_URL . '/admin/modules/announcements.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=announcements');
             }
 
             $db->update('announcements', [
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'updated', 'announcements', $_SESSION['admin_id'], "Updated announcement ID {$id}");
             if ($isAjax) jsonSuccess([], 'Announcement updated');
             setFlash('success', 'Announcement updated');
-            redirect(BASE_URL . '/admin/modules/announcements.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=announcements');
             break;
 
         case 'delete':
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Announcement deleted');
             setFlash('success', 'Announcement deleted');
-            redirect(BASE_URL . '/admin/modules/announcements.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=announcements');
             break;
     }
 }

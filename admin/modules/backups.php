@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($isAjax) jsonError('Backup failed: ' . $e->getMessage());
                 setFlash('error', 'Backup failed: ' . $e->getMessage());
             }
-            redirect(BASE_URL . '/admin/modules/backups.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=backups');
             break;
 
         case 'delete_backup':
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Backup deleted');
             setFlash('success', 'Backup deleted');
-            redirect(BASE_URL . '/admin/modules/backups.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=backups');
             break;
     }
 }
@@ -103,7 +103,7 @@ if ($action === 'download' && !empty($_GET['file'])) {
         }
     }
     setFlash('error', 'Backup file not found');
-    redirect(BASE_URL . '/admin/modules/backups.php');
+    redirect(BASE_URL . '/admin/dashboard.php?section=backups');
 }
 
 $backups = [];

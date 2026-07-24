@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Testimonial approved');
             setFlash('success', 'Testimonial approved');
-            redirect(BASE_URL . '/admin/modules/testimonials.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=testimonials');
             break;
 
         case 'reject':
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Testimonial rejected');
             setFlash('success', 'Testimonial rejected');
-            redirect(BASE_URL . '/admin/modules/testimonials.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=testimonials');
             break;
 
         case 'archive':
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Testimonial archived');
             setFlash('success', 'Testimonial archived');
-            redirect(BASE_URL . '/admin/modules/testimonials.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=testimonials');
             break;
 
         case 'delete':
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Testimonial deleted');
             setFlash('success', 'Testimonial deleted');
-            redirect(BASE_URL . '/admin/modules/testimonials.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=testimonials');
             break;
     }
 }

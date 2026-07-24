@@ -19,18 +19,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($full_name) || empty($email)) {
                 setFlash('error', 'Name and email are required');
-                redirect(BASE_URL . '/admin/modules/profile.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=profile');
             }
 
             if (!validateEmail($email)) {
                 setFlash('error', 'Invalid email address');
-                redirect(BASE_URL . '/admin/modules/profile.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=profile');
             }
 
             $existing = $db->fetch("SELECT id FROM admin_users WHERE email = ? AND id != ?", [$email, $admin['id']]);
             if ($existing) {
                 setFlash('error', 'Email already in use');
-                redirect(BASE_URL . '/admin/modules/profile.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=profile');
             }
 
             $updateData = [
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             logActivity($db, 'updated', 'profile', $admin['id'], 'Updated profile');
             setFlash('success', 'Profile updated successfully');
-            redirect(BASE_URL . '/admin/modules/profile.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=profile');
             break;
 
         case 'change_password':
@@ -65,17 +65,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($current_password) || empty($new_password)) {
                 setFlash('error', 'All password fields are required');
-                redirect(BASE_URL . '/admin/modules/profile.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=profile');
             }
 
             if ($new_password !== $confirm_password) {
                 setFlash('error', 'New passwords do not match');
-                redirect(BASE_URL . '/admin/modules/profile.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=profile');
             }
 
             if (strlen($new_password) < 8) {
                 setFlash('error', 'Password must be at least 8 characters');
-                redirect(BASE_URL . '/admin/modules/profile.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=profile');
             }
 
             $result = auth()->changePassword($admin['id'], $current_password, $new_password);
@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 setFlash('error', $result['message']);
             }
-            redirect(BASE_URL . '/admin/modules/profile.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=profile');
             break;
     }
 }

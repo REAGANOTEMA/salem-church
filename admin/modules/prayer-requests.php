@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Prayer request marked as answered');
             setFlash('success', 'Prayer request marked as answered');
-            redirect(BASE_URL . '/admin/modules/prayer-requests.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=prayer-requests');
             break;
 
         case 'archive':
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Prayer request archived');
             setFlash('success', 'Prayer request archived');
-            redirect(BASE_URL . '/admin/modules/prayer-requests.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=prayer-requests');
             break;
 
         case 'delete':
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Prayer request deleted');
             setFlash('success', 'Prayer request deleted');
-            redirect(BASE_URL . '/admin/modules/prayer-requests.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=prayer-requests');
             break;
     }
 }

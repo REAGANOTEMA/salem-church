@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($title) || empty($content)) {
                 if ($isAjax) jsonError('Title and content are required');
                 setFlash('error', 'Title and content are required');
-                redirect(BASE_URL . '/admin/modules/news.php?action=create');
+                redirect(BASE_URL . '/admin/dashboard.php?section=news&action=create');
             }
 
             $featured_image = '';
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'created', 'news', $_SESSION['admin_id'], "Created news: {$title}");
             if ($isAjax) jsonSuccess(['id' => $id], 'News created successfully');
             setFlash('success', 'News created successfully');
-            redirect(BASE_URL . '/admin/modules/news.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=news');
             break;
 
         case 'update':
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($id) || empty($title) || empty($content)) {
                 if ($isAjax) jsonError('All required fields must be filled');
                 setFlash('error', 'All required fields must be filled');
-                redirect(BASE_URL . '/admin/modules/news.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=news');
             }
 
             $updateData = [
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'updated', 'news', $_SESSION['admin_id'], "Updated news ID: {$id}");
             if ($isAjax) jsonSuccess([], 'News updated successfully');
             setFlash('success', 'News updated successfully');
-            redirect(BASE_URL . '/admin/modules/news.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=news');
             break;
 
         case 'delete':
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'News deleted successfully');
             setFlash('success', 'News deleted successfully');
-            redirect(BASE_URL . '/admin/modules/news.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=news');
             break;
 
         case 'toggle_status':
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     setFlash('success', 'Status updated');
                 }
             }
-            redirect(BASE_URL . '/admin/modules/news.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=news');
             break;
     }
 }

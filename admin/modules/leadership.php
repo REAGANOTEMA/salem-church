@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($name)) {
                 if ($isAjax) jsonError('Name is required');
                 setFlash('error', 'Name is required');
-                redirect(BASE_URL . '/admin/modules/leadership.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=leadership');
             }
 
             $image = '';
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'created', 'leadership', $_SESSION['admin_id'], "Created leader: {$name}");
             if ($isAjax) jsonSuccess(['id' => $id], 'Leader added');
             setFlash('success', 'Leader added successfully');
-            redirect(BASE_URL . '/admin/modules/leadership.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=leadership');
             break;
 
         case 'update':
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($id) || empty($name)) {
                 if ($isAjax) jsonError('Name is required');
                 setFlash('error', 'Name is required');
-                redirect(BASE_URL . '/admin/modules/leadership.php');
+                redirect(BASE_URL . '/admin/dashboard.php?section=leadership');
             }
 
             $updateData = [
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logActivity($db, 'updated', 'leadership', $_SESSION['admin_id'], "Updated leader ID {$id}");
             if ($isAjax) jsonSuccess([], 'Leader updated');
             setFlash('success', 'Leader updated');
-            redirect(BASE_URL . '/admin/modules/leadership.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=leadership');
             break;
 
         case 'delete':
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Leader deleted');
             setFlash('success', 'Leader deleted');
-            redirect(BASE_URL . '/admin/modules/leadership.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=leadership');
             break;
 
         case 'move':
@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($isAjax) jsonSuccess([], 'Position updated');
             setFlash('success', 'Position updated');
-            redirect(BASE_URL . '/admin/modules/leadership.php');
+            redirect(BASE_URL . '/admin/dashboard.php?section=leadership');
             break;
     }
 }
